@@ -1,0 +1,2 @@
+# ignore firebase_service/rize-11838-firebase-adminsdk-fbsvc-ee0a388f16.json
+firebase_service/*.json

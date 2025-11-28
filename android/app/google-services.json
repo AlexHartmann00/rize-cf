@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1004261898852",
+    "project_id": "rize-11838",
+    "storage_bucket": "rize-11838.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1004261898852:android:daf8a299f6f2c05b1b7d71",
+        "android_client_info": {
+          "package_name": "com.example.fitness_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD_9sxQ0OeVlSv4w2bcL5xArQrCCboBTKg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

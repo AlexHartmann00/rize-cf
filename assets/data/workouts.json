@@ -1,0 +1,578 @@
+{
+  "workout_types": [
+    {
+      "id": "ls",
+      "name": "Liegestütz",
+      "description": "Liegestütz!!",
+      "usedMuscleGroups": [
+        {
+          "name": "Brust",
+          "muscleArea": "Oberkörper"
+        },
+        {
+          "name": "Trizeps",
+          "muscleArea": "Oberkörper"
+        },
+        {
+          "name": "Schultern",
+          "muscleArea": "Oberkörper"
+        }
+      ],
+      "videoExplanationUrl": "https://example.com/liegestuetz"
+    },
+    {
+      "id": "sq",
+      "name": "Kniebeuge",
+      "description": "Klassische Kniebeugen mit eigenem Körpergewicht.",
+      "usedMuscleGroups": [
+        {
+          "name": "Quadrizeps",
+          "muscleArea": "Unterkörper"
+        },
+        {
+          "name": "Gesäß",
+          "muscleArea": "Unterkörper"
+        }
+      ],
+      "videoExplanationUrl": "https://example.com/kniebeuge"
+    },
+    {
+      "id": "pl",
+      "name": "Plank",
+      "description": "Unterarmstütz zur Rumpfstabilisierung.",
+      "usedMuscleGroups": [
+        {
+          "name": "Bauch",
+          "muscleArea": "Rumpf"
+        },
+        {
+          "name": "Rücken",
+          "muscleArea": "Rumpf"
+        }
+      ],
+      "videoExplanationUrl": "https://example.com/plank"
+    },
+    {
+      "id": "cr",
+      "name": "Crunches",
+      "description": "Bauch-Crunches auf dem Boden.",
+      "usedMuscleGroups": [
+        {
+          "name": "Bauch",
+          "muscleArea": "Rumpf"
+        }
+      ],
+      "videoExplanationUrl": "https://example.com/crunches"
+    },
+    {
+      "id": "ru",
+      "name": "Rudern vorgebeugt",
+      "description": "Rudern mit Kurzhanteln oder Widerstandsband.",
+      "usedMuscleGroups": [
+        {
+          "name": "Rücken",
+          "muscleArea": "Oberkörper"
+        },
+        {
+          "name": "Bizeps",
+          "muscleArea": "Oberkörper"
+        }
+      ],
+      "videoExplanationUrl": "https://example.com/rudern"
+    },
+    {
+      "id": "lp",
+      "name": "Ausfallschritte",
+      "description": "Lunges nach vorne im Wechsel.",
+      "usedMuscleGroups": [
+        {
+          "name": "Quadrizeps",
+          "muscleArea": "Unterkörper"
+        },
+        {
+          "name": "Gesäß",
+          "muscleArea": "Unterkörper"
+        },
+        {
+          "name": "Waden",
+          "muscleArea": "Unterkörper"
+        }
+      ],
+      "videoExplanationUrl": "https://example.com/ausfallschritte"
+    },
+    {
+      "id": "dbp",
+      "name": "Kurzhantel-Schulterdrücken",
+      "description": "Schulterdrücken mit Kurzhanteln im Sitzen oder Stehen.",
+      "usedMuscleGroups": [
+        {
+          "name": "Schultern",
+          "muscleArea": "Oberkörper"
+        },
+        {
+          "name": "Trizeps",
+          "muscleArea": "Oberkörper"
+        }
+      ],
+      "videoExplanationUrl": "https://example.com/dumbbell-press"
+    },
+    {
+      "id": "rb",
+      "name": "Rückenstrecker",
+      "description": "Rückenstreckerübungen im Liegen.",
+      "usedMuscleGroups": [
+        {
+          "name": "Rücken",
+          "muscleArea": "Rumpf"
+        }
+      ],
+      "videoExplanationUrl": "https://example.com/rueckenstrecker"
+    },
+    {
+      "id": "mt",
+      "name": "Bergsteiger (Mountain Climbers)",
+      "description": "Dynamische Ganzkörperübung im Liegestütz.",
+      "usedMuscleGroups": [
+        {
+          "name": "Bauch",
+          "muscleArea": "Rumpf"
+        },
+        {
+          "name": "Schultern",
+          "muscleArea": "Oberkörper"
+        },
+        {
+          "name": "Beine",
+          "muscleArea": "Unterkörper"
+        }
+      ],
+      "videoExplanationUrl": "https://example.com/mountain-climbers"
+    },
+    {
+      "id": "br",
+      "name": "Burpees",
+      "description": "Intensive Ganzkörperübung mit Sprung und Liegestütz.",
+      "usedMuscleGroups": [
+        {
+          "name": "Ganzkörper",
+          "muscleArea": "Ganzkörper"
+        }
+      ],
+      "videoExplanationUrl": "https://example.com/burpees"
+    },
+    {
+      "id": "jp",
+      "name": "Jumping Jacks",
+      "description": "Hampelmänner zur Ganzkörperaktivierung.",
+      "usedMuscleGroups": [
+        {
+          "name": "Beine",
+          "muscleArea": "Unterkörper"
+        },
+        {
+          "name": "Schultern",
+          "muscleArea": "Oberkörper"
+        }
+      ],
+      "videoExplanationUrl": "https://example.com/jumping-jacks"
+    }
+  ],
+  "workouts": [
+    {
+      "workoutType": "ls",
+      "length": "5m",
+      "repetitions": 20,
+      "intensityLevel": 3,
+      "intensityScore": 0.5
+    },
+
+    {
+      "workoutType": "ls",
+      "length": "8m",
+      "repetitions": 30,
+      "intensityLevel": 4,
+      "intensityScore": 0.7
+    },
+    {
+      "workoutType": "ls",
+      "length": "10m",
+      "repetitions": 40,
+      "intensityLevel": 5,
+      "intensityScore": 0.85
+    },
+    {
+      "workoutType": "ls",
+      "length": "3m",
+      "repetitions": 12,
+      "intensityLevel": 2,
+      "intensityScore": 0.35
+    },
+    {
+      "workoutType": "ls",
+      "length": "6m",
+      "repetitions": 25,
+      "intensityLevel": 3,
+      "intensityScore": 0.55
+    },
+
+    {
+      "workoutType": "sq",
+      "length": "5m",
+      "repetitions": 25,
+      "intensityLevel": 2,
+      "intensityScore": 0.4
+    },
+    {
+      "workoutType": "sq",
+      "length": "8m",
+      "repetitions": 40,
+      "intensityLevel": 3,
+      "intensityScore": 0.6
+    },
+    {
+      "workoutType": "sq",
+      "length": "12m",
+      "repetitions": 60,
+      "intensityLevel": 4,
+      "intensityScore": 0.78
+    },
+    {
+      "workoutType": "sq",
+      "length": "15m",
+      "repetitions": 80,
+      "intensityLevel": 5,
+      "intensityScore": 0.9
+    },
+    {
+      "workoutType": "sq",
+      "length": "4m",
+      "repetitions": 20,
+      "intensityLevel": 2,
+      "intensityScore": 0.38
+    },
+
+    {
+      "workoutType": "pl",
+      "length": "3m",
+      "repetitions": 3,
+      "intensityLevel": 2,
+      "intensityScore": 0.3
+    },
+    {
+      "workoutType": "pl",
+      "length": "5m",
+      "repetitions": 5,
+      "intensityLevel": 3,
+      "intensityScore": 0.5
+    },
+    {
+      "workoutType": "pl",
+      "length": "8m",
+      "repetitions": 6,
+      "intensityLevel": 4,
+      "intensityScore": 0.7
+    },
+    {
+      "workoutType": "pl",
+      "length": "10m",
+      "repetitions": 8,
+      "intensityLevel": 5,
+      "intensityScore": 0.88
+    },
+    {
+      "workoutType": "pl",
+      "length": "2m",
+      "repetitions": 2,
+      "intensityLevel": 1,
+      "intensityScore": 0.18
+    },
+
+    {
+      "workoutType": "cr",
+      "length": "4m",
+      "repetitions": 30,
+      "intensityLevel": 2,
+      "intensityScore": 0.42
+    },
+    {
+      "workoutType": "cr",
+      "length": "6m",
+      "repetitions": 45,
+      "intensityLevel": 3,
+      "intensityScore": 0.58
+    },
+    {
+      "workoutType": "cr",
+      "length": "8m",
+      "repetitions": 60,
+      "intensityLevel": 4,
+      "intensityScore": 0.76
+    },
+    {
+      "workoutType": "cr",
+      "length": "10m",
+      "repetitions": 80,
+      "intensityLevel": 5,
+      "intensityScore": 0.9
+    },
+    {
+      "workoutType": "cr",
+      "length": "3m",
+      "repetitions": 20,
+      "intensityLevel": 1,
+      "intensityScore": 0.25
+    },
+
+    {
+      "workoutType": "ru",
+      "length": "6m",
+      "repetitions": 24,
+      "intensityLevel": 3,
+      "intensityScore": 0.55
+    },
+    {
+      "workoutType": "ru",
+      "length": "8m",
+      "repetitions": 32,
+      "intensityLevel": 4,
+      "intensityScore": 0.72
+    },
+    {
+      "workoutType": "ru",
+      "length": "10m",
+      "repetitions": 40,
+      "intensityLevel": 5,
+      "intensityScore": 0.88
+    },
+    {
+      "workoutType": "ru",
+      "length": "4m",
+      "repetitions": 16,
+      "intensityLevel": 2,
+      "intensityScore": 0.4
+    },
+    {
+      "workoutType": "ru",
+      "length": "5m",
+      "repetitions": 20,
+      "intensityLevel": 3,
+      "intensityScore": 0.52
+    },
+
+    {
+      "workoutType": "lp",
+      "length": "5m",
+      "repetitions": 24,
+      "intensityLevel": 2,
+      "intensityScore": 0.45
+    },
+    {
+      "workoutType": "lp",
+      "length": "8m",
+      "repetitions": 40,
+      "intensityLevel": 3,
+      "intensityScore": 0.62
+    },
+    {
+      "workoutType": "lp",
+      "length": "10m",
+      "repetitions": 50,
+      "intensityLevel": 4,
+      "intensityScore": 0.8
+    },
+    {
+      "workoutType": "lp",
+      "length": "12m",
+      "repetitions": 60,
+      "intensityLevel": 5,
+      "intensityScore": 0.9
+    },
+    {
+      "workoutType": "lp",
+      "length": "4m",
+      "repetitions": 20,
+      "intensityLevel": 2,
+      "intensityScore": 0.42
+    },
+
+    {
+      "workoutType": "dbp",
+      "length": "5m",
+      "repetitions": 20,
+      "intensityLevel": 3,
+      "intensityScore": 0.55
+    },
+    {
+      "workoutType": "dbp",
+      "length": "7m",
+      "repetitions": 28,
+      "intensityLevel": 4,
+      "intensityScore": 0.7
+    },
+    {
+      "workoutType": "dbp",
+      "length": "9m",
+      "repetitions": 36,
+      "intensityLevel": 5,
+      "intensityScore": 0.85
+    },
+    {
+      "workoutType": "dbp",
+      "length": "4m",
+      "repetitions": 16,
+      "intensityLevel": 2,
+      "intensityScore": 0.4
+    },
+    {
+      "workoutType": "dbp",
+      "length": "6m",
+      "repetitions": 24,
+      "intensityLevel": 3,
+      "intensityScore": 0.6
+    },
+
+    {
+      "workoutType": "rb",
+      "length": "4m",
+      "repetitions": 20,
+      "intensityLevel": 2,
+      "intensityScore": 0.35
+    },
+    {
+      "workoutType": "rb",
+      "length": "6m",
+      "repetitions": 30,
+      "intensityLevel": 3,
+      "intensityScore": 0.5
+    },
+    {
+      "workoutType": "rb",
+      "length": "8m",
+      "repetitions": 40,
+      "intensityLevel": 4,
+      "intensityScore": 0.7
+    },
+    {
+      "workoutType": "rb",
+      "length": "10m",
+      "repetitions": 50,
+      "intensityLevel": 5,
+      "intensityScore": 0.82
+    },
+    {
+      "workoutType": "rb",
+      "length": "3m",
+      "repetitions": 15,
+      "intensityLevel": 1,
+      "intensityScore": 0.22
+    },
+
+    {
+      "workoutType": "mt",
+      "length": "4m",
+      "repetitions": 60,
+      "intensityLevel": 3,
+      "intensityScore": 0.65
+    },
+    {
+      "workoutType": "mt",
+      "length": "6m",
+      "repetitions": 90,
+      "intensityLevel": 4,
+      "intensityScore": 0.8
+    },
+    {
+      "workoutType": "mt",
+      "length": "8m",
+      "repetitions": 120,
+      "intensityLevel": 5,
+      "intensityScore": 0.93
+    },
+    {
+      "workoutType": "mt",
+      "length": "3m",
+      "repetitions": 45,
+      "intensityLevel": 2,
+      "intensityScore": 0.5
+    },
+    {
+      "workoutType": "mt",
+      "length": "5m",
+      "repetitions": 75,
+      "intensityLevel": 3,
+      "intensityScore": 0.7
+    },
+
+    {
+      "workoutType": "br",
+      "length": "4m",
+      "repetitions": 20,
+      "intensityLevel": 4,
+      "intensityScore": 0.82
+    },
+    {
+      "workoutType": "br",
+      "length": "6m",
+      "repetitions": 30,
+      "intensityLevel": 5,
+      "intensityScore": 0.95
+    },
+    {
+      "workoutType": "br",
+      "length": "3m",
+      "repetitions": 15,
+      "intensityLevel": 3,
+      "intensityScore": 0.7
+    },
+    {
+      "workoutType": "br",
+      "length": "5m",
+      "repetitions": 25,
+      "intensityLevel": 4,
+      "intensityScore": 0.88
+    },
+    {
+      "workoutType": "br",
+      "length": "2m",
+      "repetitions": 10,
+      "intensityLevel": 2,
+      "intensityScore": 0.55
+    },
+
+    {
+      "workoutType": "jp",
+      "length": "5m",
+      "repetitions": 80,
+      "intensityLevel": 2,
+      "intensityScore": 0.45
+    },
+    {
+      "workoutType": "jp",
+      "length": "8m",
+      "repetitions": 130,
+      "intensityLevel": 3,
+      "intensityScore": 0.6
+    },
+    {
+      "workoutType": "jp",
+      "length": "10m",
+      "repetitions": 160,
+      "intensityLevel": 4,
+      "intensityScore": 0.78
+    },
+    {
+      "workoutType": "jp",
+      "length": "12m",
+      "repetitions": 200,
+      "intensityLevel": 5,
+      "intensityScore": 0.9
+    },
+    {
+      "workoutType": "jp",
+      "length": "3m",
+      "repetitions": 50,
+      "intensityLevel": 1,
+      "intensityScore": 0.3
+    }
+  ]
+}
