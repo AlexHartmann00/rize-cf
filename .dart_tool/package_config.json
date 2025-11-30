@@ -117,25 +117,25 @@
     },
     {
       "name": "flutter",
-      "rootUri": "file:///Users/alexhartmann/Dev/flutter/packages/flutter",
+      "rootUri": "file:///Users/alexhartmann/Desktop/flutter/packages/flutter",
       "packageUri": "lib/",
       "languageVersion": "3.8"
     },
     {
       "name": "flutter_lints",
-      "rootUri": "file:///Users/alexhartmann/.pub-cache/hosted/pub.dev/flutter_lints-5.0.0",
+      "rootUri": "file:///Users/alexhartmann/.pub-cache/hosted/pub.dev/flutter_lints-6.0.0",
       "packageUri": "lib/",
-      "languageVersion": "3.5"
+      "languageVersion": "3.8"
     },
     {
       "name": "flutter_test",
-      "rootUri": "file:///Users/alexhartmann/Dev/flutter/packages/flutter_test",
+      "rootUri": "file:///Users/alexhartmann/Desktop/flutter/packages/flutter_test",
       "packageUri": "lib/",
       "languageVersion": "3.8"
     },
     {
       "name": "flutter_web_plugins",
-      "rootUri": "file:///Users/alexhartmann/Dev/flutter/packages/flutter_web_plugins",
+      "rootUri": "file:///Users/alexhartmann/Desktop/flutter/packages/flutter_web_plugins",
       "packageUri": "lib/",
       "languageVersion": "3.8"
     },
@@ -171,9 +171,9 @@
     },
     {
       "name": "lints",
-      "rootUri": "file:///Users/alexhartmann/.pub-cache/hosted/pub.dev/lints-5.1.1",
+      "rootUri": "file:///Users/alexhartmann/.pub-cache/hosted/pub.dev/lints-6.0.0",
       "packageUri": "lib/",
-      "languageVersion": "3.6"
+      "languageVersion": "3.8"
     },
     {
       "name": "matcher",
@@ -189,9 +189,9 @@
     },
     {
       "name": "meta",
-      "rootUri": "file:///Users/alexhartmann/.pub-cache/hosted/pub.dev/meta-1.16.0",
+      "rootUri": "file:///Users/alexhartmann/.pub-cache/hosted/pub.dev/meta-1.17.0",
       "packageUri": "lib/",
-      "languageVersion": "2.12"
+      "languageVersion": "3.5"
     },
     {
       "name": "path",
@@ -273,7 +273,7 @@
     },
     {
       "name": "sky_engine",
-      "rootUri": "file:///Users/alexhartmann/Dev/flutter/bin/cache/pkg/sky_engine",
+      "rootUri": "file:///Users/alexhartmann/Desktop/flutter/bin/cache/pkg/sky_engine",
       "packageUri": "lib/",
       "languageVersion": "3.8"
     },
@@ -309,7 +309,7 @@
     },
     {
       "name": "test_api",
-      "rootUri": "file:///Users/alexhartmann/.pub-cache/hosted/pub.dev/test_api-0.7.6",
+      "rootUri": "file:///Users/alexhartmann/.pub-cache/hosted/pub.dev/test_api-0.7.7",
       "packageUri": "lib/",
       "languageVersion": "3.5"
     },
@@ -351,8 +351,8 @@
     }
   ],
   "generator": "pub",
-  "generatorVersion": "3.9.2",
-  "flutterRoot": "file:///Users/alexhartmann/Dev/flutter",
-  "flutterVersion": "3.35.7",
+  "generatorVersion": "3.10.1",
+  "flutterRoot": "file:///Users/alexhartmann/Desktop/flutter",
+  "flutterVersion": "3.38.3",
   "pubCache": "file:///Users/alexhartmann/.pub-cache"
 }
