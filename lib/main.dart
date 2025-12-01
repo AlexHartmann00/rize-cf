@@ -9,6 +9,7 @@ import 'package:fitness_app/globals.dart' as globals;
 import 'package:fitness_app/slot_machine.dart'
     show SlotMachine, SlotMachineController;
 import 'package:fitness_app/types/anamnesis.dart';
+import 'package:fitness_app/types/user.dart' show UserData;
 import 'package:fitness_app/types/workout.dart';
 import 'package:fitness_app/utils.dart' show loadDailyWorkoutPlan;
 import 'package:fitness_app/widgets.dart';
@@ -26,12 +27,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  print('Current user: ${authServiceNotifier.value.currentUser}');
-  await authServiceNotifier.value.signOut();
-  loadWorkoutCollection().then((value) {
-    data.workoutLibrary = value;
-  });
   authServiceNotifier.value.authStateChanges.listen((user) {
     if (user != null) {
       loadUserData(user.uid).then((userData) {
@@ -44,7 +41,22 @@ void main() async {
       globals.authenticatedUserId = null;
     }
   });
-  globals.dailyWorkoutPlan = null; //TODO = await loadDailyWorkoutPlan();
+  print('Current user: ${authServiceNotifier.value.currentUser}');
+  if (authServiceNotifier.value.currentUser != null) {
+    UserData userData = await loadUserData(
+      authServiceNotifier.value.currentUser!.uid,
+    );
+
+    globals.userData = userData;
+  }
+
+  //TODO: remove this; only for testing
+  await authServiceNotifier.value.signOut();
+  loadWorkoutCollection().then((value) {
+    data.workoutLibrary = value;
+  });
+
+  globals.dailyWorkoutPlan = await loadDailyWorkoutPlan();
   runApp(const MyApp());
 }
 
@@ -364,7 +376,7 @@ class _MyHomePageState extends State<MyHomePage> {
         0 => const HomePageSlotMachineWidget(),
         1 => const Center(child: Text('Fortschritt')),
         2 => const WorkoutLibraryPage(),
-        3 => const Center(child: Text('Profil')),
+        3 => ProfilePage(),
         _ => const Center(child: Text('Unknown')),
       },
     );
@@ -395,9 +407,11 @@ class _HomePageSlotMachineWidgetState extends State<HomePageSlotMachineWidget> {
               .where(
                 (workout) =>
                     workout.impactScore >
-                        globals.userData!.intensityScore - 0.2 &&
+                        globals.userData!.intensityScore -
+                            globals.intensityScoreTolerance &&
                     workout.impactScore <
-                        globals.userData!.intensityScore + 0.2,
+                        globals.userData!.intensityScore +
+                            globals.intensityScoreTolerance,
               )
               .toList()
         : globals.workoutLibrary;
@@ -414,10 +428,10 @@ class _HomePageSlotMachineWidgetState extends State<HomePageSlotMachineWidget> {
       7,
       8,
     ]; //TODO: FIlter based on user fitness
-    List<List<(TimeOfDay, int, bool)>> schedules = [
-      [(TimeOfDay.morning, 1, false), (TimeOfDay.evening, 1, false)],
-      [(TimeOfDay.any, 3, false)],
-      [(TimeOfDay.morning, 1, false)],
+    List<List<(TimeOfDay, int, int)>> schedules = [
+      [(TimeOfDay.morning, 1, 0), (TimeOfDay.evening, 1, 0)],
+      [(TimeOfDay.any, 3, 0)],
+      [(TimeOfDay.morning, 1, 0)],
     ];
 
     SharedPreferences.getInstance().then((prefs) async {
@@ -434,7 +448,7 @@ class _HomePageSlotMachineWidgetState extends State<HomePageSlotMachineWidget> {
       }
     });
 
-    Widget scheduleEntryWidget((TimeOfDay, int, bool) entry) {
+    Widget scheduleEntryWidget((TimeOfDay, int, int) entry) {
       String timeText;
       switch (entry.$1) {
         case TimeOfDay.any:
@@ -446,6 +460,12 @@ class _HomePageSlotMachineWidgetState extends State<HomePageSlotMachineWidget> {
         default:
           timeText = 'Unbekannt';
       }
+
+      int scheduledUnits = entry.$2;
+      int completedUnits = entry.$3;
+
+      bool allDone = completedUnits >= scheduledUnits;
+
       return Container(
         width: 200,
         decoration: BoxDecoration(
@@ -459,11 +479,11 @@ class _HomePageSlotMachineWidgetState extends State<HomePageSlotMachineWidget> {
           children: [
             Text(timeText),
             SizedBox(width: 10),
-            Text('× ${entry.$2}'),
+            Text('× ${scheduledUnits}'),
             SizedBox(width: 10),
             Icon(
-              entry.$3 ? Icons.check_circle : Icons.radio_button_unchecked,
-              color: entry.$3 ? Colors.green : Colors.grey,
+              allDone ? Icons.check_circle : Icons.radio_button_unchecked,
+              color: allDone ? Colors.green : Colors.grey,
             ),
           ],
         ),
@@ -750,6 +770,119 @@ class _WorkoutLibraryPageState extends State<WorkoutLibraryPage> {
         );
       },
       itemCount: globals.workoutLibrary.length,
+    );
+  }
+}
+
+class ProfilePage extends StatefulWidget {
+  const ProfilePage({super.key});
+
+  @override
+  State<ProfilePage> createState() => _ProfilePageState();
+}
+
+class _ProfilePageState extends State<ProfilePage> {
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Row(children: [SizedBox(height: 25)]),
+        CircleAvatar(
+          radius: 50,
+          backgroundColor: Colors.white,
+          backgroundImage: NetworkImage(
+            authServiceNotifier.value.currentUser?.photoURL ??
+                'https://www.gravatar.com/avatar/?d=mp&f=y',
+          ),
+        ),
+        Text(
+          '${authServiceNotifier.value.currentUser?.displayName ?? 'Sportler'}',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 30,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        Text(
+          'Dein RIZE-Fitnessscore: ${(globals.userData!.intensityScore * 100).toStringAsFixed(0) ?? 'Lade...'} von 100',
+          style: TextStyle(color: Colors.white, fontSize: 20),
+        ),
+        _menuButton(
+          'Konto',
+          Icon(Icons.person, color: Theme.of(context).primaryColorDark),
+          () {},
+          Colors.white,
+          Theme.of(context).primaryColorDark,
+        ),
+        _menuButton(
+          'Einstellungen',
+          Icon(Icons.settings, color: Theme.of(context).primaryColorDark),
+          () {},
+          Colors.white,
+          Theme.of(context).primaryColorDark,
+        ),
+        _menuButton(
+          'Hilfe & Support',
+          Icon(Icons.help, color: Theme.of(context).primaryColorDark),
+          () {},
+          Colors.white,
+          Theme.of(context).primaryColorDark,
+        ),
+        _menuButton(
+          'Über RIZE',
+          Icon(Icons.info, color: Theme.of(context).primaryColorDark),
+          () {},
+          Colors.white,
+          Theme.of(context).primaryColorDark,
+        ),
+        _menuButton(
+          'Abmelden',
+          Icon(Icons.arrow_circle_left_rounded, color: Colors.white),
+          () {},
+          Colors.red,
+          Colors.white,
+        ),
+      ],
+    );
+  }
+
+  Widget _menuButton(
+    String text,
+    Widget icon,
+    VoidCallback onPressed,
+    Color backgroundColor,
+    Color fontColor,
+  ) {
+    return IconButton(
+      onPressed: onPressed,
+      icon: Container(
+        width: 300,
+        decoration: BoxDecoration(
+          color: backgroundColor,
+          border: Border.all(color: Colors.transparent),
+          borderRadius: BorderRadius.circular(15),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Row(
+            spacing: 5,
+            children: [
+              icon,
+              Text(
+                text,
+                style: TextStyle(
+                  color: fontColor,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 25,
+                ),
+              ),
+              Expanded(child: SizedBox()),
+              Icon(Icons.arrow_right_sharp, color: fontColor),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

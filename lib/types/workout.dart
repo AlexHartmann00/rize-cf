@@ -1,20 +1,12 @@
-
 import 'dart:convert';
 
 import 'package:fitness_app/utils.dart' as utils;
 import 'package:fitness_app/types/muscle_group.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-enum WorkoutType {
-  static,
-  dynamic
-}
+enum WorkoutType { static, dynamic }
 
-enum ImpactLevel {
-  low,
-  medium,
-  high
-}
+enum ImpactLevel { low, medium, high }
 
 class Workout {
   String id;
@@ -49,7 +41,9 @@ class Workout {
       name: json['name'] as String,
       description: json['description'] as String,
       coachingCues: json['coachingCues'] as String? ?? '',
-      usedMuscleGroups: (json['usedMuscleGroups'] ?? [] ).map<String>((e) => e as String).toList(),
+      usedMuscleGroups: (json['usedMuscleGroups'] ?? [])
+          .map<String>((e) => e as String)
+          .toList(),
       baseReps: json['baseReps'] as int?,
       baseSeconds: json['baseSeconds'] as int?,
       impactLevel: ImpactLevel.values.firstWhere(
@@ -66,33 +60,25 @@ class Workout {
   }
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'name': name,
-        'description': description,
-        'coachingCues': coachingCues,
-        'usedMuscleGroups':
-            usedMuscleGroups,
-        'baseReps': baseReps,
-        'baseSeconds': baseSeconds,
-        'impactLevel': impactLevel.name,
-        'workoutType': workoutType.name,
-        'impactScore': impactScore,
-        'videoExplanationUrl': videoExplanationUrl,
-      };
+    'id': id,
+    'name': name,
+    'description': description,
+    'coachingCues': coachingCues,
+    'usedMuscleGroups': usedMuscleGroups,
+    'baseReps': baseReps,
+    'baseSeconds': baseSeconds,
+    'impactLevel': impactLevel.name,
+    'workoutType': workoutType.name,
+    'impactScore': impactScore,
+    'videoExplanationUrl': videoExplanationUrl,
+  };
 }
 
-
-
-enum TimeOfDay{
-  any,
-  morning,
-  afternoon,
-  evening
-}
+enum TimeOfDay { any, morning, afternoon, evening }
 
 class ScheduledWorkout extends Workout {
   /// (TimeOfDay, int, bool) = (time, planned reps/seconds/units, completed)
-  List<(TimeOfDay, int, bool)> schedule;
+  List<(TimeOfDay, int, int)> schedule;
   int intensityFactor;
 
   ScheduledWorkout({
@@ -110,15 +96,17 @@ class ScheduledWorkout extends Workout {
     super.videoExplanationUrl,
     // own field
     required this.schedule,
-    required this.intensityFactor
+    required this.intensityFactor,
   });
 
-  String get durationString => workoutType == WorkoutType.dynamic ? '${(baseSeconds ?? 0) * intensityFactor} Sekunden' : '${(baseReps ?? 0) * intensityFactor} Wiederholungen';
+  String get durationString => workoutType == WorkoutType.static
+      ? '${(baseSeconds ?? 0) * intensityFactor} Sekunden'
+      : '${(baseReps ?? 0) * intensityFactor} Wiederholungen';
 
   factory ScheduledWorkout.fromBaseWorkout(
     Workout base,
-    List<(TimeOfDay, int, bool)> schedule,
-    int intensityFactor
+    List<(TimeOfDay, int, int)> schedule,
+    int intensityFactor,
   ) {
     return ScheduledWorkout(
       id: base.id,
@@ -133,15 +121,14 @@ class ScheduledWorkout extends Workout {
       baseSeconds: base.baseSeconds,
       videoExplanationUrl: base.videoExplanationUrl,
       schedule: schedule,
-      intensityFactor: intensityFactor, // Default intensity factor, can be adjusted as needed
+      intensityFactor:
+          intensityFactor, // Default intensity factor, can be adjusted as needed
     );
-
-    
   }
 
   factory ScheduledWorkout.fromJson(Map<String, dynamic> json) {
     Workout baseWorkout = Workout.fromJson(json);
-    List<(TimeOfDay, int, bool)> schedule = [];
+    List<(TimeOfDay, int, int)> schedule = [];
     if (json['schedule'] != null) {
       for (var entry in json['schedule']) {
         TimeOfDay timeOfDay = TimeOfDay.values.firstWhere(
@@ -149,7 +136,7 @@ class ScheduledWorkout extends Workout {
           orElse: () => TimeOfDay.any,
         );
         int plannedUnits = entry['plannedUnits'] as int;
-        bool completed = entry['completed'] as bool? ?? false;
+        int completed = entry['completedUnits'] as int;
         schedule.add((timeOfDay, plannedUnits, completed));
       }
     }
@@ -173,18 +160,21 @@ class ScheduledWorkout extends Workout {
   }
 
   Map<String, dynamic> toJson() {
-      final baseJson = super.toJson();
-      baseJson.addAll({
-        'schedule': schedule
-            .map((entry) => {
-                  'timeOfDay': entry.$1.name,
-                  'plannedUnits': entry.$2,
-                })
-            .toList(),
-        'intensityFactor': intensityFactor,
-      });
-      return baseJson;
-    }
+    final baseJson = super.toJson();
+    baseJson.addAll({
+      'schedule': schedule
+          .map(
+            (entry) => {
+              'timeOfDay': entry.$1.name,
+              'plannedUnits': entry.$2,
+              'completedUnits': entry.$3,
+            },
+          )
+          .toList(),
+      'intensityFactor': intensityFactor,
+    });
+    return baseJson;
+  }
 
   Future<void> saveAsDailyWorkoutPlan() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -194,5 +184,4 @@ class ScheduledWorkout extends Workout {
     String jsonString = jsonEncode(jsonData);
     await prefs.setString('daily_workout_plan', jsonString);
   }
-
 }

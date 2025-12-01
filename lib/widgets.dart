@@ -36,6 +36,7 @@ class _WorkoutSummaryWidgetState extends State<WorkoutSummaryWidget> {
           child: Column(
             children: [
               Text(workout.name),
+              Text(workout.workoutType.name),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
