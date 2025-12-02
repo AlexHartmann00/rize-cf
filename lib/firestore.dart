@@ -1,10 +1,13 @@
 library;
 
+import 'dart:convert';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fitness_app/auth_service.dart';
 import 'package:fitness_app/types/anamnesis.dart';
 import 'package:fitness_app/types/user.dart';
 import 'package:fitness_app/types/workout.dart';
+import 'package:intl/intl.dart';
 
 Future<List<Workout>> loadWorkoutCollection() async {
   CollectionReference<Map<String, dynamic>> collection = FirebaseFirestore
@@ -87,3 +90,24 @@ Future<UserData> loadUserData(String userId) async {
     return UserData(intensityScore: 0.0);
   }
 }
+
+Future<void> uploadWorkoutToServer(ScheduledWorkout workout) async {
+    Map<String, dynamic> jsonData = workout.toJson();
+    String jsonString = jsonEncode(jsonData);
+
+    //upload to Firestore collection users/{userId}/workoutHistory/{datestring}
+    // with datestring = yyyy-MM-dd
+
+    String userId = authServiceNotifier.value.currentUser?.uid ?? '';
+    DateFormat df = DateFormat('yyyy-MM-dd');
+    String dateString = df.format(DateTime.now());
+
+    await FirebaseFirestore
+      .instance
+      .collection('users')
+      .doc(userId)
+      .collection('workoutHistory')
+      .doc(dateString).set(jsonData);
+
+    await workout.saveAsDailyWorkoutPlan();
+  }

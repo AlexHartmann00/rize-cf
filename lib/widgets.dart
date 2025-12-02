@@ -1,8 +1,8 @@
 import 'package:fitness_app/base_widgets.dart';
-import 'package:fitness_app/firestore.dart' show saveAnamnesisResponse;
+import 'package:fitness_app/firestore.dart' show saveAnamnesisResponse, uploadWorkoutToServer;
 import 'package:fitness_app/types/anamnesis.dart';
 import 'package:fitness_app/types/workout.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide TimeOfDay;
 
 class WorkoutSummaryWidget extends StatefulWidget {
   Workout workout;
@@ -271,5 +271,119 @@ class _AnamnesisQuestionnaireWidgetState
         ),
       ),
     );
+  }
+}
+
+class WorkoutScheduleWidget extends StatefulWidget {
+  ScheduledWorkout workout;
+  WorkoutScheduleWidget({super.key, required this.workout});
+
+  @override
+  State<WorkoutScheduleWidget> createState() => _WorkoutScheduleWidgetState();
+}
+
+class _WorkoutScheduleWidgetState extends State<WorkoutScheduleWidget> {
+  @override
+  Widget build(BuildContext context) {
+    List<Widget> scheduleEntries = [];
+    
+    int i = 1;
+    for((TimeOfDay, int, int) scheduleEntry in widget.workout.schedule) {
+      scheduleEntries.add(Column(
+        children: [
+          Text('Runde $i', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 22),),
+          SizedBox(height: 5,),
+          _buildScheduleEntry(scheduleEntry)
+          
+        ],
+      ));
+
+      if(i < widget.workout.schedule.length){
+        scheduleEntries.add(
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: VerticalDivider(
+              color: Colors.black,
+              width: 6,
+            ),
+          )
+        );
+      }
+
+
+      i++;
+    }
+
+
+    return IntrinsicHeight(
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
+        children: scheduleEntries,),
+    );
+  }
+
+  Widget _buildScheduleEntry(
+      (TimeOfDay, int, int) scheduleEntry) {
+    TimeOfDay timeOfDay = scheduleEntry.$1;
+    int plannedUnits = scheduleEntry.$2;
+    int completedUnits = scheduleEntry.$3;
+
+    bool completed = plannedUnits <= completedUnits;
+
+    return Column(
+      children: [
+        
+        if(timeOfDay != TimeOfDay.any)
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.access_time, color: Colors.white,),
+              SizedBox(width: 5,),
+              Text(_timeOfDayToString(timeOfDay), style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 18),),
+            ],
+          ),
+        Text(widget.workout.durationStringShort, style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 14),),
+
+        IconButton(
+          onPressed: completed ? (){} : () async {
+            setState(() {
+              completedUnits++;
+              if(completedUnits > plannedUnits) {
+                completedUnits = plannedUnits;
+              }
+              int index = widget.workout.schedule.indexOf(scheduleEntry);
+              widget.workout.schedule[index] = (timeOfDay, plannedUnits, completedUnits);
+            });
+            await uploadWorkoutToServer(widget.workout);
+          }, icon: Container(
+            width: 90,
+            height: 30,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              border: Border.all(color: Colors.transparent),
+              borderRadius: BorderRadius.circular(20)),
+            child: Center(
+              child: completed ? Icon(Icons.check, color: Colors.green,) : Text('LOS', style: TextStyle(color: Theme.of(context).primaryColorDark, fontWeight: FontWeight.bold)),
+            ),
+            ),
+          )
+        
+        
+      ],
+    );
+  }
+
+  String _timeOfDayToString(TimeOfDay timeOfDay) {
+    switch (timeOfDay) {
+      case TimeOfDay.morning:
+        return 'Morgens';
+      case TimeOfDay.afternoon:
+        return 'Nachmittags';
+      case TimeOfDay.evening:
+        return 'Abends';
+      case TimeOfDay.any:
+        return 'Beliebig';
+    }
   }
 }

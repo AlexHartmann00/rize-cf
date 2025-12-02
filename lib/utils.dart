@@ -35,6 +35,9 @@ Future<ScheduledWorkout?> loadDailyWorkoutPlan() async {
   }
   final Map<String, dynamic> jsonData = jsonDecode(jsonString);
 
+  if((jsonData['day_planned'] as String).length != 10) {
+    return null;
+  }
   if(DateTime.parse(jsonData['day_planned'] as String).difference(DateTime.now()).inDays != 0) {
     return null;
   }

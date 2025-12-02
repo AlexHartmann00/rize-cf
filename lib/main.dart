@@ -399,6 +399,11 @@ class _HomePageSlotMachineWidgetState extends State<HomePageSlotMachineWidget> {
 
   bool showSlotMachine = false;
 
+  TextStyle baseTextStyle = const TextStyle(
+    fontSize: 22,
+    color: Colors.white,
+  );
+
   @override
   Widget build(BuildContext context) {
     //TODO: Check that user data is always loaded. Currently, if it is not loaded, it will be disregarded
@@ -430,13 +435,13 @@ class _HomePageSlotMachineWidgetState extends State<HomePageSlotMachineWidget> {
     ]; //TODO: FIlter based on user fitness
     List<List<(TimeOfDay, int, int)>> schedules = [
       [(TimeOfDay.morning, 1, 0), (TimeOfDay.evening, 1, 0)],
-      [(TimeOfDay.any, 3, 0)],
+      [(TimeOfDay.any, 1, 0), (TimeOfDay.any, 1, 0), (TimeOfDay.any, 1, 0)],
       [(TimeOfDay.morning, 1, 0)],
     ];
 
     SharedPreferences.getInstance().then((prefs) async {
-      bool questionnaireSubmitted = prefs.getBool('anamnesisDone') ?? true;
-      if (questionnaireSubmitted) {
+      bool questionnaireSubmitted = true; //TODO:prefs.getBool('anamnesisDone') ?? true;
+      if (!questionnaireSubmitted) {
         AnamnesisQuestionnaire questionnaire =
             await loadAnamnesisQuestionnaire();
         Navigator.of(context).push(
@@ -513,41 +518,81 @@ class _HomePageSlotMachineWidgetState extends State<HomePageSlotMachineWidget> {
                 ).textTheme.headlineMedium!.copyWith(color: Colors.white),
               ),
               SizedBox(height: 10),
-              WorkoutSummaryWidget(workout: globals.dailyWorkoutPlan!),
-              SizedBox(height: 10),
               Text(
-                'Zeitplan',
+                globals.dailyWorkoutPlan!.name,
+                textAlign: TextAlign.center,
                 style: Theme.of(
                   context,
-                ).textTheme.headlineMedium!.copyWith(color: Colors.white),
-              ),
-              globals.dailyWorkoutPlan!.schedule.isEmpty
-                  ? Text(
-                      'Kein Zeitplan festgelegt',
-                      style: TextStyle(color: Colors.white),
-                    )
-                  : Column(
-                      children: globals.dailyWorkoutPlan!.schedule
-                          .map(
-                            (entry) => Padding(
-                              padding: const EdgeInsets.all(4.0),
-                              child: scheduleEntryWidget(entry),
-                            ),
-                          )
-                          .toList(),
+                ).textTheme.headlineLarge!.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
                     ),
-              SizedBox(height: 20),
+              ),
+              SizedBox(height: 10),
+              InkWell(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                  Icon(Icons.play_circle, color: Theme.of(context).primaryColorDark),
+                  SizedBox(width: 5),
+                  Text(
+                    'Technik ansehen',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 20
+                    ),
+                  ),
+                ],),
+              ),
+              SizedBox(height: 100),
+              WorkoutScheduleWidget(
+                workout: globals.dailyWorkoutPlan!,
+              ),
+              Expanded(child: SizedBox(height: 20)),
               Text(
                 globals.dailyWorkoutPlan!.durationString,
                 style: TextStyle(color: Colors.white),
               ),
+              SizedBox(height: 20,)
             ],
           )
         : SizedBox();
 
+
+    Widget workoutCompletedWidget = Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Column(children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.check_circle, color: Colors.green, size: 100),
+            SizedBox(height: 10),
+            Text(
+              'GESCHAFFT!',
+              textAlign: TextAlign.center,
+              style: Theme.of(
+                context,
+              ).textTheme.headlineMedium!.copyWith(color: Colors.white),
+            ),
+          ],
+        ),
+        Text(
+          globals.dailyWorkoutPlan!.name,
+          style: baseTextStyle,
+        ),
+        Text('Impact ${globals.dailyWorkoutPlan!.impactLevel.name}', style: baseTextStyle,),
+        Text('Score ${globals.dailyWorkoutPlan!.impactScore}', style: baseTextStyle,),
+        Text('Nächster Spin in ${24 - DateTime.now().hour} Stunden', style: baseTextStyle,),
+        LinearProgressIndicator(value: DateTime.now().hour / 24),
+        
+      ],),
+    );
+
     return Center(
       child: globals.dailyWorkoutPlan != null
-          ? dailyWorkoutChosenWidget
+          ? (globals.dailyWorkoutPlan!.isCompleted ? workoutCompletedWidget : dailyWorkoutChosenWidget)
           : Column(
               mainAxisAlignment: showSlotMachine
                   ? MainAxisAlignment.start

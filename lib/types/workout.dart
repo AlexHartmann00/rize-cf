@@ -1,7 +1,10 @@
 import 'dart:convert';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:fitness_app/auth_service.dart';
 import 'package:fitness_app/utils.dart' as utils;
 import 'package:fitness_app/types/muscle_group.dart';
+import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 enum WorkoutType { static, dynamic }
@@ -99,9 +102,22 @@ class ScheduledWorkout extends Workout {
     required this.intensityFactor,
   });
 
-  String get durationString => workoutType == WorkoutType.static
+  String get durationString => baseSeconds != null
       ? '${(baseSeconds ?? 0) * intensityFactor} Sekunden'
       : '${(baseReps ?? 0) * intensityFactor} Wiederholungen';
+
+  String get durationStringShort => baseSeconds != null
+      ? '${(baseSeconds ?? 0) * intensityFactor} Sek.'
+      : '${(baseReps ?? 0) * intensityFactor} Wdh.';
+
+  bool get isCompleted {
+    for (var entry in schedule) {
+      if (entry.$3 < entry.$2) {
+        return false;
+      }
+    }
+    return true;
+  }
 
   factory ScheduledWorkout.fromBaseWorkout(
     Workout base,
@@ -180,8 +196,11 @@ class ScheduledWorkout extends Workout {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     Map<String, dynamic> jsonData = toJson();
     DateTime now = DateTime.now();
-    jsonData['day_planned'] = '${now.year}-${now.month}-${now.day}';
+    DateFormat df = DateFormat('yyyy-MM-dd');
+    jsonData['day_planned'] = df.format(now);
     String jsonString = jsonEncode(jsonData);
     await prefs.setString('daily_workout_plan', jsonString);
   }
+
+  
 }
