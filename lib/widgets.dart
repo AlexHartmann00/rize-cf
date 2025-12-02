@@ -293,7 +293,7 @@ class _WorkoutScheduleWidgetState extends State<WorkoutScheduleWidget> {
         children: [
           Text('Runde $i', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 22),),
           SizedBox(height: 5,),
-          _buildScheduleEntry(scheduleEntry)
+          _buildScheduleEntry(scheduleEntry, i-1)
           
         ],
       ));
@@ -324,7 +324,7 @@ class _WorkoutScheduleWidgetState extends State<WorkoutScheduleWidget> {
   }
 
   Widget _buildScheduleEntry(
-      (TimeOfDay, int, int) scheduleEntry) {
+      (TimeOfDay, int, int) scheduleEntry, int entryIndex) {
     TimeOfDay timeOfDay = scheduleEntry.$1;
     int plannedUnits = scheduleEntry.$2;
     int completedUnits = scheduleEntry.$3;
@@ -347,15 +347,45 @@ class _WorkoutScheduleWidgetState extends State<WorkoutScheduleWidget> {
 
         IconButton(
           onPressed: completed ? (){} : () async {
-            setState(() {
-              completedUnits++;
-              if(completedUnits > plannedUnits) {
-                completedUnits = plannedUnits;
+            if(timeOfDay != TimeOfDay.any) {
+              DateTime now = DateTime.now();
+              if((timeOfDay == TimeOfDay.morning && (now.hour < 5 || now.hour >= 12)) ||
+                 (timeOfDay == TimeOfDay.afternoon && (now.hour < 12 || now.hour >= 17)) ||
+                 (timeOfDay == TimeOfDay.evening && (now.hour < 17 || now.hour >= 22))) {
+                // show alert dialog that workout can only be completed in the specified time frame
+                showDialog(
+                  context: context,
+                  builder: (context) {
+                    return AlertDialog(
+                      title: Text('Nicht im richtigen Zeitraum'),
+                      content: Text('Dieses Training kann nur im angegebenen Zeitraum abgeschlossen werden.'),
+                      actions: [
+                        TextButton(
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                          },
+                          child: Text('OK'),
+                        ),
+                      ],
+                    );
+                  },
+                );
+                return;
               }
-              int index = widget.workout.schedule.indexOf(scheduleEntry);
-              widget.workout.schedule[index] = (timeOfDay, plannedUnits, completedUnits);
-            });
-            await uploadWorkoutToServer(widget.workout);
+            }
+
+            Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => WorkoutExecutionPage(workout: widget.workout, scheduleEntryIndex: entryIndex,)),
+            );
+            // setState(() {
+            //   completedUnits++;
+            //   if(completedUnits > plannedUnits) {
+            //     completedUnits = plannedUnits;
+            //   }
+            //   int index = widget.workout.schedule.indexOf(scheduleEntry);
+            //   widget.workout.schedule[index] = (timeOfDay, plannedUnits, completedUnits);
+            // });
+            // await uploadWorkoutToServer(widget.workout);
           }, icon: Container(
             width: 90,
             height: 30,
@@ -385,5 +415,102 @@ class _WorkoutScheduleWidgetState extends State<WorkoutScheduleWidget> {
       case TimeOfDay.any:
         return 'Beliebig';
     }
+  }
+}
+
+class WorkoutExecutionPage extends StatefulWidget {
+  ScheduledWorkout workout;
+  int scheduleEntryIndex;
+  WorkoutExecutionPage({super.key, required this.workout, required this.scheduleEntryIndex});
+  
+
+  @override
+  State<WorkoutExecutionPage> createState() => _WorkoutExecutionPageState();
+}
+
+class _WorkoutExecutionPageState extends State<WorkoutExecutionPage> {
+  //TODO: Possibility to start another set of reps/seconds if the user wants to do more than planned
+  //TODO: Implement thresholds etc. on Firebase side
+  //TODO: Login via Apple and Google
+  //TODO: After workout, show feedback icons for workout difficulty (1-5)
+  //10 sec timer before start of the timer "get into position"
+  //+/- buttons for reps-dependent workouts
+
+  bool showTimer = false;
+  int timerSeconds = 0;
+  bool timerCompleted = false;
+  @override
+  Widget build(BuildContext context) {
+    return RizeScaffold(
+      appBar: rizeAppBar,
+      body: Column(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          Row(),
+          Text('Runde ${widget.scheduleEntryIndex + 1}', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 22),),
+          Text('${widget.workout.durationString}', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 18),),
+          if(widget.workout.baseSeconds != null && !showTimer && !timerCompleted)
+            ElevatedButton(
+              onPressed: () {
+                setState(() {
+                  showTimer = true;
+                  timerSeconds = (widget.workout.baseSeconds ?? 0) * widget.workout.intensityFactor;
+                  Future.doWhile( () async {
+                    if(!mounted) return false;
+                    await Future.delayed(Duration(seconds: 1));
+                    setState(() {
+                      timerSeconds-=10;
+                    });
+                    if(timerSeconds <= 0) {
+                      setState(() {
+                        showTimer = false;
+                        timerCompleted = true;
+                      });
+                    }
+                    return showTimer;
+                  });
+                });
+              },
+              child: Text('Timer starten'),
+            ),
+          if(showTimer && widget.workout.baseSeconds != null)
+            Text(timerSeconds.toString(), style: TextStyle(fontSize: 48, color: Colors.white, fontWeight: FontWeight.bold),),
+          if(timerCompleted)
+            IconButton(
+              onPressed: () async {
+                setState(() {
+                  showTimer = false;
+                  widget.workout.schedule[widget.scheduleEntryIndex] =
+                    (widget.workout.schedule[widget.scheduleEntryIndex].$1,
+                    widget.workout.schedule[widget.scheduleEntryIndex].$2,
+                    widget.workout.schedule[widget.scheduleEntryIndex].$2
+                    );
+                });
+                
+                await uploadWorkoutToServer(widget.workout);
+                Navigator.of(context).pop();
+                
+              },
+              icon: Container(
+                width: 200,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  border: Border.all(color: Colors.transparent),
+                  borderRadius: BorderRadius.circular(20)),
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Row(
+                    children: [
+                      Text('Runde abschließen', style: TextStyle(color: Theme.of(context).primaryColorDark, fontWeight: FontWeight.bold)),
+                      SizedBox(width: 10),
+                      Icon(Icons.check, color: Colors.green,),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+        ],
+      )
+    );
   }
 }

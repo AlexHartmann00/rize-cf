@@ -204,3 +204,15 @@ class ScheduledWorkout extends Workout {
 
   
 }
+
+class WorkoutScheduleEntry{
+  TimeOfDay timeOfDay;
+  int plannedUnits;
+  int completedUnits;
+
+  WorkoutScheduleEntry({
+    required this.timeOfDay,
+    required this.plannedUnits,
+    required this.completedUnits,
+  });
+}

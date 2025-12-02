@@ -51,10 +51,8 @@ void main() async {
   }
 
   //TODO: remove this; only for testing
-  await authServiceNotifier.value.signOut();
-  loadWorkoutCollection().then((value) {
-    data.workoutLibrary = value;
-  });
+  //await authServiceNotifier.value.signOut();
+  data.workoutLibrary = await loadWorkoutCollection();
 
   globals.dailyWorkoutPlan = await loadDailyWorkoutPlan();
   runApp(const MyApp());
@@ -560,7 +558,7 @@ class _HomePageSlotMachineWidgetState extends State<HomePageSlotMachineWidget> {
         : SizedBox();
 
 
-    Widget workoutCompletedWidget = Padding(
+    Widget workoutCompletedWidget = globals.dailyWorkoutPlan != null ? Padding(
       padding: const EdgeInsets.all(8.0),
       child: Column(children: [
         Row(
@@ -588,7 +586,7 @@ class _HomePageSlotMachineWidgetState extends State<HomePageSlotMachineWidget> {
         LinearProgressIndicator(value: DateTime.now().hour / 24),
         
       ],),
-    );
+    ) : SizedBox();
 
     return Center(
       child: globals.dailyWorkoutPlan != null
