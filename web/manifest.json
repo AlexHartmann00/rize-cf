@@ -1,6 +1,6 @@
 {
-    "name": "fitness_app",
-    "short_name": "fitness_app",
+    "name": "rize",
+    "short_name": "rize",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

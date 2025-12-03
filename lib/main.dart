@@ -1,24 +1,24 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:fitness_app/auth_service.dart';
-import 'package:fitness_app/base_widgets.dart';
-import 'package:fitness_app/firebase_options.dart';
-import 'package:fitness_app/firestore.dart';
-import 'package:fitness_app/globals.dart' as globals;
-import 'package:fitness_app/slot_machine.dart'
+import 'package:rize/auth_service.dart';
+import 'package:rize/base_widgets.dart';
+import 'package:rize/firebase_options.dart';
+import 'package:rize/firestore.dart';
+import 'package:rize/globals.dart' as globals;
+import 'package:rize/slot_machine.dart'
     show SlotMachine, SlotMachineController;
-import 'package:fitness_app/types/anamnesis.dart';
-import 'package:fitness_app/types/user.dart' show UserData;
-import 'package:fitness_app/types/workout.dart';
-import 'package:fitness_app/utils.dart' show loadDailyWorkoutPlan;
-import 'package:fitness_app/widgets.dart';
-import 'package:fitness_app/workout_library.dart';
+import 'package:rize/types/anamnesis.dart';
+import 'package:rize/types/user.dart' show UserData;
+import 'package:rize/types/workout.dart';
+import 'package:rize/utils.dart' show loadDailyWorkoutPlan;
+import 'package:rize/widgets.dart';
+import 'package:rize/workout_library.dart';
 import 'package:flutter/material.dart' hide TimeOfDay;
 import 'dart:convert';
 import 'dart:math';
 import 'package:flutter/services.dart' show rootBundle;
-import 'package:fitness_app/globals.dart' as data;
+import 'package:rize/globals.dart' as data;
 import 'package:shared_preferences/shared_preferences.dart';
 
 //TODO: Daily workout in shared preferences

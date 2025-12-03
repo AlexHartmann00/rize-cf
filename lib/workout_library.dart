@@ -1,2 +1,2 @@
-import 'package:fitness_app/types/workout.dart';
+import 'package:rize/types/workout.dart';
 

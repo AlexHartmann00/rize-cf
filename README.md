@@ -1,4 +1,4 @@
-# fitness_app
+# rize
 
 A new Flutter project.
 

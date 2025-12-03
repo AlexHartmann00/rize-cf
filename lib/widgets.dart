@@ -1,7 +1,7 @@
-import 'package:fitness_app/base_widgets.dart';
-import 'package:fitness_app/firestore.dart' show saveAnamnesisResponse, uploadWorkoutToServer;
-import 'package:fitness_app/types/anamnesis.dart';
-import 'package:fitness_app/types/workout.dart';
+import 'package:rize/base_widgets.dart';
+import 'package:rize/firestore.dart' show saveAnamnesisResponse, uploadWorkoutToServer;
+import 'package:rize/types/anamnesis.dart';
+import 'package:rize/types/workout.dart';
 import 'package:flutter/material.dart' hide TimeOfDay;
 
 class WorkoutSummaryWidget extends StatefulWidget {

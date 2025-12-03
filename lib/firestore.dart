@@ -3,10 +3,10 @@ library;
 import 'dart:convert';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:fitness_app/auth_service.dart';
-import 'package:fitness_app/types/anamnesis.dart';
-import 'package:fitness_app/types/user.dart';
-import 'package:fitness_app/types/workout.dart';
+import 'package:rize/auth_service.dart';
+import 'package:rize/types/anamnesis.dart';
+import 'package:rize/types/user.dart';
+import 'package:rize/types/workout.dart';
 import 'package:intl/intl.dart';
 
 Future<List<Workout>> loadWorkoutCollection() async {

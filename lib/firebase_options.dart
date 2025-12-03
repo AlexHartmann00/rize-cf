@@ -63,7 +63,7 @@ class DefaultFirebaseOptions {
     messagingSenderId: '1004261898852',
     projectId: 'rize-11838',
     storageBucket: 'rize-11838.firebasestorage.app',
-    iosBundleId: 'com.example.fitnessApp',
+    iosBundleId: 'de.coach-flo.rize',
   );
 
 }

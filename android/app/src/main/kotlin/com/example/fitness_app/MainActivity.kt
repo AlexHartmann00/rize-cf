@@ -1,4 +1,4 @@
-package com.example.fitness_app
+package de.coach-flo.rize
 
 import io.flutter.embedding.android.FlutterActivity
 

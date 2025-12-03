@@ -1,5 +1,5 @@
-import 'package:fitness_app/globals.dart' as globals;
-import 'package:fitness_app/main.dart' show HomePageSlotMachineWidget, WorkoutLibraryPage;
+import 'package:rize/globals.dart' as globals;
+import 'package:rize/main.dart' show HomePageSlotMachineWidget, WorkoutLibraryPage;
 import 'package:flutter/material.dart';
 
 class RizeScaffold extends StatefulWidget {

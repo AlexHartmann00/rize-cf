@@ -2,7 +2,7 @@ library;
 
 import 'dart:convert';
 
-import 'package:fitness_app/types/workout.dart';
+import 'package:rize/types/workout.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 Duration parseDuration(String input) {

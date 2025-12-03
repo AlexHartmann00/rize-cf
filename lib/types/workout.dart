@@ -1,9 +1,9 @@
 import 'dart:convert';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:fitness_app/auth_service.dart';
-import 'package:fitness_app/utils.dart' as utils;
-import 'package:fitness_app/types/muscle_group.dart';
+import 'package:rize/auth_service.dart';
+import 'package:rize/utils.dart' as utils;
+import 'package:rize/types/muscle_group.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 

@@ -1,7 +1,7 @@
 library;
 
-import 'package:fitness_app/types/user.dart';
-import 'package:fitness_app/types/workout.dart';
+import 'package:rize/types/user.dart';
+import 'package:rize/types/workout.dart';
 
 late List<Workout> workoutLibrary;
 ScheduledWorkout? dailyWorkoutPlan;
