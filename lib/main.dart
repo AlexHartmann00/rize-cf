@@ -1021,7 +1021,7 @@ class ProgressOverviewContent extends StatelessWidget {
 
         final List<DayImpactPoint> last30 = _last30Points(stats.impactByDay, today);
 
-        final Color textColor = Theme.of(context).colorScheme.onSurface.withOpacity(0.95);
+        final Color textColor = Colors.white;//Theme.of(context).colorScheme.onSurface.withOpacity(0.95);
         final Color card = Theme.of(context).colorScheme.surface.withOpacity(0.10);
 
         return Padding(
@@ -1033,25 +1033,11 @@ class ProgressOverviewContent extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
                   _HeaderRow(
-                    title: 'Serie & Erfolgsstatistik',
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: <Widget>[
-                        const Icon(Icons.local_fire_department, size: 18, color: Colors.orange),
-                        const SizedBox(width: 6),
-                        Text(
-                          '$currentStreak Tage aktiv',
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                fontWeight: FontWeight.w700,
-                                color: textColor,
-                              ),
-                        ),
-                      ],
-                    ),
+                    title: 'Serie & Erfolgsstatistik'
                   ),
                   const SizedBox(height: 14),
               
-                  _StatRow(label: 'Aktuelle Serie', value: '$currentStreak Tage'),
+                  _StatRow(label: 'Aktuelle Serie', value: '🔥 $currentStreak Tage aktiv'),
                   _StatRow(label: 'Beste Serie', value: '$bestStreak Tage'),
                   _StatRow(label: 'Absolvierte Spins', value: '${stats.absoluteSpins}'),
                   _StatRow(label: 'Dynamische Wiederholungen', value: '${stats.dynamicReps}'),
@@ -1381,14 +1367,12 @@ double _progressToNextLevel(final double? score) {
 /* ============================= UI (typed) ============================= */
 
 class _HeaderRow extends StatelessWidget {
-  const _HeaderRow({required this.title, required this.trailing});
+  _HeaderRow({required this.title});
 
   final String title;
-  final Widget trailing;
 
   @override
   Widget build(final BuildContext context) {
-    final Color c = Theme.of(context).colorScheme.onSurface.withOpacity(0.95);
     return Row(
       children: <Widget>[
         Expanded(
@@ -1396,11 +1380,10 @@ class _HeaderRow extends StatelessWidget {
             title,
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.w800,
-                  color: c,
+                  color: Colors.white,
                 ),
           ),
         ),
-        trailing,
       ],
     );
   }
@@ -1414,20 +1397,21 @@ class _StatRow extends StatelessWidget {
 
   @override
   Widget build(final BuildContext context) {
-    final Color c = Theme.of(context).colorScheme.onSurface.withOpacity(0.95);
+    //final Color c = Theme.of(context).colorScheme.onSurface.withOpacity(0.95);
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
         children: <Widget>[
           Expanded(
-            child: Text(label, style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: c)),
+            child: Text(label, style: TextStyle(fontSize: 17),)//, style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: c)),
           ),
           Text(
-            value,
-            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: c,
-                  fontWeight: FontWeight.w800,
-                ),
+            value
+            , style: TextStyle(fontSize: 17)
+            //style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                  //color: c,
+           //       fontWeight: FontWeight.w800,
+            //    ),
           ),
         ],
       ),
@@ -1444,13 +1428,12 @@ class _ImpactRow extends StatelessWidget {
 
   @override
   Widget build(final BuildContext context) {
-    final Color c = Theme.of(context).colorScheme.onSurface.withOpacity(0.95);
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
         children: <Widget>[
           Expanded(
-            child: Text(label, style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: c)),
+            child: Text(label, style: TextStyle(fontSize: 17)),
           ),
           Row(
             mainAxisSize: MainAxisSize.min,
@@ -1458,11 +1441,7 @@ class _ImpactRow extends StatelessWidget {
               Container(width: 12, height: 12, decoration: BoxDecoration(color: dot, shape: BoxShape.circle)),
               const SizedBox(width: 8),
               Text(
-                value,
-                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      color: c,
-                      fontWeight: FontWeight.w800,
-                    ),
+                value, style: TextStyle(fontSize: 17)
               ),
             ],
           ),
