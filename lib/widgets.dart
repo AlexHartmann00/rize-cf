@@ -439,6 +439,7 @@ class _WorkoutExecutionPageState extends State<WorkoutExecutionPage> {
   bool showTimer = false;
   int timerSeconds = 0;
   bool timerCompleted = false;
+  int managedRepetitions = 0;
   @override
   Widget build(BuildContext context) {
     return RizeScaffold(
@@ -447,7 +448,9 @@ class _WorkoutExecutionPageState extends State<WorkoutExecutionPage> {
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
           Row(),
+          Text(widget.workout.name, style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 22),),
           Text('Runde ${widget.scheduleEntryIndex + 1}', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 22),),
+          //if(widget.workout.baseSeconds != null)
           Text('${widget.workout.durationString}', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 18),),
           if(widget.workout.baseSeconds != null && !showTimer && !timerCompleted)
             ElevatedButton(
@@ -475,7 +478,50 @@ class _WorkoutExecutionPageState extends State<WorkoutExecutionPage> {
             ),
           if(showTimer && widget.workout.baseSeconds != null)
             Text(timerSeconds.toString(), style: TextStyle(fontSize: 48, color: Colors.white, fontWeight: FontWeight.bold),),
-          if(timerCompleted)
+          if(widget.workout.baseReps != null)
+          Column(children:[Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+            IconButton(onPressed: (){
+             setState(() {
+              if(managedRepetitions == 0)return;
+               managedRepetitions --;
+             });
+            }, icon: Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(5)
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Icon(Icons.remove),
+              ))),
+            Container(
+              width: 50,
+              height: 50,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(5)
+              ),
+              child: Center(child: Text(managedRepetitions.toString(), style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),))
+            ),
+            IconButton(onPressed: (){
+             setState(() {
+               managedRepetitions ++;
+             });
+            }, icon: Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(5)
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Icon(Icons.add),
+              ))),
+            
+          ],),Text('Wiederholungen geschafft', style: TextStyle(color: Colors.white, fontSize: 25, fontWeight: FontWeight.bold),)
+] ,),
+          if(timerCompleted || widget.workout.baseReps != null)
             IconButton(
               onPressed: () async {
                 setState(() {

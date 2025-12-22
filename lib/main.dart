@@ -17,6 +17,7 @@ import 'package:rize/workout_library.dart';
 import 'package:flutter/material.dart' hide TimeOfDay;
 import 'dart:convert';
 import 'dart:math';
+import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:rize/globals.dart' as data;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -372,7 +373,7 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
       body: switch (globals.navBarIndex) {
         0 => const HomePageSlotMachineWidget(),
-        1 => const Center(child: Text('Fortschritt')),
+        1 => ProgressOverviewContent(userId: globals.authenticatedUserId!),
         2 => const WorkoutLibraryPage(),
         3 => ProfilePage(),
         _ => const Center(child: Text('Unknown')),
@@ -588,9 +589,29 @@ class _HomePageSlotMachineWidgetState extends State<HomePageSlotMachineWidget> {
       ],),
     ) : SizedBox();
 
+    bool dailyPlanActionable = true;
+    if(globals.dailyWorkoutPlan != null){
+      for((TimeOfDay, int, int) workoutStep in globals.dailyWorkoutPlan!.schedule){
+        if(workoutStep.$2 > 0){
+          dailyPlanActionable = false;
+          continue;
+        }
+        TimeOfDay timeOfDay = workoutStep.$1;
+        DateTime now = DateTime.now();
+        bool inCorrectTime = (timeOfDay == TimeOfDay.morning && (now.hour < 5 || now.hour >= 12)) ||
+            (timeOfDay == TimeOfDay.afternoon && (now.hour < 12 || now.hour >= 17)) ||
+            (timeOfDay == TimeOfDay.evening && (now.hour < 17 || now.hour >= 22));
+        if(!inCorrectTime) {
+              dailyPlanActionable = false;
+              break;
+            }
+      }
+    } 
+
+
     return Center(
       child: globals.dailyWorkoutPlan != null
-          ? (globals.dailyWorkoutPlan!.isCompleted ? workoutCompletedWidget : dailyWorkoutChosenWidget)
+          ? (!dailyPlanActionable ? workoutCompletedWidget : dailyWorkoutChosenWidget)
           : Column(
               mainAxisAlignment: showSlotMachine
                   ? MainAxisAlignment.start
@@ -647,31 +668,43 @@ class _HomePageSlotMachineWidgetState extends State<HomePageSlotMachineWidget> {
                   ),
                 ],
                 if (showSlotMachine) ...[
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        border: Border.all(color: Colors.transparent),
-                        borderRadius: BorderRadius.circular(20),
-                        color: Colors.amber,
-                      ),
-                      child: ExpansionTile(
-                        dense: true,
-                        showTrailingIcon: true,
-                        subtitle: null,
-                        trailing: null,
-                        title: Row(
-                          spacing: 5,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.fitness_center),
-                            Text('Filter'),
-                          ],
-                        ),
-                        children: [
-                          Text('Muskelgruppen:'),
-                          Text('Anstrengung:'),
-                        ],
+                  // Padding(
+                  //   padding: const EdgeInsets.all(8.0),
+                  //   child: Container(
+                  //     decoration: BoxDecoration(
+                  //       border: Border.all(color: Colors.transparent),
+                  //       borderRadius: BorderRadius.circular(20),
+                  //       color: Colors.amber,
+                  //     ),
+                  //     child: ExpansionTile(
+                  //       dense: true,
+                  //       showTrailingIcon: true,
+                  //       subtitle: null,
+                  //       trailing: null,
+                  //       title: Row(
+                  //         spacing: 5,
+                  //         mainAxisSize: MainAxisSize.min,
+                  //         children: [
+                  //           Icon(Icons.fitness_center),
+                  //           Text('Filter'),
+                  //         ],
+                  //       ),
+                  //       children: [
+                  //         Text('Muskelgruppen:'),
+                  //         Text('Anstrengung:'),
+                  //       ],
+                  //     ),
+                  //   ),
+                  // ),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white.withAlpha(50),
+                      borderRadius: BorderRadius.circular(20)
+                    ),
+                    child: Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(12.0),
+                        child: Text('Bereit für deinen heutigen Spin?', textAlign: TextAlign.center, style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 25),),
                       ),
                     ),
                   ),
@@ -740,13 +773,13 @@ class _HomePageSlotMachineWidgetState extends State<HomePageSlotMachineWidget> {
                         borderRadius: BorderRadius.circular(15),
                       ),
                       child: Padding(
-                        padding: const EdgeInsets.all(8.0),
+                        padding: const EdgeInsets.all(12.0),
                         child: Text(
                           'DREHEN',
                           style: TextStyle(
                             color: Theme.of(context).primaryColorDark,
                             fontWeight: FontWeight.bold,
-                            fontSize: 25,
+                            fontSize: 28,
                           ),
                         ),
                       ),
@@ -926,6 +959,808 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
         ),
       ),
+    );
+  }
+}
+
+class ProgressOverviewContent extends StatelessWidget {
+  const ProgressOverviewContent({
+    super.key,
+    required this.userId,
+  });
+
+  final String userId;
+
+  @override
+  Widget build(final BuildContext context) {
+    final CollectionReference<Map<String, Object?>> col =
+        FirebaseFirestore.instance.collection('users').doc(userId).collection('workoutHistory');
+
+    return StreamBuilder<QuerySnapshot<Map<String, Object?>>>(
+      // No orderBy => no composite index hassles. We sort locally by parsed date.
+      stream: col.limit(500).snapshots(),
+      builder: (final BuildContext context,
+          final AsyncSnapshot<QuerySnapshot<Map<String, Object?>>> snap) {
+        if (snap.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (snap.hasError) {
+          return Padding(
+            padding: const EdgeInsets.all(16),
+            child: Text('Fehler beim Laden: ${snap.error}'),
+          );
+        }
+
+        final List<QueryDocumentSnapshot<Map<String, Object?>>> docs =
+            snap.data?.docs ?? <QueryDocumentSnapshot<Map<String, Object?>>>[];
+
+        final List<WorkoutDayEntry> entries = <WorkoutDayEntry>[];
+        for (final QueryDocumentSnapshot<Map<String, Object?>> doc in docs) {
+          final DateTime? date = _tryParseDocIdDate(doc.id);
+          if (date == null) continue;
+
+          final Map<String, dynamic> json = _toDynamicMap(doc.data());
+          final ScheduledWorkout workout = ScheduledWorkout.fromJson(json);
+          entries.add(WorkoutDayEntry(date: date, workout: workout));
+        }
+
+        entries.sort((final WorkoutDayEntry a, final WorkoutDayEntry b) => a.date.compareTo(b.date));
+
+        final DateTime now = DateTime.now();
+        final DateTime today = DateTime(now.year, now.month, now.day);
+
+        final Stats stats = Stats.fromEntries(entries);
+
+        final int currentStreak = _computeCurrentStreak(stats.activeDays, today);
+        final int bestStreak = _computeBestStreak(stats.activeDays);
+
+        final DayImpact? lastImpact = stats.lastImpact;
+        final String lastImpactLabel = lastImpact == null
+            ? '—'
+            : '${_impactLevelLabel(lastImpact.impactLevel)} – ${_fmt(lastImpact.score)}';
+
+        final List<DayImpactPoint> last30 = _last30Points(stats.impactByDay, today);
+
+        final Color textColor = Theme.of(context).colorScheme.onSurface.withOpacity(0.95);
+        final Color card = Theme.of(context).colorScheme.surface.withOpacity(0.10);
+
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
+          child: DefaultTextStyle(
+            style: Theme.of(context).textTheme.bodyMedium!.copyWith(color: textColor),
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  _HeaderRow(
+                    title: 'Serie & Erfolgsstatistik',
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: <Widget>[
+                        const Icon(Icons.local_fire_department, size: 18, color: Colors.orange),
+                        const SizedBox(width: 6),
+                        Text(
+                          '$currentStreak Tage aktiv',
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                fontWeight: FontWeight.w700,
+                                color: textColor,
+                              ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+              
+                  _StatRow(label: 'Aktuelle Serie', value: '$currentStreak Tage'),
+                  _StatRow(label: 'Beste Serie', value: '$bestStreak Tage'),
+                  _StatRow(label: 'Absolvierte Spins', value: '${stats.absoluteSpins}'),
+                  _StatRow(label: 'Dynamische Wiederholungen', value: '${stats.dynamicReps}'),
+                  _StatRow(label: 'Statisch gehalten', value: '${(stats.staticSeconds / 60).floor()} min'),
+                  _ImpactRow(
+                    label: 'Letzter Impact',
+                    value: lastImpactLabel,
+                    dot: _impactDotColor(lastImpact?.impactLevel),
+                  ),
+              
+                  const SizedBox(height: 22),
+                  Text(
+                    'Impact Score-Entwicklung',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w800,
+                          color: textColor,
+                        ),
+                  ),
+                  const SizedBox(height: 10),
+                  _ImpactChart(points: last30, cardColor: card, textColor: textColor),
+                  const SizedBox(height: 6),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: Text(
+                      'Letzten 30 Tage',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: textColor.withOpacity(0.8),
+                            fontWeight: FontWeight.w600,
+                          ),
+                    ),
+                  ),
+              
+                  const SizedBox(height: 22),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Expanded(
+                        child: _LevelCard(
+                          level: _levelFromImpact(lastImpact?.score),
+                          progress: _progressToNextLevel(lastImpact?.score),
+                          cardColor: card,
+                          textColor: textColor,
+                        ),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: _HistoryCalendarCard(
+                          month: today,
+                          activeDaysInMonth: _activeDaysInMonth(stats.activeDays, today),
+                          cardColor: card,
+                          textColor: textColor,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+/* ============================= Typed models ============================= */
+
+@immutable
+class WorkoutDayEntry {
+  const WorkoutDayEntry({
+    required this.date,
+    required this.workout,
+  });
+
+  final DateTime date; // normalized yyyy-MM-dd
+  final ScheduledWorkout workout;
+}
+
+@immutable
+class DayImpact {
+  const DayImpact({
+    required this.score,
+    required this.impactLevel,
+  });
+
+  final double score;
+  final ImpactLevel impactLevel;
+}
+
+@immutable
+class DayImpactPoint {
+  const DayImpactPoint({
+    required this.index,
+    required this.date,
+    required this.score,
+  });
+
+  final int index; // 0..29
+  final DateTime date;
+  final double? score; // null if no completed workout that day
+}
+
+@immutable
+class Stats {
+  const Stats({
+    required this.absoluteSpins,
+    required this.dynamicReps,
+    required this.staticSeconds,
+    required this.activeDays,
+    required this.impactByDay,
+    required this.lastImpact,
+  });
+
+  /// With 1 workout/day, "Spins" is best interpreted as completedUnits total.
+  final int absoluteSpins;
+
+  final int dynamicReps;
+  final int staticSeconds;
+
+  /// Active day = completedUnits > 0
+  final Set<DateTime> activeDays;
+
+  /// Only present if completedUnits > 0
+  final Map<DateTime, DayImpact> impactByDay;
+
+  final DayImpact? lastImpact;
+
+  static Stats fromEntries(final List<WorkoutDayEntry> entries) {
+    int spins = 0;
+    int dyn = 0;
+    int statSec = 0;
+
+    final Set<DateTime> active = <DateTime>{};
+    final Map<DateTime, DayImpact> impactByDay = <DateTime, DayImpact>{};
+
+    DayImpact? lastImpact;
+
+    for (final WorkoutDayEntry e in entries) {
+      final DateTime day = DateTime(e.date.year, e.date.month, e.date.day);
+      final ScheduledWorkout w = e.workout;
+
+      final int completedUnits = _completedUnits(w.schedule);
+      if (completedUnits <= 0) {
+        continue;
+      }
+
+      active.add(day);
+      spins += completedUnits;
+
+      if (w.workoutType == WorkoutType.dynamic) {
+        final int repsPerUnit = (w.baseReps ?? 0) * w.intensityFactor;
+        dyn += repsPerUnit * completedUnits;
+      } else {
+        final int secPerUnit = (w.baseSeconds ?? 0) * w.intensityFactor;
+        statSec += secPerUnit * completedUnits;
+      }
+
+      final DayImpact impact = DayImpact(score: w.impactScore, impactLevel: w.impactLevel);
+      impactByDay[day] = impact;
+      lastImpact = impact;
+    }
+
+    return Stats(
+      absoluteSpins: spins,
+      dynamicReps: dyn,
+      staticSeconds: statSec,
+      activeDays: active,
+      impactByDay: impactByDay,
+      lastImpact: lastImpact,
+    );
+  }
+}
+
+int _completedUnits(final List<(TimeOfDay, int, int)> schedule) {
+  int sum = 0;
+  for (final (TimeOfDay, int, int) entry in schedule) {
+    sum += entry.$3;
+  }
+  return sum;
+}
+
+/* ============================= Firestore parsing ============================= */
+
+DateTime? _tryParseDocIdDate(final String id) {
+  // yyyy-MM-dd
+  final List<String> parts = id.split('-');
+  if (parts.length == 3) {
+    final int? y = int.tryParse(parts[0]);
+    final int? m = int.tryParse(parts[1]);
+    final int? d = int.tryParse(parts[2]);
+    if (y != null && m != null && d != null) return DateTime(y, m, d);
+  }
+  // yyyymmdd
+  if (id.length == 8) {
+    final int? y = int.tryParse(id.substring(0, 4));
+    final int? m = int.tryParse(id.substring(4, 6));
+    final int? d = int.tryParse(id.substring(6, 8));
+    if (y != null && m != null && d != null) return DateTime(y, m, d);
+  }
+  return null;
+}
+
+Map<String, dynamic> _toDynamicMap(final Map<String, Object?> src) {
+  final Map<String, dynamic> out = <String, dynamic>{};
+  for (final MapEntry<String, Object?> e in src.entries) {
+    out[e.key] = _toDynamicValue(e.value);
+  }
+  return out;
+}
+
+dynamic _toDynamicValue(final Object? v) {
+  if (v == null) return null;
+  if (v is Map<String, Object?>) return _toDynamicMap(v);
+  if (v is List<Object?>) {
+    final List<dynamic> out = <dynamic>[];
+    for (final Object? x in v) {
+      out.add(_toDynamicValue(x));
+    }
+    return out;
+  }
+  return v;
+}
+
+/* ============================= Streaks / last 30 ============================= */
+
+int _computeCurrentStreak(final Set<DateTime> activeDays, final DateTime today) {
+  if (activeDays.isEmpty) return 0;
+
+  DateTime cursor = today;
+  if (!activeDays.contains(cursor)) {
+    final DateTime yesterday = cursor.subtract(const Duration(days: 1));
+    if (activeDays.contains(yesterday)) {
+      cursor = yesterday;
+    } else {
+      return 0;
+    }
+  }
+
+  int streak = 0;
+  while (activeDays.contains(cursor)) {
+    streak += 1;
+    cursor = cursor.subtract(const Duration(days: 1));
+  }
+  return streak;
+}
+
+int _computeBestStreak(final Set<DateTime> activeDays) {
+  if (activeDays.isEmpty) return 0;
+  final List<DateTime> dates = activeDays.toList()..sort();
+
+  int best = 1;
+  int cur = 1;
+
+  for (int i = 1; i < dates.length; i++) {
+    final int diff = dates[i].difference(dates[i - 1]).inDays;
+    if (diff == 1) {
+      cur += 1;
+      if (cur > best) best = cur;
+    } else if (diff > 0) {
+      cur = 1;
+    }
+  }
+  return best;
+}
+
+List<DayImpactPoint> _last30Points(final Map<DateTime, DayImpact> impactByDay, final DateTime today) {
+  final DateTime start = today.subtract(const Duration(days: 29));
+  final List<DayImpactPoint> out = <DayImpactPoint>[];
+
+  for (int i = 0; i < 30; i++) {
+    final DateTime d = DateTime(start.year, start.month, start.day + i);
+    final DayImpact? imp = impactByDay[d];
+    out.add(DayImpactPoint(index: i, date: d, score: imp?.score));
+  }
+  return out;
+}
+
+Set<int> _activeDaysInMonth(final Set<DateTime> activeDays, final DateTime month) {
+  final Set<int> out = <int>{};
+  for (final DateTime d in activeDays) {
+    if (d.year == month.year && d.month == month.month) out.add(d.day);
+  }
+  return out;
+}
+
+/* ============================= Formatting / colors ============================= */
+
+String _fmt(final double v) => v.toStringAsFixed(2).replaceAll('.', ',');
+
+String _impactLevelLabel(final ImpactLevel level) {
+  switch (level) {
+    case ImpactLevel.low:
+      return 'Low';
+    case ImpactLevel.medium:
+      return 'Medium';
+    case ImpactLevel.high:
+      return 'High';
+  }
+}
+
+Color _impactDotColor(final ImpactLevel? level) {
+  if (level == null) return Colors.grey;
+  switch (level) {
+    case ImpactLevel.low:
+      return Colors.green;
+    case ImpactLevel.medium:
+      return Colors.orange;
+    case ImpactLevel.high:
+      return Colors.red;
+  }
+}
+
+String _levelFromImpact(final double? score) {
+  if (score == null) return 'Beginner';
+  if (score < 0.35) return 'Beginner';
+  if (score < 0.70) return 'Intermediate';
+  return 'Advanced';
+}
+
+double _progressToNextLevel(final double? score) {
+  if (score == null) return 0.0;
+  if (score < 0.35) return (score / 0.35).clamp(0.0, 1.0);
+  if (score < 0.70) return ((score - 0.35) / (0.70 - 0.35)).clamp(0.0, 1.0);
+  return 1.0;
+}
+
+/* ============================= UI (typed) ============================= */
+
+class _HeaderRow extends StatelessWidget {
+  const _HeaderRow({required this.title, required this.trailing});
+
+  final String title;
+  final Widget trailing;
+
+  @override
+  Widget build(final BuildContext context) {
+    final Color c = Theme.of(context).colorScheme.onSurface.withOpacity(0.95);
+    return Row(
+      children: <Widget>[
+        Expanded(
+          child: Text(
+            title,
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.w800,
+                  color: c,
+                ),
+          ),
+        ),
+        trailing,
+      ],
+    );
+  }
+}
+
+class _StatRow extends StatelessWidget {
+  const _StatRow({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(final BuildContext context) {
+    final Color c = Theme.of(context).colorScheme.onSurface.withOpacity(0.95);
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        children: <Widget>[
+          Expanded(
+            child: Text(label, style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: c)),
+          ),
+          Text(
+            value,
+            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                  color: c,
+                  fontWeight: FontWeight.w800,
+                ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ImpactRow extends StatelessWidget {
+  const _ImpactRow({required this.label, required this.value, required this.dot});
+
+  final String label;
+  final String value;
+  final Color dot;
+
+  @override
+  Widget build(final BuildContext context) {
+    final Color c = Theme.of(context).colorScheme.onSurface.withOpacity(0.95);
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        children: <Widget>[
+          Expanded(
+            child: Text(label, style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: c)),
+          ),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              Container(width: 12, height: 12, decoration: BoxDecoration(color: dot, shape: BoxShape.circle)),
+              const SizedBox(width: 8),
+              Text(
+                value,
+                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      color: c,
+                      fontWeight: FontWeight.w800,
+                    ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ImpactChart extends StatelessWidget {
+  const _ImpactChart({
+    required this.points,
+    required this.cardColor,
+    required this.textColor,
+  });
+
+  final List<DayImpactPoint> points;
+  final Color cardColor;
+  final Color textColor;
+
+  @override
+  Widget build(final BuildContext context) {
+    final List<FlSpot> spots = <FlSpot>[];
+    for (final DayImpactPoint p in points) {
+      if (p.score != null) {
+        spots.add(FlSpot(p.index.toDouble(), p.score!));
+      }
+    }
+
+    final List<double> ys = spots.map((final FlSpot s) => s.y).toList();
+    final double minY = ys.isEmpty ? 0.0 : ys.reduce((final double a, final double b) => a < b ? a : b);
+    final double maxY = ys.isEmpty ? 0.25 : ys.reduce((final double a, final double b) => a > b ? a : b);
+
+    final double paddedMin = (minY - 0.02).clamp(0.0, 10.0);
+    final double paddedMax = (maxY + 0.02).clamp(0.0, 10.0);
+
+    final Color axis = textColor.withOpacity(0.85);
+    final Color grid = textColor.withOpacity(0.12);
+
+    return Container(
+      height: 150,
+      padding: const EdgeInsets.fromLTRB(12, 10, 12, 6),
+      decoration: BoxDecoration(
+        color: cardColor,
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: LineChart(
+        LineChartData(
+          minX: 0,
+          maxX: 29,
+          minY: paddedMin,
+          maxY: paddedMax,
+          gridData: FlGridData(
+            show: true,
+            drawVerticalLine: false,
+            horizontalInterval: (paddedMax - paddedMin) <= 0 ? 0.05 : (paddedMax - paddedMin) / 4,
+            getDrawingHorizontalLine: (final double _) => FlLine(color: grid, strokeWidth: 1),
+          ),
+          titlesData: FlTitlesData(
+            topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+            rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+            bottomTitles: AxisTitles(
+              sideTitles: SideTitles(
+                showTitles: true,
+                interval: 7,
+                reservedSize: 18,
+                getTitlesWidget: (final double value, final TitleMeta meta) {
+                  final int idx = value.round();
+                  if (idx < 0 || idx >= points.length) return const SizedBox.shrink();
+                  final DateTime d = points[idx].date;
+                  final String txt = '${d.day}.${d.month}.';
+                  return Padding(
+                    padding: const EdgeInsets.only(top: 6),
+                    child: Text(txt, style: TextStyle(color: axis, fontSize: 10)),
+                  );
+                },
+              ),
+            ),
+            leftTitles: AxisTitles(
+              sideTitles: SideTitles(
+                showTitles: true,
+                reservedSize: 40,
+                interval: (paddedMax - paddedMin) <= 0 ? 0.05 : (paddedMax - paddedMin) / 4,
+                getTitlesWidget: (final double value, final TitleMeta meta) {
+                  return Text(_fmt(value), style: TextStyle(color: axis, fontSize: 10));
+                },
+              ),
+            ),
+          ),
+          borderData: FlBorderData(show: false),
+          lineBarsData: <LineChartBarData>[
+            LineChartBarData(
+              spots: spots,
+              isCurved: true,
+              barWidth: 3,
+              dotData: const FlDotData(show: true),
+              belowBarData: BarAreaData(show: false),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _LevelCard extends StatelessWidget {
+  const _LevelCard({
+    required this.level,
+    required this.progress,
+    required this.cardColor,
+    required this.textColor,
+  });
+
+  final String level;
+  final double progress;
+  final Color cardColor;
+  final Color textColor;
+
+  @override
+  Widget build(final BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(color: cardColor, borderRadius: BorderRadius.circular(14)),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Text('Level',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    color: textColor,
+                  )),
+          const SizedBox(height: 8),
+          Text(level,
+              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    color: textColor,
+                  )),
+          const SizedBox(height: 12),
+          Text('Fortschritt', style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: textColor)),
+          const SizedBox(height: 8),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(999),
+            child: LinearProgressIndicator(
+              value: progress.clamp(0.0, 1.0),
+              minHeight: 10,
+              backgroundColor: textColor.withOpacity(0.12),
+            ),
+          ),
+          const SizedBox(height: 6),
+          Align(
+            alignment: Alignment.centerRight,
+            child: Text(
+              '${(progress * 100).round()}%',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: textColor,
+                    fontWeight: FontWeight.w800,
+                  ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _HistoryCalendarCard extends StatelessWidget {
+  const _HistoryCalendarCard({
+    required this.month,
+    required this.activeDaysInMonth,
+    required this.cardColor,
+    required this.textColor,
+  });
+
+  final DateTime month;
+  final Set<int> activeDaysInMonth;
+  final Color cardColor;
+  final Color textColor;
+
+  @override
+  Widget build(final BuildContext context) {
+    final DateTime first = DateTime(month.year, month.month, 1);
+    final int daysInMonth = DateTime(month.year, month.month + 1, 0).day;
+
+    final int firstWeekday = first.weekday; // Mon=1 .. Sun=7
+    final int leadingEmpty = (firstWeekday - DateTime.monday) % 7;
+
+    const List<String> dow = <String>['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
+
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(color: cardColor, borderRadius: BorderRadius.circular(14)),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Text('Historie',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    color: textColor,
+                  )),
+          const SizedBox(height: 10),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: dow
+                .map((final String s) => SizedBox(
+                      width: 22,
+                      child: Text(
+                        s,
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: textColor.withOpacity(0.85),
+                              fontWeight: FontWeight.w800,
+                            ),
+                      ),
+                    ))
+                .toList(),
+          ),
+          const SizedBox(height: 8),
+          _CalendarGrid(
+            leadingEmpty: leadingEmpty,
+            daysInMonth: daysInMonth,
+            activeDays: activeDaysInMonth,
+            textColor: textColor,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CalendarGrid extends StatelessWidget {
+  const _CalendarGrid({
+    required this.leadingEmpty,
+    required this.daysInMonth,
+    required this.activeDays,
+    required this.textColor,
+  });
+
+  final int leadingEmpty;
+  final int daysInMonth;
+  final Set<int> activeDays;
+  final Color textColor;
+
+  @override
+  Widget build(final BuildContext context) {
+    final int totalCells = leadingEmpty + daysInMonth;
+    final int rows = (totalCells / 7).ceil().clamp(1, 6);
+
+    return Column(
+      children: List<Widget>.generate(rows, (final int row) {
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 6),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: List<Widget>.generate(7, (final int col) {
+              final int idx = row * 7 + col;
+              final int day = idx - leadingEmpty + 1;
+
+              if (idx < leadingEmpty || day < 1 || day > daysInMonth) {
+                return const SizedBox(width: 22, height: 22);
+              }
+
+              final bool isActive = activeDays.contains(day);
+
+              return SizedBox(
+                width: 22,
+                height: 22,
+                child: Center(
+                  child: isActive
+                      ? Container(
+                          width: 16,
+                          height: 16,
+                          decoration: const BoxDecoration(color: Colors.green, shape: BoxShape.circle),
+                          child: Center(
+                            child: Text(
+                              '$day',
+                              style: const TextStyle(
+                                fontSize: 9,
+                                fontWeight: FontWeight.w800,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        )
+                      : Text(
+                          '$day',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w800,
+                            color: textColor.withOpacity(0.75),
+                          ),
+                        ),
+                ),
+              );
+            }),
+          ),
+        );
+      }),
     );
   }
 }
