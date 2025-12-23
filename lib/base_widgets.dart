@@ -28,7 +28,14 @@ class _RizeScaffoldState extends State<RizeScaffold> {
             colors: [Colors.blue.shade200, Colors.blue.shade900, Colors.black],
           )//LinearGradient(colors: [Theme.of(context).primaryColor, Color(0xaa72c6ef)], begin: Alignment.bottomCenter, end: Alignment.topCenter)
         ),
-        child: widget.body)
+        child: Stack(
+          children: [
+            Center(child: SizedBox(
+              width: MediaQuery.sizeOf(context).width * 0.55,
+              child:Image.asset('assets/brand/rize_logo_r.png', color: Colors.white.withAlpha(50),))),
+            widget.body,
+          ],
+        ))
     );
   }
 }
