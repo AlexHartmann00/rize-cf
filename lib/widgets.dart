@@ -546,7 +546,7 @@ class _WorkoutExecutionPageState extends State<WorkoutExecutionPage> {
                     if (!mounted) return false;
                     await Future.delayed(Duration(seconds: 1));
                     setState(() {
-                      timerSeconds -= 10;
+                      timerSeconds -= 1;
                     });
                     if (timerSeconds <= 0) {
                       setState(() {
