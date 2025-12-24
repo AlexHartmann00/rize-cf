@@ -308,7 +308,7 @@ class _WorkoutScheduleWidgetState extends State<WorkoutScheduleWidget> {
     List<Widget> scheduleEntries = [];
 
     int i = 1;
-    for ((TimeOfDay, int, int) scheduleEntry in widget.workout.schedule) {
+    for (WorkoutStep scheduleEntry in widget.workout.schedule) {
       scheduleEntries.add(
         Column(
           children: [
@@ -347,13 +347,10 @@ class _WorkoutScheduleWidgetState extends State<WorkoutScheduleWidget> {
     );
   }
 
-  Widget _buildScheduleEntry(
-    (TimeOfDay, int, int) scheduleEntry,
-    int entryIndex,
-  ) {
-    TimeOfDay timeOfDay = scheduleEntry.$1;
-    int plannedUnits = scheduleEntry.$2;
-    int completedUnits = scheduleEntry.$3;
+  Widget _buildScheduleEntry(WorkoutStep scheduleEntry, int entryIndex) {
+    TimeOfDay timeOfDay = scheduleEntry.timeOfDay;
+    int plannedUnits = scheduleEntry.plannedUnits;
+    int completedUnits = scheduleEntry.completedUnits;
 
     bool completed = plannedUnits <= completedUnits;
 
@@ -647,11 +644,14 @@ class _WorkoutExecutionPageState extends State<WorkoutExecutionPage> {
               onPressed: () async {
                 setState(() {
                   showTimer = false;
-                  widget.workout.schedule[widget.scheduleEntryIndex] = (
-                    widget.workout.schedule[widget.scheduleEntryIndex].$1,
-                    widget.workout.schedule[widget.scheduleEntryIndex].$2,
-                    widget.workout.schedule[widget.scheduleEntryIndex].$2,
-                  );
+                  WorkoutStep workoutStep =
+                      widget.workout.schedule[widget.scheduleEntryIndex];
+                  widget.workout.schedule[widget.scheduleEntryIndex] =
+                      WorkoutStep(
+                        timeOfDay: workoutStep.timeOfDay,
+                        plannedUnits: workoutStep.plannedUnits,
+                        completedUnits: workoutStep.plannedUnits,
+                      );
                 });
 
                 await uploadWorkoutToServer(widget.workout);

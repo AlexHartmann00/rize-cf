@@ -35,10 +35,13 @@ Future<ScheduledWorkout?> loadDailyWorkoutPlan() async {
   }
   final Map<String, dynamic> jsonData = jsonDecode(jsonString);
 
-  if((jsonData['day_planned'] as String).length != 10) {
+  if ((jsonData['day_planned'] as String).length != 10) {
     return null;
   }
-  if(DateTime.parse(jsonData['day_planned'] as String).difference(DateTime.now()).inDays != 0) {
+  if (DateTime.parse(
+        jsonData['day_planned'] as String,
+      ).difference(DateTime.now()).inDays !=
+      0) {
     return null;
   }
   try {
@@ -48,5 +51,52 @@ Future<ScheduledWorkout?> loadDailyWorkoutPlan() async {
       prefs.remove('daily_workout_plan');
     });
     return null;
+  }
+}
+
+bool timeOfDayIsCurrent(TimeOfDay timeOfDay) {
+  DateTime now = DateTime.now();
+  bool inCorrectTime =
+      (timeOfDay == TimeOfDay.any) ||
+      ((timeOfDay == TimeOfDay.morning && (now.hour <= 12)) ||
+          (timeOfDay == TimeOfDay.afternoon &&
+              (now.hour >= 12 && now.hour <= 17)) ||
+          (timeOfDay == TimeOfDay.evening && (now.hour >= 17)));
+  return inCorrectTime;
+}
+
+bool timeOfDayIsPast(TimeOfDay timeOfDay) {
+  DateTime now = DateTime.now();
+  if ((timeOfDay == TimeOfDay.any) || (timeOfDay == TimeOfDay.evening)) {
+    return false;
+  }
+  bool isPast =
+      ((timeOfDay == TimeOfDay.morning && (now.hour >= 12)) ||
+      (timeOfDay == TimeOfDay.afternoon && (now.hour >= 17)));
+  return isPast;
+}
+
+String workoutScheduleToString(List<WorkoutStep> schedule) {
+  int anyUnits = 0;
+  String timeOfDayNames = '';
+  for (WorkoutStep element in schedule) {
+    if (element.timeOfDay == TimeOfDay.any) {
+      anyUnits += element.plannedUnits;
+    } else {
+      if (timeOfDayNames.isEmpty) {
+        timeOfDayNames = element.timeOfDay.name;
+      } else {
+        timeOfDayNames += ' / ' + element.timeOfDay.name;
+      }
+    }
+  }
+
+  if (anyUnits == 0) {
+    return timeOfDayNames;
+  }
+  if (timeOfDayNames.isEmpty) {
+    return '$anyUnits x';
+  } else {
+    return '$timeOfDayNames + $anyUnits x';
   }
 }

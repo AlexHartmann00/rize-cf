@@ -10,7 +10,12 @@ import 'package:rize/slot_machine.dart' show SlotMachine, SlotMachineController;
 import 'package:rize/types/anamnesis.dart';
 import 'package:rize/types/user.dart' show UserData;
 import 'package:rize/types/workout.dart';
-import 'package:rize/utils.dart' show loadDailyWorkoutPlan;
+import 'package:rize/utils.dart'
+    show
+        loadDailyWorkoutPlan,
+        timeOfDayIsCurrent,
+        timeOfDayIsPast,
+        workoutScheduleToString;
 import 'package:rize/widgets.dart';
 import 'package:rize/workout_library.dart';
 import 'package:flutter/material.dart' hide TimeOfDay;
@@ -428,15 +433,28 @@ class _HomePageSlotMachineWidgetState extends State<HomePageSlotMachineWidget> {
       7,
       8,
     ]; //TODO: FIlter based on user fitness
-    List<List<(TimeOfDay, int, int)>> schedules = [
-      [(TimeOfDay.morning, 1, 0), (TimeOfDay.evening, 1, 0)],
-      [(TimeOfDay.any, 1, 0), (TimeOfDay.any, 1, 0), (TimeOfDay.any, 1, 0)],
-      [(TimeOfDay.morning, 1, 0)],
+    List<List<WorkoutStep>> schedules = [
+      if (!timeOfDayIsPast(TimeOfDay.morning))
+        [
+          WorkoutStep.fromTuple((TimeOfDay.morning, 1, 0)),
+          WorkoutStep.fromTuple((TimeOfDay.evening, 1, 0)),
+        ],
+      [
+        WorkoutStep.fromTuple((TimeOfDay.any, 1, 0)),
+        WorkoutStep.fromTuple((TimeOfDay.any, 1, 0)),
+        WorkoutStep.fromTuple((TimeOfDay.any, 1, 0)),
+      ],
+      [
+        WorkoutStep.fromTuple((TimeOfDay.any, 1, 0)),
+        WorkoutStep.fromTuple((TimeOfDay.any, 1, 0)),
+      ],
+      if (!timeOfDayIsPast(TimeOfDay.morning))
+        [WorkoutStep.fromTuple((TimeOfDay.morning, 1, 0))],
+      [WorkoutStep.fromTuple((TimeOfDay.any, 1, 0))],
     ];
 
     SharedPreferences.getInstance().then((prefs) async {
-      bool questionnaireSubmitted =
-          true; //TODO:prefs.getBool('anamnesisDone') ?? true;
+      bool questionnaireSubmitted = prefs.getBool('anamnesisDone') ?? true;
       if (!questionnaireSubmitted) {
         AnamnesisQuestionnaire questionnaire =
             await loadAnamnesisQuestionnaire();
@@ -557,6 +575,32 @@ class _HomePageSlotMachineWidgetState extends State<HomePageSlotMachineWidget> {
                 style: TextStyle(color: Colors.white),
               ),
               SizedBox(height: 20),
+              IconButton(
+                onPressed: () async {
+                  SharedPreferences prefs =
+                      await SharedPreferences.getInstance();
+                  await prefs.remove('daily_workout_plan');
+                  setState(() {
+                    globals.dailyWorkoutPlan = null;
+                  });
+                },
+                icon: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(20),
+                    color: Colors.amber,
+                  ),
+                  child: Padding(
+                    padding: EdgeInsets.all(8),
+                    child: Text(
+                      'Reset',
+                      style: TextStyle(
+                        color: Colors.black,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
             ],
           )
         : SizedBox();
@@ -602,24 +646,19 @@ class _HomePageSlotMachineWidgetState extends State<HomePageSlotMachineWidget> {
 
     bool dailyPlanActionable = false;
     if (globals.dailyWorkoutPlan != null) {
-      for ((TimeOfDay, int, int) workoutStep
-          in globals.dailyWorkoutPlan!.schedule) {
+      for (WorkoutStep workoutStep in globals.dailyWorkoutPlan!.schedule) {
         bool workoutStepActionable = true;
 
-        if (workoutStep.$3 > 0) {
+        if (workoutStep.completedUnits > 0) {
           workoutStepActionable = false;
           continue;
         }
-        TimeOfDay timeOfDay = workoutStep.$1;
-        DateTime now = DateTime.now();
-        bool inCorrectTime =
-            (timeOfDay == TimeOfDay.any) ||
-            ((timeOfDay == TimeOfDay.morning &&
-                    (now.hour < 5 || now.hour >= 12)) ||
-                (timeOfDay == TimeOfDay.afternoon &&
-                    (now.hour < 12 || now.hour >= 17)) ||
-                (timeOfDay == TimeOfDay.evening &&
-                    (now.hour < 17 || now.hour >= 22)));
+        TimeOfDay timeOfDay = workoutStep.timeOfDay;
+        bool inCorrectTime = !timeOfDayIsPast(timeOfDay);
+        print(
+          'tod debug: $timeOfDay is future? $inCorrectTime. Completed units: ${workoutStep.completedUnits}',
+        );
+
         if (!inCorrectTime) {
           workoutStepActionable = false;
           continue;
@@ -627,6 +666,15 @@ class _HomePageSlotMachineWidgetState extends State<HomePageSlotMachineWidget> {
         if (workoutStepActionable) {
           dailyPlanActionable = true;
           break;
+        }
+      }
+    }
+
+    bool dailyPlanResettable = true;
+    if (globals.dailyWorkoutPlan != null) {
+      for (WorkoutStep workoutStep in globals.dailyWorkoutPlan!.schedule) {
+        if (workoutStep.completedUnits > 0) {
+          dailyPlanResettable = false;
         }
       }
     }
@@ -755,7 +803,9 @@ class _HomePageSlotMachineWidgetState extends State<HomePageSlotMachineWidget> {
                         List.generate(intensities.length, (idx) {
                           return Text(intensities[idx].toString());
                         }),
-                        [Text('Morgens / Abends'), Text('3x'), Text('1x')],
+                        List.generate(schedules.length, (idx) {
+                          return Text(workoutScheduleToString(schedules[idx]));
+                        }),
                       ],
                       reelTitles: const [
                         Text('Übung'),
@@ -1278,10 +1328,10 @@ class Stats {
   }
 }
 
-int _completedUnits(final List<(TimeOfDay, int, int)> schedule) {
+int _completedUnits(final List<WorkoutStep> schedule) {
   int sum = 0;
-  for (final (TimeOfDay, int, int) entry in schedule) {
-    sum += entry.$3;
+  for (final WorkoutStep entry in schedule) {
+    sum += entry.completedUnits;
   }
   return sum;
 }

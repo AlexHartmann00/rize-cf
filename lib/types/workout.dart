@@ -81,7 +81,7 @@ enum TimeOfDay { any, morning, afternoon, evening }
 
 class ScheduledWorkout extends Workout {
   /// (TimeOfDay, int, bool) = (time, planned reps/seconds/units, completed)
-  List<(TimeOfDay, int, int)> schedule;
+  List<WorkoutStep> schedule;
   int intensityFactor;
 
   ScheduledWorkout({
@@ -112,7 +112,7 @@ class ScheduledWorkout extends Workout {
 
   bool get isCompleted {
     for (var entry in schedule) {
-      if (entry.$3 < entry.$2) {
+      if (entry.completedUnits < entry.plannedUnits) {
         return false;
       }
     }
@@ -121,7 +121,7 @@ class ScheduledWorkout extends Workout {
 
   factory ScheduledWorkout.fromBaseWorkout(
     Workout base,
-    List<(TimeOfDay, int, int)> schedule,
+    List<WorkoutStep> schedule,
     int intensityFactor,
   ) {
     return ScheduledWorkout(
@@ -144,7 +144,7 @@ class ScheduledWorkout extends Workout {
 
   factory ScheduledWorkout.fromJson(Map<String, dynamic> json) {
     Workout baseWorkout = Workout.fromJson(json);
-    List<(TimeOfDay, int, int)> schedule = [];
+    List<WorkoutStep> schedule = [];
     if (json['schedule'] != null) {
       for (var entry in json['schedule']) {
         TimeOfDay timeOfDay = TimeOfDay.values.firstWhere(
@@ -153,7 +153,13 @@ class ScheduledWorkout extends Workout {
         );
         int plannedUnits = entry['plannedUnits'] as int;
         int completed = entry['completedUnits'] as int;
-        schedule.add((timeOfDay, plannedUnits, completed));
+        schedule.add(
+          WorkoutStep(
+            timeOfDay: timeOfDay,
+            plannedUnits: plannedUnits,
+            completedUnits: completed,
+          ),
+        );
       }
     }
     int intensityFactor = json['intensityFactor'] as int? ?? 1;
@@ -181,9 +187,9 @@ class ScheduledWorkout extends Workout {
       'schedule': schedule
           .map(
             (entry) => {
-              'timeOfDay': entry.$1.name,
-              'plannedUnits': entry.$2,
-              'completedUnits': entry.$3,
+              'timeOfDay': entry.timeOfDay.name,
+              'plannedUnits': entry.plannedUnits,
+              'completedUnits': entry.completedUnits,
             },
           )
           .toList(),
@@ -201,11 +207,9 @@ class ScheduledWorkout extends Workout {
     String jsonString = jsonEncode(jsonData);
     await prefs.setString('daily_workout_plan', jsonString);
   }
-
-  
 }
 
-class WorkoutScheduleEntry{
+class WorkoutScheduleEntry {
   TimeOfDay timeOfDay;
   int plannedUnits;
   int completedUnits;
@@ -215,4 +219,24 @@ class WorkoutScheduleEntry{
     required this.plannedUnits,
     required this.completedUnits,
   });
+}
+
+class WorkoutStep {
+  TimeOfDay timeOfDay;
+  int plannedUnits;
+  int completedUnits;
+
+  WorkoutStep({
+    required this.timeOfDay,
+    required this.plannedUnits,
+    required this.completedUnits,
+  });
+
+  factory WorkoutStep.fromTuple((TimeOfDay, int, int) input) {
+    return WorkoutStep(
+      timeOfDay: input.$1,
+      plannedUnits: input.$2,
+      completedUnits: input.$3,
+    );
+  }
 }
