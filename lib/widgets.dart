@@ -1,5 +1,6 @@
 import 'package:rize/base_widgets.dart';
-import 'package:rize/firestore.dart' show saveAnamnesisResponse, uploadWorkoutToServer;
+import 'package:rize/firestore.dart'
+    show saveAnamnesisResponse, uploadWorkoutToServer;
 import 'package:rize/types/anamnesis.dart';
 import 'package:rize/types/workout.dart';
 import 'package:flutter/material.dart' hide TimeOfDay;
@@ -92,12 +93,31 @@ class _WorkoutDetailsPageState extends State<WorkoutDetailsPage> {
   Widget build(BuildContext context) {
     return RizeScaffold(
       appBar: rizeAppBar,
-      body: Column(
-        children: [
-          Text(widget.workout.name),
-          Text(widget.workout.description),
-          Text('${widget.workout.baseReps} Wiederholungen'),
-        ],
+      body: DefaultTextStyle(
+        style: TextStyle(color: Colors.white, fontSize: 20),
+        child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Column(
+            children: [
+              Text(
+                widget.workout.name,
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 25),
+              ),
+              Divider(),
+              Text(
+                'Beschreibung',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22),
+              ),
+              Text(widget.workout.description),
+              Divider(),
+              Text(
+                'Tipps',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22),
+              ),
+              Text(widget.workout.coachingCues),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -286,45 +306,51 @@ class _WorkoutScheduleWidgetState extends State<WorkoutScheduleWidget> {
   @override
   Widget build(BuildContext context) {
     List<Widget> scheduleEntries = [];
-    
-    int i = 1;
-    for((TimeOfDay, int, int) scheduleEntry in widget.workout.schedule) {
-      scheduleEntries.add(Column(
-        children: [
-          Text('Runde $i', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 22),),
-          SizedBox(height: 5,),
-          _buildScheduleEntry(scheduleEntry, i-1)
-          
-        ],
-      ));
 
-      if(i < widget.workout.schedule.length){
+    int i = 1;
+    for ((TimeOfDay, int, int) scheduleEntry in widget.workout.schedule) {
+      scheduleEntries.add(
+        Column(
+          children: [
+            Text(
+              'Runde $i',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+                fontSize: 22,
+              ),
+            ),
+            SizedBox(height: 5),
+            _buildScheduleEntry(scheduleEntry, i - 1),
+          ],
+        ),
+      );
+
+      if (i < widget.workout.schedule.length) {
         scheduleEntries.add(
           Padding(
             padding: const EdgeInsets.all(8.0),
-            child: VerticalDivider(
-              color: Colors.black,
-              width: 6,
-            ),
-          )
+            child: VerticalDivider(color: Colors.black, width: 6),
+          ),
         );
       }
 
-
       i++;
     }
-
 
     return IntrinsicHeight(
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         mainAxisSize: MainAxisSize.min,
-        children: scheduleEntries,),
+        children: scheduleEntries,
+      ),
     );
   }
 
   Widget _buildScheduleEntry(
-      (TimeOfDay, int, int) scheduleEntry, int entryIndex) {
+    (TimeOfDay, int, int) scheduleEntry,
+    int entryIndex,
+  ) {
     TimeOfDay timeOfDay = scheduleEntry.$1;
     int plannedUnits = scheduleEntry.$2;
     int completedUnits = scheduleEntry.$3;
@@ -333,73 +359,106 @@ class _WorkoutScheduleWidgetState extends State<WorkoutScheduleWidget> {
 
     return Column(
       children: [
-        
-        if(timeOfDay != TimeOfDay.any)
+        if (timeOfDay != TimeOfDay.any)
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.access_time, color: Colors.white,),
-              SizedBox(width: 5,),
-              Text(_timeOfDayToString(timeOfDay), style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 18),),
+              Icon(Icons.access_time, color: Colors.white),
+              SizedBox(width: 5),
+              Text(
+                _timeOfDayToString(timeOfDay),
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                  fontSize: 18,
+                ),
+              ),
             ],
           ),
-        Text(widget.workout.durationStringShort, style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 14),),
+        Text(
+          widget.workout.durationStringShort,
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+            fontSize: 14,
+          ),
+        ),
 
         IconButton(
-          onPressed: completed ? (){} : () async {
-            if(timeOfDay != TimeOfDay.any) {
-              DateTime now = DateTime.now();
-              if((timeOfDay == TimeOfDay.morning && (now.hour < 5 || now.hour >= 12)) ||
-                 (timeOfDay == TimeOfDay.afternoon && (now.hour < 12 || now.hour >= 17)) ||
-                 (timeOfDay == TimeOfDay.evening && (now.hour < 17 || now.hour >= 22))) {
-                // show alert dialog that workout can only be completed in the specified time frame
-                showDialog(
-                  context: context,
-                  builder: (context) {
-                    return AlertDialog(
-                      title: Text('Nicht im richtigen Zeitraum'),
-                      content: Text('Dieses Training kann nur im angegebenen Zeitraum abgeschlossen werden.'),
-                      actions: [
-                        TextButton(
-                          onPressed: () {
-                            Navigator.of(context).pop();
-                          },
-                          child: Text('OK'),
-                        ),
-                      ],
-                    );
-                  },
-                );
-                return;
-              }
-            }
+          onPressed: completed
+              ? () {}
+              : () async {
+                  if (timeOfDay != TimeOfDay.any) {
+                    DateTime now = DateTime.now();
+                    if ((timeOfDay == TimeOfDay.morning &&
+                            (now.hour < 5 || now.hour >= 12)) ||
+                        (timeOfDay == TimeOfDay.afternoon &&
+                            (now.hour < 12 || now.hour >= 17)) ||
+                        (timeOfDay == TimeOfDay.evening &&
+                            (now.hour < 17 || now.hour >= 22))) {
+                      // show alert dialog that workout can only be completed in the specified time frame
+                      showDialog(
+                        context: context,
+                        builder: (context) {
+                          return AlertDialog(
+                            title: Text('Nicht im richtigen Zeitraum'),
+                            content: Text(
+                              'Dieses Training kann nur im angegebenen Zeitraum abgeschlossen werden.',
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () {
+                                  Navigator.of(context).pop();
+                                },
+                                child: Text('OK'),
+                              ),
+                            ],
+                          );
+                        },
+                      );
+                      return;
+                    }
+                  }
 
-            Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => WorkoutExecutionPage(workout: widget.workout, scheduleEntryIndex: entryIndex,)),
-            );
-            // setState(() {
-            //   completedUnits++;
-            //   if(completedUnits > plannedUnits) {
-            //     completedUnits = plannedUnits;
-            //   }
-            //   int index = widget.workout.schedule.indexOf(scheduleEntry);
-            //   widget.workout.schedule[index] = (timeOfDay, plannedUnits, completedUnits);
-            // });
-            // await uploadWorkoutToServer(widget.workout);
-          }, icon: Container(
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => WorkoutExecutionPage(
+                        workout: widget.workout,
+                        scheduleEntryIndex: entryIndex,
+                      ),
+                    ),
+                  );
+                  // setState(() {
+                  //   completedUnits++;
+                  //   if(completedUnits > plannedUnits) {
+                  //     completedUnits = plannedUnits;
+                  //   }
+                  //   int index = widget.workout.schedule.indexOf(scheduleEntry);
+                  //   widget.workout.schedule[index] = (timeOfDay, plannedUnits, completedUnits);
+                  // });
+                  // await uploadWorkoutToServer(widget.workout);
+                },
+          icon: Container(
             width: 90,
             height: 30,
             decoration: BoxDecoration(
               color: Colors.white,
               border: Border.all(color: Colors.transparent),
-              borderRadius: BorderRadius.circular(20)),
+              borderRadius: BorderRadius.circular(20),
+            ),
             child: Center(
-              child: completed ? Icon(Icons.check, color: Colors.green,) : Text('LOS', style: TextStyle(color: Theme.of(context).primaryColorDark, fontWeight: FontWeight.bold)),
+              child: completed
+                  ? Icon(Icons.check, color: Colors.green)
+                  : Text(
+                      'LOS',
+                      style: TextStyle(
+                        color: Theme.of(context).primaryColorDark,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
             ),
-            ),
-          )
-        
-        
+          ),
+        ),
       ],
     );
   }
@@ -421,8 +480,11 @@ class _WorkoutScheduleWidgetState extends State<WorkoutScheduleWidget> {
 class WorkoutExecutionPage extends StatefulWidget {
   ScheduledWorkout workout;
   int scheduleEntryIndex;
-  WorkoutExecutionPage({super.key, required this.workout, required this.scheduleEntryIndex});
-  
+  WorkoutExecutionPage({
+    super.key,
+    required this.workout,
+    required this.scheduleEntryIndex,
+  });
 
   @override
   State<WorkoutExecutionPage> createState() => _WorkoutExecutionPageState();
@@ -448,23 +510,48 @@ class _WorkoutExecutionPageState extends State<WorkoutExecutionPage> {
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
           Row(),
-          Text(widget.workout.name, style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 22),),
-          Text('Runde ${widget.scheduleEntryIndex + 1}', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 22),),
+          Text(
+            widget.workout.name,
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+              fontSize: 22,
+            ),
+          ),
+          Text(
+            'Runde ${widget.scheduleEntryIndex + 1}',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+              fontSize: 22,
+            ),
+          ),
           //if(widget.workout.baseSeconds != null)
-          Text('${widget.workout.durationString}', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 18),),
-          if(widget.workout.baseSeconds != null && !showTimer && !timerCompleted)
+          Text(
+            '${widget.workout.durationString}',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+              fontSize: 18,
+            ),
+          ),
+          if (widget.workout.baseSeconds != null &&
+              !showTimer &&
+              !timerCompleted)
             ElevatedButton(
               onPressed: () {
                 setState(() {
                   showTimer = true;
-                  timerSeconds = (widget.workout.baseSeconds ?? 0) * widget.workout.intensityFactor;
-                  Future.doWhile( () async {
-                    if(!mounted) return false;
+                  timerSeconds =
+                      (widget.workout.baseSeconds ?? 0) *
+                      widget.workout.intensityFactor;
+                  Future.doWhile(() async {
+                    if (!mounted) return false;
                     await Future.delayed(Duration(seconds: 1));
                     setState(() {
-                      timerSeconds-=10;
+                      timerSeconds -= 10;
                     });
-                    if(timerSeconds <= 0) {
+                    if (timerSeconds <= 0) {
                       setState(() {
                         showTimer = false;
                         timerCompleted = true;
@@ -476,87 +563,127 @@ class _WorkoutExecutionPageState extends State<WorkoutExecutionPage> {
               },
               child: Text('Timer starten'),
             ),
-          if(showTimer && widget.workout.baseSeconds != null)
-            Text(timerSeconds.toString(), style: TextStyle(fontSize: 48, color: Colors.white, fontWeight: FontWeight.bold),),
-          if(widget.workout.baseReps != null)
-          Column(children:[Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-            IconButton(onPressed: (){
-             setState(() {
-              if(managedRepetitions == 0)return;
-               managedRepetitions --;
-             });
-            }, icon: Container(
-              decoration: BoxDecoration(
+          if (showTimer && widget.workout.baseSeconds != null)
+            Text(
+              timerSeconds.toString(),
+              style: TextStyle(
+                fontSize: 48,
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(5)
+                fontWeight: FontWeight.bold,
               ),
-              child: Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Icon(Icons.remove),
-              ))),
-            Container(
-              width: 50,
-              height: 50,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(5)
-              ),
-              child: Center(child: Text(managedRepetitions.toString(), style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),))
             ),
-            IconButton(onPressed: (){
-             setState(() {
-               managedRepetitions ++;
-             });
-            }, icon: Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(5)
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Icon(Icons.add),
-              ))),
-            
-          ],),Text('Wiederholungen geschafft', style: TextStyle(color: Colors.white, fontSize: 25, fontWeight: FontWeight.bold),)
-] ,),
-          if(timerCompleted || widget.workout.baseReps != null)
+          if (widget.workout.baseReps != null)
+            Column(
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    IconButton(
+                      onPressed: () {
+                        setState(() {
+                          if (managedRepetitions == 0) return;
+                          managedRepetitions--;
+                        });
+                      },
+                      icon: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(5),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Icon(Icons.remove),
+                        ),
+                      ),
+                    ),
+                    Container(
+                      width: 50,
+                      height: 50,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(5),
+                      ),
+                      child: Center(
+                        child: Text(
+                          managedRepetitions.toString(),
+                          style: TextStyle(
+                            fontSize: 25,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () {
+                        setState(() {
+                          managedRepetitions++;
+                        });
+                      },
+                      icon: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(5),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Icon(Icons.add),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                Text(
+                  'Wiederholungen geschafft',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 25,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          if (timerCompleted || widget.workout.baseReps != null)
             IconButton(
               onPressed: () async {
                 setState(() {
                   showTimer = false;
-                  widget.workout.schedule[widget.scheduleEntryIndex] =
-                    (widget.workout.schedule[widget.scheduleEntryIndex].$1,
+                  widget.workout.schedule[widget.scheduleEntryIndex] = (
+                    widget.workout.schedule[widget.scheduleEntryIndex].$1,
                     widget.workout.schedule[widget.scheduleEntryIndex].$2,
-                    widget.workout.schedule[widget.scheduleEntryIndex].$2
-                    );
+                    widget.workout.schedule[widget.scheduleEntryIndex].$2,
+                  );
                 });
-                
+
                 await uploadWorkoutToServer(widget.workout);
                 Navigator.of(context).pop();
-                
               },
               icon: Container(
                 width: 200,
                 decoration: BoxDecoration(
                   color: Colors.white,
                   border: Border.all(color: Colors.transparent),
-                  borderRadius: BorderRadius.circular(20)),
+                  borderRadius: BorderRadius.circular(20),
+                ),
                 child: Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: Row(
                     children: [
-                      Text('Runde abschließen', style: TextStyle(color: Theme.of(context).primaryColorDark, fontWeight: FontWeight.bold)),
+                      Text(
+                        'Runde abschließen',
+                        style: TextStyle(
+                          color: Theme.of(context).primaryColorDark,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                       SizedBox(width: 10),
-                      Icon(Icons.check, color: Colors.green,),
+                      Icon(Icons.check, color: Colors.green),
                     ],
                   ),
                 ),
               ),
             ),
         ],
-      )
+      ),
     );
   }
 }
