@@ -600,12 +600,14 @@ class _HomePageSlotMachineWidgetState extends State<HomePageSlotMachineWidget> {
           )
         : SizedBox();
 
-    bool dailyPlanActionable = true;
+    bool dailyPlanActionable = false;
     if (globals.dailyWorkoutPlan != null) {
       for ((TimeOfDay, int, int) workoutStep
           in globals.dailyWorkoutPlan!.schedule) {
+        bool workoutStepActionable = true;
+
         if (workoutStep.$3 > 0) {
-          dailyPlanActionable = false;
+          workoutStepActionable = false;
           continue;
         }
         TimeOfDay timeOfDay = workoutStep.$1;
@@ -619,7 +621,11 @@ class _HomePageSlotMachineWidgetState extends State<HomePageSlotMachineWidget> {
                 (timeOfDay == TimeOfDay.evening &&
                     (now.hour < 17 || now.hour >= 22)));
         if (!inCorrectTime) {
-          dailyPlanActionable = false;
+          workoutStepActionable = false;
+          continue;
+        }
+        if (workoutStepActionable) {
+          dailyPlanActionable = true;
           break;
         }
       }
