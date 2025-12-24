@@ -524,6 +524,15 @@ class _HomePageSlotMachineWidgetState extends State<HomePageSlotMachineWidget> {
               ),
               SizedBox(height: 10),
               InkWell(
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => WorkoutDetailsPage(
+                        workout: globals.dailyWorkoutPlan!,
+                      ),
+                    ),
+                  );
+                },
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   mainAxisSize: MainAxisSize.min,
