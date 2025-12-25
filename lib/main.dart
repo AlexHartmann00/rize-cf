@@ -922,6 +922,7 @@ class _WorkoutLibraryPageState extends State<WorkoutLibraryPage> {
   Widget build(BuildContext context) {
     return ListView.builder(
       itemBuilder: (context, idx) {
+        print('Library debug: ${globals.workoutLibrary[idx].workoutType}');
         return Padding(
           padding: const EdgeInsets.all(8.0),
           child: WorkoutSummaryWidget(workout: globals.workoutLibrary[idx]),

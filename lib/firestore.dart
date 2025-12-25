@@ -20,6 +20,7 @@ Future<List<Workout>> loadWorkoutCollection() async {
 
   for (QueryDocumentSnapshot<Map<String, dynamic>> doc in snapshot.docs) {
     if (doc.data().isEmpty) continue;
+    print('FS debug: ${doc.data()['type']}');
     workouts.add(Workout.fromJson(doc.data()));
   }
 
@@ -92,22 +93,22 @@ Future<UserData> loadUserData(String userId) async {
 }
 
 Future<void> uploadWorkoutToServer(ScheduledWorkout workout) async {
-    Map<String, dynamic> jsonData = workout.toJson();
-    String jsonString = jsonEncode(jsonData);
+  Map<String, dynamic> jsonData = workout.toJson();
+  String jsonString = jsonEncode(jsonData);
 
-    //upload to Firestore collection users/{userId}/workoutHistory/{datestring}
-    // with datestring = yyyy-MM-dd
+  //upload to Firestore collection users/{userId}/workoutHistory/{datestring}
+  // with datestring = yyyy-MM-dd
 
-    String userId = authServiceNotifier.value.currentUser?.uid ?? '';
-    DateFormat df = DateFormat('yyyy-MM-dd');
-    String dateString = df.format(DateTime.now());
+  String userId = authServiceNotifier.value.currentUser?.uid ?? '';
+  DateFormat df = DateFormat('yyyy-MM-dd');
+  String dateString = df.format(DateTime.now());
 
-    await FirebaseFirestore
-      .instance
+  await FirebaseFirestore.instance
       .collection('users')
       .doc(userId)
       .collection('workoutHistory')
-      .doc(dateString).set(jsonData);
+      .doc(dateString)
+      .set(jsonData);
 
-    await workout.saveAsDailyWorkoutPlan();
-  }
+  await workout.saveAsDailyWorkoutPlan();
+}

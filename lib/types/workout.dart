@@ -19,10 +19,19 @@ class Workout {
   List<String> usedMuscleGroups;
   int? baseReps;
   int? baseSeconds;
-  ImpactLevel impactLevel;
   WorkoutType workoutType;
   double impactScore;
   String? videoExplanationUrl;
+
+  ImpactLevel get impactLevel {
+    if (impactScore < 0.33) {
+      return ImpactLevel.low;
+    }
+    if (impactScore < 0.67) {
+      return ImpactLevel.medium;
+    }
+    return ImpactLevel.high;
+  }
 
   Workout({
     required this.id,
@@ -30,7 +39,6 @@ class Workout {
     required this.description,
     required this.coachingCues,
     required this.usedMuscleGroups,
-    required this.impactLevel,
     required this.workoutType,
     required this.impactScore,
     this.baseReps,
@@ -49,12 +57,8 @@ class Workout {
           .toList(),
       baseReps: json['baseReps'] as int?,
       baseSeconds: json['baseSeconds'] as int?,
-      impactLevel: ImpactLevel.values.firstWhere(
-        (e) => e.name == (json['impactLevel'] as String? ?? 'low'),
-        orElse: () => ImpactLevel.low,
-      ),
       workoutType: WorkoutType.values.firstWhere(
-        (e) => e.name == (json['workoutType'] as String? ?? 'static'),
+        (e) => e.name.contains(json['type'] as String? ?? 'static'),
         orElse: () => WorkoutType.static,
       ),
       impactScore: (json['impactScore'] as num?)?.toDouble() ?? 0.0,
@@ -91,7 +95,6 @@ class ScheduledWorkout extends Workout {
     required super.description,
     required super.coachingCues,
     required super.usedMuscleGroups,
-    required super.impactLevel,
     required super.workoutType,
     required super.impactScore,
     super.baseReps,
@@ -130,7 +133,6 @@ class ScheduledWorkout extends Workout {
       description: base.description,
       coachingCues: base.coachingCues,
       usedMuscleGroups: base.usedMuscleGroups,
-      impactLevel: base.impactLevel,
       workoutType: base.workoutType,
       impactScore: base.impactScore,
       baseReps: base.baseReps,
@@ -170,7 +172,6 @@ class ScheduledWorkout extends Workout {
       description: baseWorkout.description,
       coachingCues: baseWorkout.coachingCues,
       usedMuscleGroups: baseWorkout.usedMuscleGroups,
-      impactLevel: baseWorkout.impactLevel,
       workoutType: baseWorkout.workoutType,
       impactScore: baseWorkout.impactScore,
       baseReps: baseWorkout.baseReps,
