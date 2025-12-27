@@ -421,7 +421,7 @@ class _WorkoutScheduleWidgetState extends State<WorkoutScheduleWidget> {
                     }
                   }
 
-                  Navigator.of(context).push(
+                  bool completed = await Navigator.of(context).push(
                     MaterialPageRoute(
                       builder: (_) => WorkoutExecutionPage(
                         workout: widget.workout,
@@ -429,6 +429,17 @@ class _WorkoutScheduleWidgetState extends State<WorkoutScheduleWidget> {
                       ),
                     ),
                   );
+                  setState(() {
+                    completedUnits++;
+                    if (completedUnits > plannedUnits) {
+                      completedUnits = plannedUnits;
+                    }
+                    widget.workout.schedule[entryIndex] = WorkoutStep(
+                      timeOfDay: timeOfDay,
+                      plannedUnits: plannedUnits,
+                      completedUnits: completedUnits,
+                    );
+                  });
                   // setState(() {
                   //   completedUnits++;
                   //   if(completedUnits > plannedUnits) {
@@ -666,7 +677,7 @@ class _WorkoutExecutionPageState extends State<WorkoutExecutionPage> {
                         2.0,
                   );
                 }
-                Navigator.of(context).pop();
+                Navigator.of(context).pop(true);
               },
               icon: Container(
                 width: 200,

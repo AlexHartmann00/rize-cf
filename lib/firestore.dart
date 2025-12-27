@@ -82,9 +82,10 @@ Future<void> updateUserIntensityScore(double intensityScore) async {
       .instance
       .collection('users');
 
-  await usersCollection.doc(authServiceNotifier.value.currentUser!.uid).update({
+  //Create document if it does not exist
+  await usersCollection.doc(authServiceNotifier.value.currentUser!.uid).set({
     'intensityScore': intensityScore,
-  });
+  }, SetOptions(merge: true));
 }
 
 Future<UserData> loadUserData(String userId) async {

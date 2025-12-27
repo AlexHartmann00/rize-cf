@@ -454,7 +454,9 @@ class _HomePageSlotMachineWidgetState extends State<HomePageSlotMachineWidget> {
     ];
 
     SharedPreferences.getInstance().then((prefs) async {
-      bool questionnaireSubmitted = prefs.getBool('anamnesisDone') ?? false;
+      bool questionnaireSubmitted =
+          (prefs.getBool('anamnesisDone') ?? false) ||
+          globals.userData?.intensityScore != 0.0;
       if (!questionnaireSubmitted) {
         AnamnesisQuestionnaire questionnaire =
             await loadAnamnesisQuestionnaire();
