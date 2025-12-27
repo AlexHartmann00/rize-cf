@@ -88,6 +88,14 @@ Future<void> updateUserIntensityScore(double intensityScore) async {
   }, SetOptions(merge: true));
 }
 
+Future<void> createUserDocument(String userId) {
+  CollectionReference<Map<String, dynamic>> usersCollection = FirebaseFirestore
+      .instance
+      .collection('users');
+
+  return usersCollection.doc(userId).set({'intensityScore': 0.0});
+}
+
 Future<UserData> loadUserData(String userId) async {
   DocumentReference<Map<String, dynamic>> docRef = FirebaseFirestore.instance
       .collection('users')

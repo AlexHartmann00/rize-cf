@@ -340,8 +340,11 @@ class _MyHomePageState extends State<MyHomePage> {
   //init state
   @override
   void initState() {
-    loadUserData(authServiceNotifier.value.currentUser!.uid).then((userData) {
+    loadUserData(authServiceNotifier.value.currentUser!.uid).then((
+      userData,
+    ) async {
       globals.userData = userData;
+      await updateUserIntensityScore(userData.intensityScore);
     });
     super.initState();
   }
@@ -1000,7 +1003,12 @@ class _ProfilePageState extends State<ProfilePage> {
         _menuButton(
           'Abmelden',
           Icon(Icons.arrow_circle_left_rounded, color: Colors.white),
-          () {},
+          () async {
+            await authServiceNotifier.value.signOut();
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (context) => const WelcomePage()),
+            );
+          },
           Colors.red,
           Colors.white,
         ),
