@@ -5,6 +5,7 @@ import 'package:rize/types/anamnesis.dart';
 import 'package:rize/types/workout.dart';
 import 'package:rize/globals.dart' as globals;
 import 'package:flutter/material.dart' hide TimeOfDay;
+import 'package:shared_preferences/shared_preferences.dart';
 
 class WorkoutSummaryWidget extends StatefulWidget {
   Workout workout;
@@ -283,6 +284,8 @@ class _AnamnesisQuestionnaireWidgetState
             ElevatedButton(
               onPressed: () async {
                 await saveAnamnesisResponse(widget.questionnaire);
+                SharedPreferences prefs = await SharedPreferences.getInstance();
+                await prefs.setBool('anamnesisDone', true);
 
                 Navigator.of(context).pop();
               },
