@@ -77,6 +77,16 @@ Future<void> saveAnamnesisResponse(AnamnesisQuestionnaire questionnaire) async {
   });
 }
 
+Future<void> updateUserIntensityScore(double intensityScore) async {
+  CollectionReference<Map<String, dynamic>> usersCollection = FirebaseFirestore
+      .instance
+      .collection('users');
+
+  await usersCollection.doc(authServiceNotifier.value.currentUser!.uid).update({
+    'intensityScore': intensityScore,
+  });
+}
+
 Future<UserData> loadUserData(String userId) async {
   DocumentReference<Map<String, dynamic>> docRef = FirebaseFirestore.instance
       .collection('users')

@@ -1,8 +1,9 @@
 import 'package:rize/base_widgets.dart';
 import 'package:rize/firestore.dart'
-    show saveAnamnesisResponse, uploadWorkoutToServer;
+    show saveAnamnesisResponse, uploadWorkoutToServer, updateUserIntensityScore;
 import 'package:rize/types/anamnesis.dart';
 import 'package:rize/types/workout.dart';
+import 'package:rize/globals.dart' as globals;
 import 'package:flutter/material.dart' hide TimeOfDay;
 
 class WorkoutSummaryWidget extends StatefulWidget {
@@ -655,6 +656,13 @@ class _WorkoutExecutionPageState extends State<WorkoutExecutionPage> {
                 });
 
                 await uploadWorkoutToServer(widget.workout);
+                if (widget.workout.isCompleted) {
+                  await updateUserIntensityScore(
+                    (widget.workout.impactScore +
+                            globals.userData!.intensityScore) /
+                        2.0,
+                  );
+                }
                 Navigator.of(context).pop();
               },
               icon: Container(
