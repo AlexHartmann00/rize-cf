@@ -672,11 +672,15 @@ class _WorkoutExecutionPageState extends State<WorkoutExecutionPage> {
 
                 await uploadWorkoutToServer(widget.workout);
                 if (widget.workout.isCompleted) {
-                  await updateUserIntensityScore(
-                    (widget.workout.impactScore +
-                            globals.userData!.intensityScore) /
-                        2.0,
-                  );
+                  double newIntensityScore =
+                      0.004 +
+                      (widget.workout.impactScore +
+                              globals.userData!.intensityScore) /
+                          2.0;
+                  newIntensityScore = newIntensityScore > 1.0
+                      ? 1.0
+                      : newIntensityScore;
+                  await updateUserIntensityScore(newIntensityScore);
                 }
                 Navigator.of(context).pop(true);
               },

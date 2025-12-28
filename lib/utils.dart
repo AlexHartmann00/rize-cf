@@ -2,6 +2,8 @@ library;
 
 import 'dart:convert';
 
+import 'package:rize/firestore.dart';
+import 'package:rize/globals.dart' as globals;
 import 'package:rize/types/workout.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -38,10 +40,17 @@ Future<ScheduledWorkout?> loadDailyWorkoutPlan() async {
   if ((jsonData['day_planned'] as String).length != 10) {
     return null;
   }
-  if (DateTime.parse(
-        jsonData['day_planned'] as String,
-      ).difference(DateTime.now()).inDays !=
-      0) {
+  int daysSinceLast = DateTime.parse(
+    jsonData['day_planned'] as String,
+  ).difference(DateTime.now()).inDays;
+  if (daysSinceLast != 0) {
+    ScheduledWorkout previousWorkout = ScheduledWorkout.fromJson(jsonData);
+    if (!previousWorkout.isCompleted) {
+      await updateUserIntensityScore(
+        globals.userData!.intensityScore - 0.005 * (daysSinceLast - 1),
+      );
+      globals.userData!.intensityScore -= 0.005 * (daysSinceLast - 1);
+    }
     return null;
   }
   try {
