@@ -5,6 +5,7 @@ import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:rize/auth_service.dart';
 import 'package:rize/types/anamnesis.dart';
+import 'package:rize/types/config.dart' show IntensityLevel;
 import 'package:rize/types/user.dart';
 import 'package:rize/types/workout.dart';
 import 'package:intl/intl.dart';
@@ -130,4 +131,20 @@ Future<void> uploadWorkoutToServer(ScheduledWorkout workout) async {
       .set(jsonData);
 
   await workout.saveAsDailyWorkoutPlan();
+}
+
+Future<List<IntensityLevel>> loadIntensityLevels() async {
+  DocumentReference<Map<String, dynamic>> docRef = FirebaseFirestore.instance
+      .collection('config')
+      .doc('intensityLevels');
+  DocumentSnapshot<Map<String, dynamic>> docSnap = await docRef.get();
+  List<IntensityLevel> levels = [];
+  if (docSnap.exists && docSnap.data() != null) {
+    Map<String, dynamic> data = docSnap.data()!;
+    for (MapEntry entry in data.entries) {
+      levels.add(IntensityLevel.fromJson(entry.value));
+    }
+  }
+
+  return levels;
 }

@@ -8,6 +8,7 @@ import 'package:rize/firestore.dart';
 import 'package:rize/globals.dart' as globals;
 import 'package:rize/slot_machine.dart' show SlotMachine, SlotMachineController;
 import 'package:rize/types/anamnesis.dart';
+import 'package:rize/types/config.dart' show IntensityLevel;
 import 'package:rize/types/user.dart' show UserData;
 import 'package:rize/types/workout.dart';
 import 'package:rize/utils.dart'
@@ -40,6 +41,20 @@ void main() async {
         globals.userData = userData;
         print('User logged in: ${user.uid}');
         globals.authenticatedUserId = user.uid;
+        loadIntensityLevels().then((value) {
+          globals.intensityLevels = value;
+          print(
+            'levels debug: ${value.length}; user score: ${globals.userData!.intensityScore}; levels: ${value.map((e) => '${e.label} ${e.minScore}-${e.maxScore}').toList()}',
+          );
+          print(
+            'Levels debug: ${value.firstWhere((level) => globals.userData!.intensityScore >= level.minScore && globals.userData!.intensityScore <= level.maxScore).label}',
+          );
+          globals.userData!.intensityLevel = value.firstWhere(
+            (level) =>
+                globals.userData!.intensityScore >= level.minScore &&
+                globals.userData!.intensityScore <= level.maxScore,
+          );
+        });
       });
     } else {
       print('User logged out');
@@ -50,6 +65,12 @@ void main() async {
   if (authServiceNotifier.value.currentUser != null) {
     UserData userData = await loadUserData(
       authServiceNotifier.value.currentUser!.uid,
+    );
+    List<IntensityLevel> levels = await loadIntensityLevels();
+    userData.intensityLevel = levels.firstWhere(
+      (level) =>
+          userData.intensityScore >= level.minScore &&
+          userData.intensityScore <= level.maxScore,
     );
 
     globals.userData = userData;
@@ -343,6 +364,12 @@ class _MyHomePageState extends State<MyHomePage> {
     loadUserData(authServiceNotifier.value.currentUser!.uid).then((
       userData,
     ) async {
+      List<IntensityLevel> levels = await loadIntensityLevels();
+      userData.intensityLevel = levels.firstWhere(
+        (level) =>
+            userData.intensityScore >= level.minScore &&
+            userData.intensityScore <= level.maxScore,
+      );
       globals.userData = userData;
       await updateUserIntensityScore(userData.intensityScore);
     });
@@ -427,15 +454,13 @@ class _HomePageSlotMachineWidgetState extends State<HomePageSlotMachineWidget> {
         .map((e) => e.name)
         .toSet()
         .toList();
-    List<int> intensities = [
-      2,
-      3,
-      4,
-      5,
-      6,
-      7,
-      8,
-    ]; //TODO: FIlter based on user fitness
+    List<int> intensities = [];
+    IntensityLevel userLevel =
+        globals.userData?.intensityLevel ?? IntensityLevel.unknown();
+    for (int i = userLevel.minFactor; i <= userLevel.maxFactor; i++) {
+      intensities.add(i);
+    }
+
     List<List<WorkoutStep>> schedules = [
       if (!timeOfDayIsPast(TimeOfDay.morning))
         [
@@ -846,6 +871,10 @@ class _HomePageSlotMachineWidgetState extends State<HomePageSlotMachineWidget> {
                         scheduleIdx,
                       ]);
 
+                      _selectedWorkout = userLevel.applyToWorkout(
+                        _selectedWorkout,
+                      );
+
                       setState(() {
                         selectedWorkout = _selectedWorkout;
                         globals.dailyWorkoutPlan = _selectedWorkout;
@@ -1204,8 +1233,11 @@ class ProgressOverviewContent extends StatelessWidget {
                         children: <Widget>[
                           Expanded(
                             child: _LevelCard(
-                              level: _levelFromImpact(lastImpact?.score),
-                              progress: _progressToNextLevel(lastImpact?.score),
+                              level: globals.userData!.intensityLevel.label,
+                              progress: globals.userData!.intensityLevel
+                                  .progressToNextLevel(
+                                    globals.userData!.intensityScore,
+                                  ),
                               cardColor: card,
                               textColor: textColor,
                             ),
@@ -1485,20 +1517,6 @@ Color _impactDotColor(final ImpactLevel? level) {
     case ImpactLevel.high:
       return Colors.red;
   }
-}
-
-String _levelFromImpact(final double? score) {
-  if (score == null) return 'Beginner';
-  if (score < 0.35) return 'Beginner';
-  if (score < 0.70) return 'Intermediate';
-  return 'Advanced';
-}
-
-double _progressToNextLevel(final double? score) {
-  if (score == null) return 0.0;
-  if (score < 0.35) return (score / 0.35).clamp(0.0, 1.0);
-  if (score < 0.70) return ((score - 0.35) / (0.70 - 0.35)).clamp(0.0, 1.0);
-  return 1.0;
 }
 
 /* ============================= UI (typed) ============================= */

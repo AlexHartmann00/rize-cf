@@ -286,7 +286,8 @@ class _AnamnesisQuestionnaireWidgetState
                 await saveAnamnesisResponse(widget.questionnaire);
                 SharedPreferences prefs = await SharedPreferences.getInstance();
                 await prefs.setBool('anamnesisDone', true);
-
+                globals.userData!.intensityScore =
+                    widget.questionnaire.totalScore;
                 Navigator.of(context).pop();
               },
               child: Text('Los geht\'s!'),
