@@ -111,3 +111,23 @@ Future<void> uploadWorkoutToServer(ScheduledWorkout workout) async {
 
     await workout.saveAsDailyWorkoutPlan();
   }
+
+Future<List<ScheduledWorkout>> loadWorkoutHistoryFromServer() async {
+    String userId = authServiceNotifier.value.currentUser?.uid ?? '';
+
+    QuerySnapshot<Map<String, dynamic>> snapshot = await FirebaseFirestore
+      .instance
+      .collection('users')
+      .doc(userId)
+      .collection('workoutHistory')
+      .get();
+
+    List<ScheduledWorkout> workouts = [];
+
+    for (QueryDocumentSnapshot<Map<String, dynamic>> doc in snapshot.docs) {
+      if (doc.data().isEmpty) continue;
+      workouts.add(ScheduledWorkout.fromJson(doc.data()));
+    }
+
+    return workouts;
+  }
