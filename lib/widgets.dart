@@ -479,11 +479,11 @@ class _WorkoutScheduleWidgetState extends State<WorkoutScheduleWidget> {
   String _timeOfDayToString(TimeOfDay timeOfDay) {
     switch (timeOfDay) {
       case TimeOfDay.morning:
-        return 'Morgens';
+        return 'Morgens (vor 12 Uhr)';
       case TimeOfDay.afternoon:
-        return 'Nachmittags';
+        return 'Nachmittags (12-17 Uhr)';
       case TimeOfDay.evening:
-        return 'Abends';
+        return 'Abends (17-22 Uhr)';
       case TimeOfDay.any:
         return 'Beliebig';
     }

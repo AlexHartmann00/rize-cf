@@ -596,11 +596,11 @@ class _HomePageSlotMachineWidgetState extends State<HomePageSlotMachineWidget> {
               SizedBox(height: 100),
               WorkoutScheduleWidget(workout: globals.dailyWorkoutPlan!),
               Expanded(child: SizedBox(height: 20)),
-              Text(
-                globals.dailyWorkoutPlan!.durationString,
-                style: TextStyle(color: Colors.white),
-              ),
-              SizedBox(height: 20),
+              // Text(
+              //   globals.dailyWorkoutPlan!.durationString,
+              //   style: TextStyle(color: Colors.white),
+              // ),
+              // SizedBox(height: 20),
               IconButton(
                 onPressed: () async {
                   await deleteDailyWorkoutPlan();
