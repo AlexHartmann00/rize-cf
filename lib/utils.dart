@@ -29,39 +29,6 @@ Duration parseDuration(String input) {
   }
 }
 
-Future<ScheduledWorkout?> loadDailyWorkoutPlan() async {
-  final prefs = await SharedPreferences.getInstance();
-  final jsonString = prefs.getString('daily_workout_plan');
-  if (jsonString == null) {
-    return null;
-  }
-  final Map<String, dynamic> jsonData = jsonDecode(jsonString);
-
-  if ((jsonData['day_planned'] as String).length != 10) {
-    return null;
-  }
-  int daysSinceLast = DateTime.parse(
-    jsonData['day_planned'] as String,
-  ).difference(DateTime.now()).inDays;
-  if (daysSinceLast != 0) {
-    ScheduledWorkout previousWorkout = ScheduledWorkout.fromJson(jsonData);
-    if (!previousWorkout.isCompleted) {
-      await updateUserIntensityScore(
-        globals.userData!.intensityScore - 0.005 * (daysSinceLast - 1),
-      );
-      globals.userData!.intensityScore -= 0.005 * (daysSinceLast - 1);
-    }
-    return null;
-  }
-  try {
-    return ScheduledWorkout.fromJson(jsonData);
-  } catch (e) {
-    SharedPreferences.getInstance().then((prefs) {
-      prefs.remove('daily_workout_plan');
-    });
-    return null;
-  }
-}
 
 bool timeOfDayIsCurrent(TimeOfDay timeOfDay) {
   DateTime now = DateTime.now();
@@ -108,4 +75,26 @@ String workoutScheduleToString(List<WorkoutStep> schedule) {
   } else {
     return '$timeOfDayNames + $anyUnits x';
   }
+}
+
+int computeCurrentStreakFromHistory(List<ScheduledWorkout> history) {
+  int streak = 0;
+  DateTime today = DateTime.now();
+  history.sort((a, b) => b.scheduledDay!.compareTo(a.scheduledDay!));
+
+  for (ScheduledWorkout workout in history) {
+    DateTime workoutDate = workout.scheduledDay!;
+    Duration difference = today.difference(workoutDate);
+    if (difference.inDays == streak) {
+      if (workout.isCompleted) {
+        streak += 1;
+      } else {
+        break;
+      }
+    } else if (difference.inDays > streak) {
+      break;
+    }
+  }
+
+  return streak;
 }

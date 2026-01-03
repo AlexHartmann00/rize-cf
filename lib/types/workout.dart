@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:rize/auth_service.dart';
+import 'package:rize/firestore.dart';
 import 'package:rize/utils.dart' as utils;
 import 'package:rize/types/muscle_group.dart';
 import 'package:intl/intl.dart';
@@ -87,6 +88,7 @@ class ScheduledWorkout extends Workout {
   /// (TimeOfDay, int, bool) = (time, planned reps/seconds/units, completed)
   List<WorkoutStep> schedule;
   int intensityFactor;
+  DateTime? scheduledDay;
 
   ScheduledWorkout({
     // super fields
@@ -200,13 +202,14 @@ class ScheduledWorkout extends Workout {
   }
 
   Future<void> saveAsDailyWorkoutPlan() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    Map<String, dynamic> jsonData = toJson();
-    DateTime now = DateTime.now();
-    DateFormat df = DateFormat('yyyy-MM-dd');
-    jsonData['day_planned'] = df.format(now);
-    String jsonString = jsonEncode(jsonData);
-    await prefs.setString('daily_workout_plan', jsonString);
+    // SharedPreferences prefs = await SharedPreferences.getInstance();
+    // Map<String, dynamic> jsonData = toJson();
+    // DateTime now = DateTime.now();
+    // DateFormat df = DateFormat('yyyy-MM-dd');
+    uploadWorkoutToServer(this);
+    // jsonData['day_planned'] = df.format(now);
+    // String jsonString = jsonEncode(jsonData);
+    // await prefs.setString('daily_workout_plan', jsonString);
   }
 }
 

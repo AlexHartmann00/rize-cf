@@ -12,11 +12,7 @@ import 'package:rize/types/config.dart' show IntensityLevel;
 import 'package:rize/types/user.dart' show UserData;
 import 'package:rize/types/workout.dart';
 import 'package:rize/utils.dart'
-    show
-        loadDailyWorkoutPlan,
-        timeOfDayIsCurrent,
-        timeOfDayIsPast,
-        workoutScheduleToString;
+    show timeOfDayIsCurrent, timeOfDayIsPast, workoutScheduleToString, computeCurrentStreakFromHistory;
 import 'package:rize/widgets.dart';
 import 'package:rize/workout_library.dart';
 import 'package:flutter/material.dart' hide TimeOfDay;
@@ -607,11 +603,10 @@ class _HomePageSlotMachineWidgetState extends State<HomePageSlotMachineWidget> {
               SizedBox(height: 20),
               IconButton(
                 onPressed: () async {
-                  SharedPreferences prefs =
-                      await SharedPreferences.getInstance();
-                  await prefs.remove('daily_workout_plan');
+                  await deleteDailyWorkoutPlan();
                   setState(() {
                     globals.dailyWorkoutPlan = null;
+                    selectedWorkout = null;
                   });
                 },
                 icon: Container(
@@ -930,14 +925,26 @@ class _HomePageSlotMachineWidgetState extends State<HomePageSlotMachineWidget> {
                   ],
                 ],
                 if (!showSlotMachine)
-                  Text(
-                    '🔥 Serie: 8 Tage aktiv',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                FutureBuilder(future: loadWorkoutHistoryFromServer(), builder: 
+                  (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return CircularProgressIndicator();
+                    }
+                    if (snapshot.hasError) {
+                      return Text('Fehler beim Laden der Historie');
+                    }
+                    List<ScheduledWorkout> history = snapshot.data ?? [];
+                    int currentStreak = computeCurrentStreakFromHistory(history);
+                    return Text(
+                      '🔥 Serie: $currentStreak Tage aktiv',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    );
+                  }
+                ),
               ],
             ),
     );

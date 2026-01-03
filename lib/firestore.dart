@@ -148,7 +148,9 @@ Future<List<ScheduledWorkout>> loadWorkoutHistoryFromServer() async {
 
     for (QueryDocumentSnapshot<Map<String, dynamic>> doc in snapshot.docs) {
       if (doc.data().isEmpty) continue;
-      workouts.add(ScheduledWorkout.fromJson(doc.data()));
+      ScheduledWorkout workout = ScheduledWorkout.fromJson(doc.data());
+      workout.scheduledDay = DateTime.parse(doc.id);
+      workouts.add(workout);
     }
 
     return workouts;
@@ -169,4 +171,37 @@ Future<List<IntensityLevel>> loadIntensityLevels() async {
   }
 
   return levels;
+}
+
+
+Future<ScheduledWorkout?> loadDailyWorkoutPlan() async {
+  String userId = authServiceNotifier.value.currentUser?.uid ?? '';
+
+    DocumentSnapshot<Map<String, dynamic>> snapshot = await FirebaseFirestore
+      .instance
+      .collection('users')
+      .doc(userId)
+      .collection('workoutHistory')
+      .doc(DateFormat('yyyy-MM-dd').format(DateTime.now()))
+      .get();
+
+    if (!snapshot.exists || snapshot.data() == null) {
+      return null;
+    }
+
+    ScheduledWorkout workout = ScheduledWorkout.fromJson(snapshot.data()!);
+    workout.scheduledDay = DateTime.now();
+    return workout;
+}
+
+Future<void> deleteDailyWorkoutPlan() async {
+  String userId = authServiceNotifier.value.currentUser?.uid ?? '';
+
+    await FirebaseFirestore
+      .instance
+      .collection('users')
+      .doc(userId)
+      .collection('workoutHistory')
+      .doc(DateFormat('yyyy-MM-dd').format(DateTime.now()))
+      .delete();
 }
