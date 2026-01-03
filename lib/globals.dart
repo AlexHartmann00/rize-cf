@@ -1,5 +1,6 @@
 library;
 
+import 'package:rize/types/config.dart' show IntensityLevel;
 import 'package:rize/types/user.dart';
 import 'package:rize/types/workout.dart';
 
@@ -12,3 +13,5 @@ double intensityScoreTolerance = 0.15;
 UserData? userData;
 
 String? authenticatedUserId;
+
+List<IntensityLevel> intensityLevels = [];

@@ -1,5 +1,8 @@
+import 'package:rize/types/config.dart';
+
 class UserData {
   double intensityScore;
+  IntensityLevel intensityLevel = IntensityLevel.unknown();
 
   UserData({required this.intensityScore});
 

@@ -6,12 +6,17 @@ import 'package:rize/base_widgets.dart';
 import 'package:rize/firebase_options.dart';
 import 'package:rize/firestore.dart';
 import 'package:rize/globals.dart' as globals;
-import 'package:rize/slot_machine.dart'
-    show SlotMachine, SlotMachineController;
+import 'package:rize/slot_machine.dart' show SlotMachine, SlotMachineController;
 import 'package:rize/types/anamnesis.dart';
+import 'package:rize/types/config.dart' show IntensityLevel;
 import 'package:rize/types/user.dart' show UserData;
 import 'package:rize/types/workout.dart';
-import 'package:rize/utils.dart' show loadDailyWorkoutPlan;
+import 'package:rize/utils.dart'
+    show
+        loadDailyWorkoutPlan,
+        timeOfDayIsCurrent,
+        timeOfDayIsPast,
+        workoutScheduleToString;
 import 'package:rize/widgets.dart';
 import 'package:rize/workout_library.dart';
 import 'package:flutter/material.dart' hide TimeOfDay;
@@ -36,6 +41,20 @@ void main() async {
         globals.userData = userData;
         print('User logged in: ${user.uid}');
         globals.authenticatedUserId = user.uid;
+        loadIntensityLevels().then((value) {
+          globals.intensityLevels = value;
+          print(
+            'levels debug: ${value.length}; user score: ${globals.userData!.intensityScore}; levels: ${value.map((e) => '${e.label} ${e.minScore}-${e.maxScore}').toList()}',
+          );
+          print(
+            'Levels debug: ${value.firstWhere((level) => globals.userData!.intensityScore >= level.minScore && globals.userData!.intensityScore <= level.maxScore).label}',
+          );
+          globals.userData!.intensityLevel = value.firstWhere(
+            (level) =>
+                globals.userData!.intensityScore >= level.minScore &&
+                globals.userData!.intensityScore <= level.maxScore,
+          );
+        });
       });
     } else {
       print('User logged out');
@@ -46,6 +65,12 @@ void main() async {
   if (authServiceNotifier.value.currentUser != null) {
     UserData userData = await loadUserData(
       authServiceNotifier.value.currentUser!.uid,
+    );
+    List<IntensityLevel> levels = await loadIntensityLevels();
+    userData.intensityLevel = levels.firstWhere(
+      (level) =>
+          userData.intensityScore >= level.minScore &&
+          userData.intensityScore <= level.maxScore,
     );
 
     globals.userData = userData;
@@ -336,8 +361,17 @@ class _MyHomePageState extends State<MyHomePage> {
   //init state
   @override
   void initState() {
-    loadUserData(authServiceNotifier.value.currentUser!.uid).then((userData) {
+    loadUserData(authServiceNotifier.value.currentUser!.uid).then((
+      userData,
+    ) async {
+      List<IntensityLevel> levels = await loadIntensityLevels();
+      userData.intensityLevel = levels.firstWhere(
+        (level) =>
+            userData.intensityScore >= level.minScore &&
+            userData.intensityScore <= level.maxScore,
+      );
       globals.userData = userData;
+      await updateUserIntensityScore(userData.intensityScore);
     });
     super.initState();
   }
@@ -398,10 +432,7 @@ class _HomePageSlotMachineWidgetState extends State<HomePageSlotMachineWidget> {
 
   bool showSlotMachine = false;
 
-  TextStyle baseTextStyle = const TextStyle(
-    fontSize: 22,
-    color: Colors.white,
-  );
+  TextStyle baseTextStyle = const TextStyle(fontSize: 22, color: Colors.white);
 
   @override
   Widget build(BuildContext context) {
@@ -423,23 +454,37 @@ class _HomePageSlotMachineWidgetState extends State<HomePageSlotMachineWidget> {
         .map((e) => e.name)
         .toSet()
         .toList();
-    List<int> intensities = [
-      2,
-      3,
-      4,
-      5,
-      6,
-      7,
-      8,
-    ]; //TODO: FIlter based on user fitness
-    List<List<(TimeOfDay, int, int)>> schedules = [
-      [(TimeOfDay.morning, 1, 0), (TimeOfDay.evening, 1, 0)],
-      [(TimeOfDay.any, 1, 0), (TimeOfDay.any, 1, 0), (TimeOfDay.any, 1, 0)],
-      [(TimeOfDay.morning, 1, 0)],
+    List<int> intensities = [];
+    IntensityLevel userLevel =
+        globals.userData?.intensityLevel ?? IntensityLevel.unknown();
+    for (int i = userLevel.minFactor; i <= userLevel.maxFactor; i++) {
+      intensities.add(i);
+    }
+
+    List<List<WorkoutStep>> schedules = [
+      if (!timeOfDayIsPast(TimeOfDay.morning))
+        [
+          WorkoutStep.fromTuple((TimeOfDay.morning, 1, 0)),
+          WorkoutStep.fromTuple((TimeOfDay.evening, 1, 0)),
+        ],
+      [
+        WorkoutStep.fromTuple((TimeOfDay.any, 1, 0)),
+        WorkoutStep.fromTuple((TimeOfDay.any, 1, 0)),
+        WorkoutStep.fromTuple((TimeOfDay.any, 1, 0)),
+      ],
+      [
+        WorkoutStep.fromTuple((TimeOfDay.any, 1, 0)),
+        WorkoutStep.fromTuple((TimeOfDay.any, 1, 0)),
+      ],
+      if (!timeOfDayIsPast(TimeOfDay.morning))
+        [WorkoutStep.fromTuple((TimeOfDay.morning, 1, 0))],
+      [WorkoutStep.fromTuple((TimeOfDay.any, 1, 0))],
     ];
 
     SharedPreferences.getInstance().then((prefs) async {
-      bool questionnaireSubmitted = true; //TODO:prefs.getBool('anamnesisDone') ?? true;
+      bool questionnaireSubmitted =
+          (prefs.getBool('anamnesisDone') ?? false) ||
+          globals.userData?.intensityScore != 0.0;
       if (!questionnaireSubmitted) {
         AnamnesisQuestionnaire questionnaire =
             await loadAnamnesisQuestionnaire();
@@ -520,98 +565,155 @@ class _HomePageSlotMachineWidgetState extends State<HomePageSlotMachineWidget> {
               Text(
                 globals.dailyWorkoutPlan!.name,
                 textAlign: TextAlign.center,
-                style: Theme.of(
-                  context,
-                ).textTheme.headlineLarge!.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
+                style: Theme.of(context).textTheme.headlineLarge!.copyWith(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               SizedBox(height: 10),
               InkWell(
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => WorkoutDetailsPage(
+                        workout: globals.dailyWorkoutPlan!,
+                      ),
+                    ),
+                  );
+                },
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                  Icon(Icons.play_circle, color: Theme.of(context).primaryColorDark),
-                  SizedBox(width: 5),
-                  Text(
-                    'Technik ansehen',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 20
+                    Icon(
+                      Icons.play_circle,
+                      color: Theme.of(context).primaryColorDark,
                     ),
-                  ),
-                ],),
+                    SizedBox(width: 5),
+                    Text(
+                      'Technik ansehen',
+                      style: TextStyle(color: Colors.white, fontSize: 20),
+                    ),
+                  ],
+                ),
               ),
               SizedBox(height: 100),
-              WorkoutScheduleWidget(
-                workout: globals.dailyWorkoutPlan!,
-              ),
+              WorkoutScheduleWidget(workout: globals.dailyWorkoutPlan!),
               Expanded(child: SizedBox(height: 20)),
               Text(
                 globals.dailyWorkoutPlan!.durationString,
                 style: TextStyle(color: Colors.white),
               ),
-              SizedBox(height: 20,)
+              SizedBox(height: 20),
+              IconButton(
+                onPressed: () async {
+                  SharedPreferences prefs =
+                      await SharedPreferences.getInstance();
+                  await prefs.remove('daily_workout_plan');
+                  setState(() {
+                    globals.dailyWorkoutPlan = null;
+                  });
+                },
+                icon: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(20),
+                    color: Colors.amber,
+                  ),
+                  child: Padding(
+                    padding: EdgeInsets.all(8),
+                    child: Text(
+                      'Reset',
+                      style: TextStyle(
+                        color: Colors.black,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
             ],
           )
         : SizedBox();
 
-
-    Widget workoutCompletedWidget = globals.dailyWorkoutPlan != null ? Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: Column(children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.check_circle, color: Colors.green, size: 100),
-            SizedBox(height: 10),
-            Text(
-              'GESCHAFFT!',
-              textAlign: TextAlign.center,
-              style: Theme.of(
-                context,
-              ).textTheme.headlineMedium!.copyWith(color: Colors.white),
+    Widget workoutCompletedWidget = globals.dailyWorkoutPlan != null
+        ? Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Column(
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.check_circle, color: Colors.green, size: 100),
+                    SizedBox(height: 10),
+                    Text(
+                      'GESCHAFFT!',
+                      textAlign: TextAlign.center,
+                      style: Theme.of(
+                        context,
+                      ).textTheme.headlineMedium!.copyWith(color: Colors.white),
+                    ),
+                  ],
+                ),
+                Text(globals.dailyWorkoutPlan!.name, style: baseTextStyle),
+                Text(
+                  'Impact ${globals.dailyWorkoutPlan!.impactLevel.name}',
+                  style: baseTextStyle,
+                ),
+                Text(
+                  'Score ${globals.dailyWorkoutPlan!.impactScore}',
+                  style: baseTextStyle,
+                ),
+                Text(
+                  'Nächster Spin in ${24 - DateTime.now().hour} Stunden',
+                  style: baseTextStyle,
+                ),
+                LinearProgressIndicator(value: DateTime.now().hour / 24),
+              ],
             ),
-          ],
-        ),
-        Text(
-          globals.dailyWorkoutPlan!.name,
-          style: baseTextStyle,
-        ),
-        Text('Impact ${globals.dailyWorkoutPlan!.impactLevel.name}', style: baseTextStyle,),
-        Text('Score ${globals.dailyWorkoutPlan!.impactScore}', style: baseTextStyle,),
-        Text('Nächster Spin in ${24 - DateTime.now().hour} Stunden', style: baseTextStyle,),
-        LinearProgressIndicator(value: DateTime.now().hour / 24),
-        
-      ],),
-    ) : SizedBox();
+          )
+        : SizedBox();
 
-    bool dailyPlanActionable = true;
-    if(globals.dailyWorkoutPlan != null){
-      for((TimeOfDay, int, int) workoutStep in globals.dailyWorkoutPlan!.schedule){
-        if(workoutStep.$2 > 0){
-          dailyPlanActionable = false;
+    bool dailyPlanActionable = false;
+    if (globals.dailyWorkoutPlan != null) {
+      for (WorkoutStep workoutStep in globals.dailyWorkoutPlan!.schedule) {
+        bool workoutStepActionable = true;
+
+        if (workoutStep.completedUnits > 0) {
+          workoutStepActionable = false;
           continue;
         }
-        TimeOfDay timeOfDay = workoutStep.$1;
-        DateTime now = DateTime.now();
-        bool inCorrectTime = (timeOfDay == TimeOfDay.morning && (now.hour < 5 || now.hour >= 12)) ||
-            (timeOfDay == TimeOfDay.afternoon && (now.hour < 12 || now.hour >= 17)) ||
-            (timeOfDay == TimeOfDay.evening && (now.hour < 17 || now.hour >= 22));
-        if(!inCorrectTime) {
-              dailyPlanActionable = false;
-              break;
-            }
-      }
-    } 
+        TimeOfDay timeOfDay = workoutStep.timeOfDay;
+        bool inCorrectTime = !timeOfDayIsPast(timeOfDay);
+        print(
+          'tod debug: $timeOfDay is future? $inCorrectTime. Completed units: ${workoutStep.completedUnits}',
+        );
 
+        if (!inCorrectTime) {
+          workoutStepActionable = false;
+          continue;
+        }
+        if (workoutStepActionable) {
+          dailyPlanActionable = true;
+          break;
+        }
+      }
+    }
+
+    bool dailyPlanResettable = true;
+    if (globals.dailyWorkoutPlan != null) {
+      for (WorkoutStep workoutStep in globals.dailyWorkoutPlan!.schedule) {
+        if (workoutStep.completedUnits > 0) {
+          dailyPlanResettable = false;
+        }
+      }
+    }
 
     return Center(
       child: globals.dailyWorkoutPlan != null
-          ? (!dailyPlanActionable ? workoutCompletedWidget : dailyWorkoutChosenWidget)
+          ? (!dailyPlanActionable
+                ? workoutCompletedWidget
+                : dailyWorkoutChosenWidget)
           : Column(
               mainAxisAlignment: showSlotMachine
                   ? MainAxisAlignment.start
@@ -699,12 +801,20 @@ class _HomePageSlotMachineWidgetState extends State<HomePageSlotMachineWidget> {
                   Container(
                     decoration: BoxDecoration(
                       color: Colors.white.withAlpha(50),
-                      borderRadius: BorderRadius.circular(20)
+                      borderRadius: BorderRadius.circular(20),
                     ),
                     child: Center(
                       child: Padding(
                         padding: const EdgeInsets.all(12.0),
-                        child: Text('Bereit für deinen heutigen Spin?', textAlign: TextAlign.center, style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 25),),
+                        child: Text(
+                          'Bereit für deinen heutigen Spin?',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 25,
+                          ),
+                        ),
                       ),
                     ),
                   ),
@@ -723,7 +833,9 @@ class _HomePageSlotMachineWidgetState extends State<HomePageSlotMachineWidget> {
                         List.generate(intensities.length, (idx) {
                           return Text(intensities[idx].toString());
                         }),
-                        [Text('Morgens / Abends'), Text('3x'), Text('1x')],
+                        List.generate(schedules.length, (idx) {
+                          return Text(workoutScheduleToString(schedules[idx]));
+                        }),
                       ],
                       reelTitles: const [
                         Text('Übung'),
@@ -758,6 +870,10 @@ class _HomePageSlotMachineWidgetState extends State<HomePageSlotMachineWidget> {
                         intensityIdx,
                         scheduleIdx,
                       ]);
+
+                      _selectedWorkout = userLevel.applyToWorkout(
+                        _selectedWorkout,
+                      );
 
                       setState(() {
                         selectedWorkout = _selectedWorkout;
@@ -840,6 +956,7 @@ class _WorkoutLibraryPageState extends State<WorkoutLibraryPage> {
   Widget build(BuildContext context) {
     return ListView.builder(
       itemBuilder: (context, idx) {
+        print('Library debug: ${globals.workoutLibrary[idx].workoutType}');
         return Padding(
           padding: const EdgeInsets.all(8.0),
           child: WorkoutSummaryWidget(workout: globals.workoutLibrary[idx]),
@@ -915,7 +1032,12 @@ class _ProfilePageState extends State<ProfilePage> {
         _menuButton(
           'Abmelden',
           Icon(Icons.arrow_circle_left_rounded, color: Colors.white),
-          () {},
+          () async {
+            await authServiceNotifier.value.signOut();
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (context) => const WelcomePage()),
+            );
+          },
           Colors.red,
           Colors.white,
         ),
@@ -964,141 +1086,182 @@ class _ProfilePageState extends State<ProfilePage> {
 }
 
 class ProgressOverviewContent extends StatelessWidget {
-  const ProgressOverviewContent({
-    super.key,
-    required this.userId,
-  });
+  const ProgressOverviewContent({super.key, required this.userId});
 
   final String userId;
 
   @override
   Widget build(final BuildContext context) {
-    final CollectionReference<Map<String, Object?>> col =
-        FirebaseFirestore.instance.collection('users').doc(userId).collection('workoutHistory');
+    final CollectionReference<Map<String, Object?>> col = FirebaseFirestore
+        .instance
+        .collection('users')
+        .doc(userId)
+        .collection('workoutHistory');
 
     return StreamBuilder<QuerySnapshot<Map<String, Object?>>>(
       // No orderBy => no composite index hassles. We sort locally by parsed date.
       stream: col.limit(500).snapshots(),
-      builder: (final BuildContext context,
-          final AsyncSnapshot<QuerySnapshot<Map<String, Object?>>> snap) {
-        if (snap.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        }
-        if (snap.hasError) {
-          return Padding(
-            padding: const EdgeInsets.all(16),
-            child: Text('Fehler beim Laden: ${snap.error}'),
-          );
-        }
+      builder:
+          (
+            final BuildContext context,
+            final AsyncSnapshot<QuerySnapshot<Map<String, Object?>>> snap,
+          ) {
+            if (snap.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            if (snap.hasError) {
+              return Padding(
+                padding: const EdgeInsets.all(16),
+                child: Text('Fehler beim Laden: ${snap.error}'),
+              );
+            }
 
-        final List<QueryDocumentSnapshot<Map<String, Object?>>> docs =
-            snap.data?.docs ?? <QueryDocumentSnapshot<Map<String, Object?>>>[];
+            final List<QueryDocumentSnapshot<Map<String, Object?>>> docs =
+                snap.data?.docs ??
+                <QueryDocumentSnapshot<Map<String, Object?>>>[];
 
-        final List<WorkoutDayEntry> entries = <WorkoutDayEntry>[];
-        for (final QueryDocumentSnapshot<Map<String, Object?>> doc in docs) {
-          final DateTime? date = _tryParseDocIdDate(doc.id);
-          if (date == null) continue;
+            final List<WorkoutDayEntry> entries = <WorkoutDayEntry>[];
+            for (final QueryDocumentSnapshot<Map<String, Object?>> doc
+                in docs) {
+              final DateTime? date = _tryParseDocIdDate(doc.id);
+              if (date == null) continue;
 
-          final Map<String, dynamic> json = _toDynamicMap(doc.data());
-          final ScheduledWorkout workout = ScheduledWorkout.fromJson(json);
-          entries.add(WorkoutDayEntry(date: date, workout: workout));
-        }
+              final Map<String, dynamic> json = _toDynamicMap(doc.data());
+              final ScheduledWorkout workout = ScheduledWorkout.fromJson(json);
+              entries.add(WorkoutDayEntry(date: date, workout: workout));
+            }
 
-        entries.sort((final WorkoutDayEntry a, final WorkoutDayEntry b) => a.date.compareTo(b.date));
+            entries.sort(
+              (final WorkoutDayEntry a, final WorkoutDayEntry b) =>
+                  a.date.compareTo(b.date),
+            );
 
-        final DateTime now = DateTime.now();
-        final DateTime today = DateTime(now.year, now.month, now.day);
+            final DateTime now = DateTime.now();
+            final DateTime today = DateTime(now.year, now.month, now.day);
 
-        final Stats stats = Stats.fromEntries(entries);
+            final Stats stats = Stats.fromEntries(entries);
 
-        final int currentStreak = _computeCurrentStreak(stats.activeDays, today);
-        final int bestStreak = _computeBestStreak(stats.activeDays);
+            final int currentStreak = _computeCurrentStreak(
+              stats.activeDays,
+              today,
+            );
+            final int bestStreak = _computeBestStreak(stats.activeDays);
 
-        final DayImpact? lastImpact = stats.lastImpact;
-        final String lastImpactLabel = lastImpact == null
-            ? '—'
-            : '${_impactLevelLabel(lastImpact.impactLevel)} – ${_fmt(lastImpact.score)}';
+            final DayImpact? lastImpact = stats.lastImpact;
+            final String lastImpactLabel = lastImpact == null
+                ? '—'
+                : '${_impactLevelLabel(lastImpact.impactLevel)} – ${_fmt(lastImpact.score)}';
 
-        final List<DayImpactPoint> last30 = _last30Points(stats.impactByDay, today);
+            final List<DayImpactPoint> last30 = _last30Points(
+              stats.impactByDay,
+              today,
+            );
 
-        final Color textColor = Colors.white;//Theme.of(context).colorScheme.onSurface.withOpacity(0.95);
-        final Color card = Theme.of(context).colorScheme.surface.withOpacity(0.10);
+            final Color textColor = Colors
+                .white; //Theme.of(context).colorScheme.onSurface.withOpacity(0.95);
+            final Color card = Theme.of(
+              context,
+            ).colorScheme.surface.withOpacity(0.10);
 
-        return Padding(
-          padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
-          child: DefaultTextStyle(
-            style: Theme.of(context).textTheme.bodyMedium!.copyWith(color: textColor),
-            child: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  _HeaderRow(
-                    title: 'Serie & Erfolgsstatistik'
-                  ),
-                  const SizedBox(height: 14),
-              
-                  _StatRow(label: 'Aktuelle Serie', value: '🔥 $currentStreak Tage aktiv'),
-                  _StatRow(label: 'Beste Serie', value: '$bestStreak Tage'),
-                  _StatRow(label: 'Absolvierte Spins', value: '${stats.absoluteSpins}'),
-                  _StatRow(label: 'Dynamische Wiederholungen', value: '${stats.dynamicReps}'),
-                  _StatRow(label: 'Statisch gehalten', value: '${(stats.staticSeconds / 60).floor()} min'),
-                  _ImpactRow(
-                    label: 'Letzter Impact',
-                    value: lastImpactLabel,
-                    dot: _impactDotColor(lastImpact?.impactLevel),
-                  ),
-              
-                  const SizedBox(height: 22),
-                  Text(
-                    'Impact Score-Entwicklung',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w800,
-                          color: textColor,
-                        ),
-                  ),
-                  const SizedBox(height: 10),
-                  _ImpactChart(points: last30, cardColor: card, textColor: textColor),
-                  const SizedBox(height: 6),
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: Text(
-                      'Letzten 30 Tage',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: textColor.withOpacity(0.8),
-                            fontWeight: FontWeight.w600,
-                          ),
-                    ),
-                  ),
-              
-                  const SizedBox(height: 22),
-                  Row(
+            return Padding(
+              padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
+              child: DefaultTextStyle(
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium!.copyWith(color: textColor),
+                child: SingleChildScrollView(
+                  child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
-                      Expanded(
-                        child: _LevelCard(
-                          level: _levelFromImpact(lastImpact?.score),
-                          progress: _progressToNextLevel(lastImpact?.score),
-                          cardColor: card,
-                          textColor: textColor,
+                      _HeaderRow(title: 'Serie & Erfolgsstatistik'),
+                      const SizedBox(height: 14),
+
+                      _StatRow(
+                        label: 'Aktuelle Serie',
+                        value: '🔥 $currentStreak Tage aktiv',
+                      ),
+                      _StatRow(label: 'Beste Serie', value: '$bestStreak Tage'),
+                      _StatRow(
+                        label: 'Absolvierte Spins',
+                        value: '${stats.absoluteSpins}',
+                      ),
+                      _StatRow(
+                        label: 'Dynamische Wiederholungen',
+                        value: '${stats.dynamicReps}',
+                      ),
+                      _StatRow(
+                        label: 'Statisch gehalten',
+                        value: '${(stats.staticSeconds / 60).floor()} min',
+                      ),
+                      _ImpactRow(
+                        label: 'Letzter Impact',
+                        value: lastImpactLabel,
+                        dot: _impactDotColor(lastImpact?.impactLevel),
+                      ),
+
+                      const SizedBox(height: 22),
+                      Text(
+                        'Impact Score-Entwicklung',
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(
+                              fontWeight: FontWeight.w800,
+                              color: textColor,
+                            ),
+                      ),
+                      const SizedBox(height: 10),
+                      _ImpactChart(
+                        points: last30,
+                        cardColor: card,
+                        textColor: textColor,
+                      ),
+                      const SizedBox(height: 6),
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: Text(
+                          'Letzten 30 Tage',
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                color: textColor.withOpacity(0.8),
+                                fontWeight: FontWeight.w600,
+                              ),
                         ),
                       ),
-                      const SizedBox(width: 14),
-                      Expanded(
-                        child: _HistoryCalendarCard(
-                          month: today,
-                          activeDaysInMonth: _activeDaysInMonth(stats.activeDays, today),
-                          cardColor: card,
-                          textColor: textColor,
-                        ),
+
+                      const SizedBox(height: 22),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          Expanded(
+                            child: _LevelCard(
+                              level: globals.userData!.intensityLevel.label,
+                              progress: globals.userData!.intensityLevel
+                                  .progressToNextLevel(
+                                    globals.userData!.intensityScore,
+                                  ),
+                              cardColor: card,
+                              textColor: textColor,
+                            ),
+                          ),
+                          const SizedBox(width: 14),
+                          Expanded(
+                            child: _HistoryCalendarCard(
+                              month: today,
+                              activeDaysInMonth: _activeDaysInMonth(
+                                stats.activeDays,
+                                today,
+                              ),
+                              cardColor: card,
+                              textColor: textColor,
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
-                ],
+                ),
               ),
-            ),
-          ),
-        );
-      },
+            );
+          },
     );
   }
 }
@@ -1107,10 +1270,7 @@ class ProgressOverviewContent extends StatelessWidget {
 
 @immutable
 class WorkoutDayEntry {
-  const WorkoutDayEntry({
-    required this.date,
-    required this.workout,
-  });
+  const WorkoutDayEntry({required this.date, required this.workout});
 
   final DateTime date; // normalized yyyy-MM-dd
   final ScheduledWorkout workout;
@@ -1118,10 +1278,7 @@ class WorkoutDayEntry {
 
 @immutable
 class DayImpact {
-  const DayImpact({
-    required this.score,
-    required this.impactLevel,
-  });
+  const DayImpact({required this.score, required this.impactLevel});
 
   final double score;
   final ImpactLevel impactLevel;
@@ -1195,7 +1352,10 @@ class Stats {
         statSec += secPerUnit * completedUnits;
       }
 
-      final DayImpact impact = DayImpact(score: w.impactScore, impactLevel: w.impactLevel);
+      final DayImpact impact = DayImpact(
+        score: w.impactScore,
+        impactLevel: w.impactLevel,
+      );
       impactByDay[day] = impact;
       lastImpact = impact;
     }
@@ -1211,10 +1371,10 @@ class Stats {
   }
 }
 
-int _completedUnits(final List<(TimeOfDay, int, int)> schedule) {
+int _completedUnits(final List<WorkoutStep> schedule) {
   int sum = 0;
-  for (final (TimeOfDay, int, int) entry in schedule) {
-    sum += entry.$3;
+  for (final WorkoutStep entry in schedule) {
+    sum += entry.completedUnits;
   }
   return sum;
 }
@@ -1263,7 +1423,10 @@ dynamic _toDynamicValue(final Object? v) {
 
 /* ============================= Streaks / last 30 ============================= */
 
-int _computeCurrentStreak(final Set<DateTime> activeDays, final DateTime today) {
+int _computeCurrentStreak(
+  final Set<DateTime> activeDays,
+  final DateTime today,
+) {
   if (activeDays.isEmpty) return 0;
 
   DateTime cursor = today;
@@ -1303,7 +1466,10 @@ int _computeBestStreak(final Set<DateTime> activeDays) {
   return best;
 }
 
-List<DayImpactPoint> _last30Points(final Map<DateTime, DayImpact> impactByDay, final DateTime today) {
+List<DayImpactPoint> _last30Points(
+  final Map<DateTime, DayImpact> impactByDay,
+  final DateTime today,
+) {
   final DateTime start = today.subtract(const Duration(days: 29));
   final List<DayImpactPoint> out = <DayImpactPoint>[];
 
@@ -1315,7 +1481,10 @@ List<DayImpactPoint> _last30Points(final Map<DateTime, DayImpact> impactByDay, f
   return out;
 }
 
-Set<int> _activeDaysInMonth(final Set<DateTime> activeDays, final DateTime month) {
+Set<int> _activeDaysInMonth(
+  final Set<DateTime> activeDays,
+  final DateTime month,
+) {
   final Set<int> out = <int>{};
   for (final DateTime d in activeDays) {
     if (d.year == month.year && d.month == month.month) out.add(d.day);
@@ -1350,20 +1519,6 @@ Color _impactDotColor(final ImpactLevel? level) {
   }
 }
 
-String _levelFromImpact(final double? score) {
-  if (score == null) return 'Beginner';
-  if (score < 0.35) return 'Beginner';
-  if (score < 0.70) return 'Intermediate';
-  return 'Advanced';
-}
-
-double _progressToNextLevel(final double? score) {
-  if (score == null) return 0.0;
-  if (score < 0.35) return (score / 0.35).clamp(0.0, 1.0);
-  if (score < 0.70) return ((score - 0.35) / (0.70 - 0.35)).clamp(0.0, 1.0);
-  return 1.0;
-}
-
 /* ============================= UI (typed) ============================= */
 
 class _HeaderRow extends StatelessWidget {
@@ -1379,9 +1534,9 @@ class _HeaderRow extends StatelessWidget {
           child: Text(
             title,
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.w800,
-                  color: Colors.white,
-                ),
+              fontWeight: FontWeight.w800,
+              color: Colors.white,
+            ),
           ),
         ),
       ],
@@ -1403,14 +1558,17 @@ class _StatRow extends StatelessWidget {
       child: Row(
         children: <Widget>[
           Expanded(
-            child: Text(label, style: TextStyle(fontSize: 17),)//, style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: c)),
+            child: Text(
+              label,
+              style: TextStyle(fontSize: 17),
+            ), //, style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: c)),
           ),
           Text(
-            value
-            , style: TextStyle(fontSize: 17)
+            value,
+            style: TextStyle(fontSize: 17),
             //style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  //color: c,
-           //       fontWeight: FontWeight.w800,
+            //color: c,
+            //       fontWeight: FontWeight.w800,
             //    ),
           ),
         ],
@@ -1420,7 +1578,11 @@ class _StatRow extends StatelessWidget {
 }
 
 class _ImpactRow extends StatelessWidget {
-  const _ImpactRow({required this.label, required this.value, required this.dot});
+  const _ImpactRow({
+    required this.label,
+    required this.value,
+    required this.dot,
+  });
 
   final String label;
   final String value;
@@ -1432,17 +1594,17 @@ class _ImpactRow extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
         children: <Widget>[
-          Expanded(
-            child: Text(label, style: TextStyle(fontSize: 17)),
-          ),
+          Expanded(child: Text(label, style: TextStyle(fontSize: 17))),
           Row(
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
-              Container(width: 12, height: 12, decoration: BoxDecoration(color: dot, shape: BoxShape.circle)),
-              const SizedBox(width: 8),
-              Text(
-                value, style: TextStyle(fontSize: 17)
+              Container(
+                width: 12,
+                height: 12,
+                decoration: BoxDecoration(color: dot, shape: BoxShape.circle),
               ),
+              const SizedBox(width: 8),
+              Text(value, style: TextStyle(fontSize: 17)),
             ],
           ),
         ],
@@ -1472,8 +1634,12 @@ class _ImpactChart extends StatelessWidget {
     }
 
     final List<double> ys = spots.map((final FlSpot s) => s.y).toList();
-    final double minY = ys.isEmpty ? 0.0 : ys.reduce((final double a, final double b) => a < b ? a : b);
-    final double maxY = ys.isEmpty ? 0.25 : ys.reduce((final double a, final double b) => a > b ? a : b);
+    final double minY = ys.isEmpty
+        ? 0.0
+        : ys.reduce((final double a, final double b) => a < b ? a : b);
+    final double maxY = ys.isEmpty
+        ? 0.25
+        : ys.reduce((final double a, final double b) => a > b ? a : b);
 
     final double paddedMin = (minY - 0.02).clamp(0.0, 10.0);
     final double paddedMax = (maxY + 0.02).clamp(0.0, 10.0);
@@ -1497,12 +1663,19 @@ class _ImpactChart extends StatelessWidget {
           gridData: FlGridData(
             show: true,
             drawVerticalLine: false,
-            horizontalInterval: (paddedMax - paddedMin) <= 0 ? 0.05 : (paddedMax - paddedMin) / 4,
-            getDrawingHorizontalLine: (final double _) => FlLine(color: grid, strokeWidth: 1),
+            horizontalInterval: (paddedMax - paddedMin) <= 0
+                ? 0.05
+                : (paddedMax - paddedMin) / 4,
+            getDrawingHorizontalLine: (final double _) =>
+                FlLine(color: grid, strokeWidth: 1),
           ),
           titlesData: FlTitlesData(
-            topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-            rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+            topTitles: const AxisTitles(
+              sideTitles: SideTitles(showTitles: false),
+            ),
+            rightTitles: const AxisTitles(
+              sideTitles: SideTitles(showTitles: false),
+            ),
             bottomTitles: AxisTitles(
               sideTitles: SideTitles(
                 showTitles: true,
@@ -1510,12 +1683,16 @@ class _ImpactChart extends StatelessWidget {
                 reservedSize: 18,
                 getTitlesWidget: (final double value, final TitleMeta meta) {
                   final int idx = value.round();
-                  if (idx < 0 || idx >= points.length) return const SizedBox.shrink();
+                  if (idx < 0 || idx >= points.length)
+                    return const SizedBox.shrink();
                   final DateTime d = points[idx].date;
                   final String txt = '${d.day}.${d.month}.';
                   return Padding(
                     padding: const EdgeInsets.only(top: 6),
-                    child: Text(txt, style: TextStyle(color: axis, fontSize: 10)),
+                    child: Text(
+                      txt,
+                      style: TextStyle(color: axis, fontSize: 10),
+                    ),
                   );
                 },
               ),
@@ -1524,9 +1701,14 @@ class _ImpactChart extends StatelessWidget {
               sideTitles: SideTitles(
                 showTitles: true,
                 reservedSize: 40,
-                interval: (paddedMax - paddedMin) <= 0 ? 0.05 : (paddedMax - paddedMin) / 4,
+                interval: (paddedMax - paddedMin) <= 0
+                    ? 0.05
+                    : (paddedMax - paddedMin) / 4,
                 getTitlesWidget: (final double value, final TitleMeta meta) {
-                  return Text(_fmt(value), style: TextStyle(color: axis, fontSize: 10));
+                  return Text(
+                    _fmt(value),
+                    style: TextStyle(color: axis, fontSize: 10),
+                  );
                 },
               ),
             ),
@@ -1564,23 +1746,35 @@ class _LevelCard extends StatelessWidget {
   Widget build(final BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(color: cardColor, borderRadius: BorderRadius.circular(14)),
+      decoration: BoxDecoration(
+        color: cardColor,
+        borderRadius: BorderRadius.circular(14),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          Text('Level',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w800,
-                    color: textColor,
-                  )),
+          Text(
+            'Level',
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w800,
+              color: textColor,
+            ),
+          ),
           const SizedBox(height: 8),
-          Text(level,
-              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    fontWeight: FontWeight.w800,
-                    color: textColor,
-                  )),
+          Text(
+            level,
+            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+              fontWeight: FontWeight.w800,
+              color: textColor,
+            ),
+          ),
           const SizedBox(height: 12),
-          Text('Fortschritt', style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: textColor)),
+          Text(
+            'Fortschritt',
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: textColor),
+          ),
           const SizedBox(height: 8),
           ClipRRect(
             borderRadius: BorderRadius.circular(999),
@@ -1596,9 +1790,9 @@ class _LevelCard extends StatelessWidget {
             child: Text(
               '${(progress * 100).round()}%',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: textColor,
-                    fontWeight: FontWeight.w800,
-                  ),
+                color: textColor,
+                fontWeight: FontWeight.w800,
+              ),
             ),
           ),
         ],
@@ -1632,30 +1826,37 @@ class _HistoryCalendarCard extends StatelessWidget {
 
     return Container(
       padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(color: cardColor, borderRadius: BorderRadius.circular(14)),
+      decoration: BoxDecoration(
+        color: cardColor,
+        borderRadius: BorderRadius.circular(14),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          Text('Historie',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w800,
-                    color: textColor,
-                  )),
+          Text(
+            'Historie',
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w800,
+              color: textColor,
+            ),
+          ),
           const SizedBox(height: 10),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: dow
-                .map((final String s) => SizedBox(
-                      width: 22,
-                      child: Text(
-                        s,
-                        textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: textColor.withOpacity(0.85),
-                              fontWeight: FontWeight.w800,
-                            ),
+                .map(
+                  (final String s) => SizedBox(
+                    width: 22,
+                    child: Text(
+                      s,
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: textColor.withOpacity(0.85),
+                        fontWeight: FontWeight.w800,
                       ),
-                    ))
+                    ),
+                  ),
+                )
                 .toList(),
           ),
           const SizedBox(height: 8),
@@ -1713,7 +1914,10 @@ class _CalendarGrid extends StatelessWidget {
                       ? Container(
                           width: 16,
                           height: 16,
-                          decoration: const BoxDecoration(color: Colors.green, shape: BoxShape.circle),
+                          decoration: const BoxDecoration(
+                            color: Colors.green,
+                            shape: BoxShape.circle,
+                          ),
                           child: Center(
                             child: Text(
                               '$day',

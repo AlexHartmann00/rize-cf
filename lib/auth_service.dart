@@ -1,7 +1,10 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:rize/firestore.dart';
 
-ValueNotifier<AuthService> authServiceNotifier = ValueNotifier<AuthService>(AuthService());
+ValueNotifier<AuthService> authServiceNotifier = ValueNotifier<AuthService>(
+  AuthService(),
+);
 
 class AuthService {
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
@@ -10,12 +13,13 @@ class AuthService {
 
   Stream<User?> get authStateChanges => _firebaseAuth.authStateChanges();
 
-  Future<UserCredential?> signInWithEmailAndPassword(String email, String password) async {
+  Future<UserCredential?> signInWithEmailAndPassword(
+    String email,
+    String password,
+  ) async {
     try {
-      UserCredential userCredential = await _firebaseAuth.signInWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
+      UserCredential userCredential = await _firebaseAuth
+          .signInWithEmailAndPassword(email: email, password: password);
       return userCredential;
     } catch (e) {
       print('Error signing in: $e');
@@ -23,13 +27,17 @@ class AuthService {
     }
   }
 
-  Future<UserCredential?> registerWithEmailAndPassword(String email, String password, String displayName) async {
+  Future<UserCredential?> registerWithEmailAndPassword(
+    String email,
+    String password,
+    String displayName,
+  ) async {
     try {
-      UserCredential userCredential = await _firebaseAuth.createUserWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
+      UserCredential userCredential = await _firebaseAuth
+          .createUserWithEmailAndPassword(email: email, password: password);
       await userCredential.user?.updateDisplayName(displayName);
+      //Create user document in firestore
+      await createUserDocument(userCredential.user!.uid);
       return userCredential;
     } catch (e) {
       print('Error registering: $e');
@@ -53,7 +61,8 @@ class AuthService {
   }
 
   Future<void> deleteAccountWithReauthentication(
-      String email, String password
+    String email,
+    String password,
   ) async {
     AuthCredential credential = EmailAuthProvider.credential(
       email: email,
@@ -66,7 +75,9 @@ class AuthService {
   }
 
   Future<void> updatePasswordWithCurrentPassword(
-      String email, String currentPassword, String newPassword
+    String email,
+    String currentPassword,
+    String newPassword,
   ) async {
     if (currentUser != null) {
       AuthCredential credential = EmailAuthProvider.credential(

@@ -5,6 +5,7 @@ import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:rize/auth_service.dart';
 import 'package:rize/types/anamnesis.dart';
+import 'package:rize/types/config.dart' show IntensityLevel;
 import 'package:rize/types/user.dart';
 import 'package:rize/types/workout.dart';
 import 'package:intl/intl.dart';
@@ -20,6 +21,7 @@ Future<List<Workout>> loadWorkoutCollection() async {
 
   for (QueryDocumentSnapshot<Map<String, dynamic>> doc in snapshot.docs) {
     if (doc.data().isEmpty) continue;
+    print('FS debug: ${doc.data()['type']}');
     workouts.add(Workout.fromJson(doc.data()));
   }
 
@@ -76,6 +78,25 @@ Future<void> saveAnamnesisResponse(AnamnesisQuestionnaire questionnaire) async {
   });
 }
 
+Future<void> updateUserIntensityScore(double intensityScore) async {
+  CollectionReference<Map<String, dynamic>> usersCollection = FirebaseFirestore
+      .instance
+      .collection('users');
+
+  //Create document if it does not exist
+  await usersCollection.doc(authServiceNotifier.value.currentUser!.uid).set({
+    'intensityScore': intensityScore,
+  }, SetOptions(merge: true));
+}
+
+Future<void> createUserDocument(String userId) {
+  CollectionReference<Map<String, dynamic>> usersCollection = FirebaseFirestore
+      .instance
+      .collection('users');
+
+  return usersCollection.doc(userId).set({'intensityScore': 0.0});
+}
+
 Future<UserData> loadUserData(String userId) async {
   DocumentReference<Map<String, dynamic>> docRef = FirebaseFirestore.instance
       .collection('users')
@@ -92,25 +113,26 @@ Future<UserData> loadUserData(String userId) async {
 }
 
 Future<void> uploadWorkoutToServer(ScheduledWorkout workout) async {
-    Map<String, dynamic> jsonData = workout.toJson();
-    String jsonString = jsonEncode(jsonData);
+  Map<String, dynamic> jsonData = workout.toJson();
+  String jsonString = jsonEncode(jsonData);
 
-    //upload to Firestore collection users/{userId}/workoutHistory/{datestring}
-    // with datestring = yyyy-MM-dd
+  //upload to Firestore collection users/{userId}/workoutHistory/{datestring}
+  // with datestring = yyyy-MM-dd
 
-    String userId = authServiceNotifier.value.currentUser?.uid ?? '';
-    DateFormat df = DateFormat('yyyy-MM-dd');
-    String dateString = df.format(DateTime.now());
+  String userId = authServiceNotifier.value.currentUser?.uid ?? '';
+  DateFormat df = DateFormat('yyyy-MM-dd');
+  String dateString = df.format(DateTime.now());
 
-    await FirebaseFirestore
-      .instance
+  await FirebaseFirestore.instance
       .collection('users')
       .doc(userId)
       .collection('workoutHistory')
-      .doc(dateString).set(jsonData);
+      .doc(dateString)
+      .set(jsonData);
 
     await workout.saveAsDailyWorkoutPlan();
   }
+
 
 Future<List<ScheduledWorkout>> loadWorkoutHistoryFromServer() async {
     String userId = authServiceNotifier.value.currentUser?.uid ?? '';
@@ -131,3 +153,20 @@ Future<List<ScheduledWorkout>> loadWorkoutHistoryFromServer() async {
 
     return workouts;
   }
+
+
+Future<List<IntensityLevel>> loadIntensityLevels() async {
+  DocumentReference<Map<String, dynamic>> docRef = FirebaseFirestore.instance
+      .collection('config')
+      .doc('intensityLevels');
+  DocumentSnapshot<Map<String, dynamic>> docSnap = await docRef.get();
+  List<IntensityLevel> levels = [];
+  if (docSnap.exists && docSnap.data() != null) {
+    Map<String, dynamic> data = docSnap.data()!;
+    for (MapEntry entry in data.entries) {
+      levels.add(IntensityLevel.fromJson(entry.value));
+    }
+  }
+
+  return levels;
+}
