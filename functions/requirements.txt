@@ -1,1 +1,22 @@
-firebase_functions~=0.1.0
+# Firebase Functions SDK (Python)
+firebase-functions>=0.5.0,<1.0.0
+
+# Firebase Admin SDK (Firestore, auth, transactions)
+firebase-admin>=6.4.0,<7.0.0
+
+# Required by firebase-functions / CloudEvents
+functions-framework>=3.5.0,<4.0.0
+cloudevents>=1.10.0,<2.0.0
+
+# Firestore client (pulled by firebase-admin but pinned for safety)
+google-cloud-firestore>=2.14.0,<3.0.0
+
+# Event definitions used internally by firebase-functions
+google-events>=0.5.0,<1.0.0
+
+# Indirect but required by firebase stack
+flask>=2.3.0,<3.0.0
+flask-cors>=4.0.0,<5.0.0
+pyjwt>=2.8.0,<3.0.0
+pyyaml>=6.0.0,<7.0.0
+typing-extensions>=4.9.0,<5.0.0

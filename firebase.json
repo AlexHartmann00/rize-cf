@@ -29,7 +29,6 @@
   },
   "functions": [
     {
-      "source": "functions",
       "codebase": "default",
       "ignore": [
         "venv",
@@ -38,6 +37,7 @@
         "firebase-debug.*.log",
         "*.local"
       ],
+      "source": "functions",
       "runtime": "python313"
     }
   ]
