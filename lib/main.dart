@@ -457,25 +457,36 @@ class _HomePageSlotMachineWidgetState extends State<HomePageSlotMachineWidget> {
       intensities.add(i);
     }
 
-    List<List<WorkoutStep>> schedules = [
-      if (!timeOfDayIsPast(TimeOfDay.morning))
-        [
-          WorkoutStep.fromTuple((TimeOfDay.morning, 1, 0)),
-          WorkoutStep.fromTuple((TimeOfDay.evening, 1, 0)),
-        ],
-      [
-        WorkoutStep.fromTuple((TimeOfDay.any, 1, 0)),
-        WorkoutStep.fromTuple((TimeOfDay.any, 1, 0)),
-        WorkoutStep.fromTuple((TimeOfDay.any, 1, 0)),
-      ],
-      [
-        WorkoutStep.fromTuple((TimeOfDay.any, 1, 0)),
-        WorkoutStep.fromTuple((TimeOfDay.any, 1, 0)),
-      ],
-      if (!timeOfDayIsPast(TimeOfDay.morning))
-        [WorkoutStep.fromTuple((TimeOfDay.morning, 1, 0))],
-      [WorkoutStep.fromTuple((TimeOfDay.any, 1, 0))],
-    ];
+    List<List<WorkoutStep>> schedules = [];
+
+    for(int i = 1; i <= userLevel.setsPerDayMax; i++) {
+      TimeOfDay timeOfDay = TimeOfDay.any;
+      schedules.add(List.generate(
+        i,
+        (index) => WorkoutStep.fromTuple((timeOfDay, 1, 0)),
+      ));
+
+    }
+    
+    // [
+    //   if (!timeOfDayIsPast(TimeOfDay.morning))
+    //     [
+    //       WorkoutStep.fromTuple((TimeOfDay.morning, 1, 0)),
+    //       WorkoutStep.fromTuple((TimeOfDay.evening, 1, 0)),
+    //     ],
+    //   [
+    //     WorkoutStep.fromTuple((TimeOfDay.any, 1, 0)),
+    //     WorkoutStep.fromTuple((TimeOfDay.any, 1, 0)),
+    //     WorkoutStep.fromTuple((TimeOfDay.any, 1, 0)),
+    //   ],
+    //   [
+    //     WorkoutStep.fromTuple((TimeOfDay.any, 1, 0)),
+    //     WorkoutStep.fromTuple((TimeOfDay.any, 1, 0)),
+    //   ],
+    //   if (!timeOfDayIsPast(TimeOfDay.morning))
+    //     [WorkoutStep.fromTuple((TimeOfDay.morning, 1, 0))],
+    //   [WorkoutStep.fromTuple((TimeOfDay.any, 1, 0))],
+    // ];
 
     SharedPreferences.getInstance().then((prefs) async {
       bool questionnaireSubmitted =
