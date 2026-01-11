@@ -1115,171 +1115,163 @@ class ProgressOverviewContent extends StatelessWidget {
         .doc(userId)
         .collection('workoutHistory');
 
+      final CollectionReference<Map<String, Object?>> scoreHistory = FirebaseFirestore
+        .instance
+        .collection('users')
+        .doc(userId)
+        .collection('scoreHistory');
+
     return StreamBuilder<QuerySnapshot<Map<String, Object?>>>(
-      // No orderBy => no composite index hassles. We sort locally by parsed date.
-      stream: col.limit(500).snapshots(),
-      builder:
-          (
-            final BuildContext context,
-            final AsyncSnapshot<QuerySnapshot<Map<String, Object?>>> snap,
-          ) {
-            if (snap.connectionState == ConnectionState.waiting) {
-              return const Center(child: CircularProgressIndicator());
-            }
-            if (snap.hasError) {
-              return Padding(
-                padding: const EdgeInsets.all(16),
-                child: Text('Fehler beim Laden: ${snap.error}'),
-              );
-            }
+  stream: col.limit(500).snapshots(),
+  builder: (context, snap) {
+    if (snap.connectionState == ConnectionState.waiting) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (snap.hasError) {
+      return Padding(
+        padding: const EdgeInsets.all(16),
+        child: Text('Fehler beim Laden: ${snap.error}'),
+      );
+    }
 
-            final List<QueryDocumentSnapshot<Map<String, Object?>>> docs =
-                snap.data?.docs ??
-                <QueryDocumentSnapshot<Map<String, Object?>>>[];
+    // --- Parse workout history (as you already do) ---
+    final docs = snap.data?.docs ?? <QueryDocumentSnapshot<Map<String, Object?>>>[];
 
-            final List<WorkoutDayEntry> entries = <WorkoutDayEntry>[];
-            for (final QueryDocumentSnapshot<Map<String, Object?>> doc
-                in docs) {
-              final DateTime? date = _tryParseDocIdDate(doc.id);
-              if (date == null) continue;
+    final List<WorkoutDayEntry> entries = <WorkoutDayEntry>[];
+    for (final doc in docs) {
+      final DateTime? date = _tryParseDocIdDate(doc.id);
+      if (date == null) continue;
 
-              final Map<String, dynamic> json = _toDynamicMap(doc.data());
-              final ScheduledWorkout workout = ScheduledWorkout.fromJson(json);
-              entries.add(WorkoutDayEntry(date: date, workout: workout));
-            }
+      final Map<String, dynamic> json = _toDynamicMap(doc.data());
+      final ScheduledWorkout workout = ScheduledWorkout.fromJson(json);
+      entries.add(WorkoutDayEntry(date: date, workout: workout));
+    }
 
-            entries.sort(
-              (final WorkoutDayEntry a, final WorkoutDayEntry b) =>
-                  a.date.compareTo(b.date),
-            );
+    entries.sort((a, b) => a.date.compareTo(b.date));
 
-            final DateTime now = DateTime.now();
-            final DateTime today = DateTime(now.year, now.month, now.day);
+    final DateTime now = DateTime.now();
+    final DateTime today = DateTime(now.year, now.month, now.day);
 
-            final Stats stats = Stats.fromEntries(entries);
+    final Stats stats = Stats.fromEntries(entries);
 
-            final int currentStreak = _computeCurrentStreak(
-              stats.activeDays,
-              today,
-            );
-            final int bestStreak = _computeBestStreak(stats.activeDays);
+    final int currentStreak = _computeCurrentStreak(stats.activeDays, today);
+    final int bestStreak = _computeBestStreak(stats.activeDays);
 
-            final DayImpact? lastImpact = stats.lastImpact;
-            final String lastImpactLabel = lastImpact == null
-                ? '—'
-                : '${_impactLevelLabel(lastImpact.impactLevel)} – ${_fmt(lastImpact.score)}';
+    final DayImpact? lastImpact = stats.lastImpact;
+    final String lastImpactLabel = lastImpact == null
+        ? '—'
+        : '${_impactLevelLabel(lastImpact.impactLevel)} – ${_fmt(lastImpact.score)}';
 
-            final List<DayImpactPoint> last30 = _last30Points(
-              stats.impactByDay,
-              today,
-            );
+    // Build impact series for last 30 days
+    final List<DayImpactPoint> impactLast30 = _last30Points(stats.impactByDay, today);
 
-            final Color textColor = Colors
-                .white; //Theme.of(context).colorScheme.onSurface.withOpacity(0.95);
-            final Color card = Theme.of(
-              context,
-            ).colorScheme.surface.withOpacity(0.10);
+    // --- Now load scoreHistory too ---
+    return StreamBuilder<QuerySnapshot<Map<String, Object?>>>(
+      stream: scoreHistory.limit(500).snapshots(),
+      builder: (context, scoreSnap) {
+        if (scoreSnap.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (scoreSnap.hasError) {
+          return Padding(
+            padding: const EdgeInsets.all(16),
+            child: Text('Fehler beim Laden (Score History): ${scoreSnap.error}'),
+          );
+        }
 
-            return Padding(
-              padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
-              child: DefaultTextStyle(
-                style: Theme.of(
-                  context,
-                ).textTheme.bodyMedium!.copyWith(color: textColor),
-                child: SingleChildScrollView(
-                  child: Column(
+        final scoreDocs = scoreSnap.data?.docs ?? <QueryDocumentSnapshot<Map<String, Object?>>>[];
+        final Map<DateTime, double> scoreByDay = _parseScoreHistory(scoreDocs);
+
+        final List<DayImpactPoint> scoreLast30 = _last30PointsScore(scoreByDay, today);
+
+        final Color textColor = Colors.white;
+        final Color card = Theme.of(context).colorScheme.surface.withOpacity(0.30);
+
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
+          child: DefaultTextStyle(
+            style: Theme.of(context).textTheme.bodyMedium!.copyWith(color: textColor),
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  _HeaderRow(title: 'Serie & Erfolgsstatistik'),
+                  const SizedBox(height: 14),
+
+                  _StatRow(label: 'Aktuelle Serie', value: '🔥 $currentStreak Tage aktiv'),
+                  _StatRow(label: 'Beste Serie', value: '$bestStreak Tage'),
+                  _StatRow(label: 'Absolvierte Spins', value: '${stats.absoluteSpins}'),
+                  _StatRow(label: 'Dynamische Wiederholungen', value: '${stats.dynamicReps}'),
+                  _StatRow(label: 'Statisch gehalten', value: '${(stats.staticSeconds / 60).floor()} min'),
+                  _ImpactRow(
+                    label: 'Letzter Impact',
+                    value: lastImpactLabel,
+                    dot: _impactDotColor(lastImpact?.impactLevel),
+                  ),
+
+                  const SizedBox(height: 22),
+                  Text(
+                    'Impact Score-Entwicklung',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w800,
+                          color: textColor,
+                        ),
+                  ),
+                  const SizedBox(height: 10),
+
+                  _ImpactChart(
+                    impactPoints: impactLast30,
+                    scorePoints: scoreLast30,
+                    cardColor: card,
+                    textColor: textColor,
+                  ),
+
+                  const SizedBox(height: 6),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: Text(
+                      'Letzten 30 Tage',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: textColor.withOpacity(0.8),
+                            fontWeight: FontWeight.w600,
+                          ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 22),
+                  Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
-                      _HeaderRow(title: 'Serie & Erfolgsstatistik'),
-                      const SizedBox(height: 14),
-
-                      _StatRow(
-                        label: 'Aktuelle Serie',
-                        value: '🔥 $currentStreak Tage aktiv',
-                      ),
-                      _StatRow(label: 'Beste Serie', value: '$bestStreak Tage'),
-                      _StatRow(
-                        label: 'Absolvierte Spins',
-                        value: '${stats.absoluteSpins}',
-                      ),
-                      _StatRow(
-                        label: 'Dynamische Wiederholungen',
-                        value: '${stats.dynamicReps}',
-                      ),
-                      _StatRow(
-                        label: 'Statisch gehalten',
-                        value: '${(stats.staticSeconds / 60).floor()} min',
-                      ),
-                      _ImpactRow(
-                        label: 'Letzter Impact',
-                        value: lastImpactLabel,
-                        dot: _impactDotColor(lastImpact?.impactLevel),
-                      ),
-
-                      const SizedBox(height: 22),
-                      Text(
-                        'Impact Score-Entwicklung',
-                        style: Theme.of(context).textTheme.titleMedium
-                            ?.copyWith(
-                              fontWeight: FontWeight.w800,
-                              color: textColor,
-                            ),
-                      ),
-                      const SizedBox(height: 10),
-                      _ImpactChart(
-                        points: last30,
-                        cardColor: card,
-                        textColor: textColor,
-                      ),
-                      const SizedBox(height: 6),
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: Text(
-                          'Letzten 30 Tage',
-                          style: Theme.of(context).textTheme.bodySmall
-                              ?.copyWith(
-                                color: textColor.withOpacity(0.8),
-                                fontWeight: FontWeight.w600,
-                              ),
+                      Expanded(
+                        child: _LevelCard(
+                          level: globals.userData!.intensityLevel.label,
+                          progress: globals.userData!.intensityLevel
+                              .progressToNextLevel(globals.userData!.intensityScore),
+                          cardColor: card,
+                          textColor: textColor,
                         ),
                       ),
-
-                      const SizedBox(height: 22),
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: <Widget>[
-                          Expanded(
-                            child: _LevelCard(
-                              level: globals.userData!.intensityLevel.label,
-                              progress: globals.userData!.intensityLevel
-                                  .progressToNextLevel(
-                                    globals.userData!.intensityScore,
-                                  ),
-                              cardColor: card,
-                              textColor: textColor,
-                            ),
-                          ),
-                          const SizedBox(width: 14),
-                          Expanded(
-                            child: _HistoryCalendarCard(
-                              month: today,
-                              activeDaysInMonth: _activeDaysInMonth(
-                                stats.activeDays,
-                                today,
-                              ),
-                              cardColor: card,
-                              textColor: textColor,
-                            ),
-                          ),
-                        ],
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: _HistoryCalendarCard(
+                          month: today,
+                          activeDaysInMonth: _activeDaysInMonth(stats.activeDays, today),
+                          cardColor: card,
+                          textColor: textColor,
+                        ),
                       ),
                     ],
                   ),
-                ),
+                ],
               ),
-            );
-          },
+            ),
+          ),
+        );
+      },
     );
+  },
+);
+
   }
 }
 
@@ -1632,31 +1624,40 @@ class _ImpactRow extends StatelessWidget {
 
 class _ImpactChart extends StatelessWidget {
   const _ImpactChart({
-    required this.points,
+    required this.impactPoints,
+    required this.scorePoints,
     required this.cardColor,
     required this.textColor,
   });
 
-  final List<DayImpactPoint> points;
+  final List<DayImpactPoint> impactPoints;
+  final List<DayImpactPoint> scorePoints;
+
   final Color cardColor;
   final Color textColor;
 
   @override
   Widget build(final BuildContext context) {
-    final List<FlSpot> spots = <FlSpot>[];
-    for (final DayImpactPoint p in points) {
-      if (p.score != null) {
-        spots.add(FlSpot(p.index.toDouble(), p.score!));
-      }
+    // Series 1: Impact
+    final List<FlSpot> impactSpots = <FlSpot>[];
+    for (final DayImpactPoint p in impactPoints) {
+      if (p.score != null) impactSpots.add(FlSpot(p.index.toDouble(), p.score!));
     }
 
-    final List<double> ys = spots.map((final FlSpot s) => s.y).toList();
-    final double minY = ys.isEmpty
-        ? 0.0
-        : ys.reduce((final double a, final double b) => a < b ? a : b);
-    final double maxY = ys.isEmpty
-        ? 0.25
-        : ys.reduce((final double a, final double b) => a > b ? a : b);
+    // Series 2: Score history
+    final List<FlSpot> scoreSpots = <FlSpot>[];
+    for (final DayImpactPoint p in scorePoints) {
+      if (p.score != null) scoreSpots.add(FlSpot(p.index.toDouble(), p.score!));
+    }
+
+    // Compute y-range from BOTH series
+    final List<double> ys = <double>[
+      ...impactSpots.map((s) => s.y),
+      ...scoreSpots.map((s) => s.y),
+    ];
+
+    final double minY = ys.isEmpty ? 0.0 : ys.reduce((a, b) => a < b ? a : b);
+    final double maxY = ys.isEmpty ? 0.25 : ys.reduce((a, b) => a > b ? a : b);
 
     final double paddedMin = (minY - 0.02).clamp(0.0, 10.0);
     final double paddedMax = (maxY + 0.02).clamp(0.0, 10.0);
@@ -1664,87 +1665,156 @@ class _ImpactChart extends StatelessWidget {
     final Color axis = textColor.withOpacity(0.85);
     final Color grid = textColor.withOpacity(0.12);
 
+    // Pick explicit colors so it’s deterministic
+    final Color impactColor = Colors.greenAccent;
+    final Color scoreColor = Colors.blue;
+
     return Container(
-      height: 150,
+      height: 180,
       padding: const EdgeInsets.fromLTRB(12, 10, 12, 6),
       decoration: BoxDecoration(
         color: cardColor,
         borderRadius: BorderRadius.circular(14),
       ),
-      child: LineChart(
-        LineChartData(
-          minX: 0,
-          maxX: 29,
-          minY: paddedMin,
-          maxY: paddedMax,
-          gridData: FlGridData(
-            show: true,
-            drawVerticalLine: false,
-            horizontalInterval: (paddedMax - paddedMin) <= 0
-                ? 0.05
-                : (paddedMax - paddedMin) / 4,
-            getDrawingHorizontalLine: (final double _) =>
-                FlLine(color: grid, strokeWidth: 1),
+      child: Column(
+        children: <Widget>[
+          // Legend
+          Padding(
+            padding: const EdgeInsets.only(bottom: 6),
+            child: Row(
+              children: <Widget>[
+                _LegendItem(color: impactColor, label: 'Übung'),
+                const SizedBox(width: 14),
+                _LegendItem(color: scoreColor, label: 'RIZE-Score'),
+              ],
+            ),
           ),
-          titlesData: FlTitlesData(
-            topTitles: const AxisTitles(
-              sideTitles: SideTitles(showTitles: false),
-            ),
-            rightTitles: const AxisTitles(
-              sideTitles: SideTitles(showTitles: false),
-            ),
-            bottomTitles: AxisTitles(
-              sideTitles: SideTitles(
-                showTitles: true,
-                interval: 7,
-                reservedSize: 18,
-                getTitlesWidget: (final double value, final TitleMeta meta) {
-                  final int idx = value.round();
-                  if (idx < 0 || idx >= points.length)
-                    return const SizedBox.shrink();
-                  final DateTime d = points[idx].date;
-                  final String txt = '${d.day}.${d.month}.';
-                  return Padding(
-                    padding: const EdgeInsets.only(top: 6),
-                    child: Text(
-                      txt,
-                      style: TextStyle(color: axis, fontSize: 10),
+
+          Expanded(
+            child: LineChart(
+              LineChartData(
+                minX: 0,
+                maxX: 29,
+                minY: paddedMin,
+                maxY: paddedMax,
+                gridData: FlGridData(
+                  show: true,
+                  drawVerticalLine: false,
+                  horizontalInterval: (paddedMax - paddedMin) <= 0
+                      ? 0.05
+                      : (paddedMax - paddedMin) / 4,
+                  getDrawingHorizontalLine: (final double _) =>
+                      FlLine(color: grid, strokeWidth: 1),
+                ),
+                titlesData: FlTitlesData(
+                  topTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
+                  rightTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
+                  bottomTitles: AxisTitles(
+                    axisNameWidget: Text('Datum', style: TextStyle(color: axis, fontSize: 12)),
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      interval: 7,
+                      reservedSize: 18,
+                      getTitlesWidget: (final double value, final TitleMeta meta) {
+                        final int idx = value.round();
+                        if (idx < 0 || idx >= impactPoints.length) {
+                          return const SizedBox.shrink();
+                        }
+                        final DateTime d = impactPoints[idx].date;
+                        final String txt = '${d.day}.${d.month}.';
+                        return Padding(
+                          padding: const EdgeInsets.only(top: 6),
+                          child: Text(txt, style: TextStyle(color: axis, fontSize: 10)),
+                        );
+                      },
                     ),
-                  );
-                },
-              ),
-            ),
-            leftTitles: AxisTitles(
-              sideTitles: SideTitles(
-                showTitles: true,
-                reservedSize: 40,
-                interval: (paddedMax - paddedMin) <= 0
-                    ? 0.05
-                    : (paddedMax - paddedMin) / 4,
-                getTitlesWidget: (final double value, final TitleMeta meta) {
-                  return Text(
-                    _fmt(value),
-                    style: TextStyle(color: axis, fontSize: 10),
-                  );
-                },
+                  ),
+                  leftTitles: AxisTitles(
+                    axisNameWidget: Text('Score', style: TextStyle(color: axis, fontSize: 12)),
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      reservedSize: 40,
+                      interval: (paddedMax - paddedMin) <= 0
+                          ? 0.05
+                          : (paddedMax - paddedMin) / 4,
+                      getTitlesWidget: (final double value, final TitleMeta meta) {
+                        return Text(
+                          _fmt(value),
+                          style: TextStyle(color: axis, fontSize: 10),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+                borderData: FlBorderData(show: false),
+                lineBarsData: <LineChartBarData>[
+                  LineChartBarData(
+                    spots: impactSpots,
+                    isCurved: false,
+                    barWidth: 0,
+                    color: impactColor,
+                    dotData: FlDotData(
+                      show: true,
+                      getDotPainter: (spot, percent, barData, index) {
+                        return FlDotCirclePainter(
+                          radius: 3,
+                          color: impactColor,
+                        );
+                      },
+                    ),
+                    belowBarData: BarAreaData(show: false),
+                  ),
+                  LineChartBarData(
+                    spots: scoreSpots,
+                    isCurved: false,
+                    barWidth: 3,
+                    color: scoreColor,
+                    dotData: const FlDotData(show: true),
+                    belowBarData: BarAreaData(show: false),
+                  ),
+                ],
               ),
             ),
           ),
-          borderData: FlBorderData(show: false),
-          lineBarsData: <LineChartBarData>[
-            LineChartBarData(
-              spots: spots,
-              isCurved: true,
-              barWidth: 3,
-              dotData: const FlDotData(show: true),
-              belowBarData: BarAreaData(show: false),
-            ),
-          ],
-        ),
+        ],
       ),
     );
   }
 }
+
+class _LegendItem extends StatelessWidget {
+  const _LegendItem({required this.color, required this.label});
+
+  final Color color;
+  final String label;
+
+  @override
+  Widget build(final BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: <Widget>[
+        Container(
+          width: 10,
+          height: 10,
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+        ),
+        const SizedBox(width: 6),
+        Text(
+          label,
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                fontWeight: FontWeight.w800,
+                color: Colors.white.withOpacity(0.9),
+              ),
+        ),
+      ],
+    );
+  }
+}
+
 
 class _LevelCard extends StatelessWidget {
   const _LevelCard({
@@ -1964,3 +2034,65 @@ class _CalendarGrid extends StatelessWidget {
     );
   }
 }
+
+Map<DateTime, double> _parseScoreHistory(
+  final List<QueryDocumentSnapshot<Map<String, Object?>>> docs,
+) {
+  final Map<DateTime, double> out = <DateTime, double>{};
+
+  for (final doc in docs) {
+    final Map<String, Object?> data = doc.data();
+
+    // Prefer workoutId because it aligns with your workoutHistory doc ids (yyyy-MM-dd)
+    DateTime? day;
+    final Object? workoutIdRaw = data['workoutId'];
+    if (workoutIdRaw is String) {
+      day = _tryParseDocIdDate(workoutIdRaw);
+    }
+
+    // Fallback: ts
+    if (day == null) {
+      final Object? tsRaw = data['ts'];
+      if (tsRaw is Timestamp) {
+        final DateTime dt = tsRaw.toDate();
+        day = DateTime(dt.year, dt.month, dt.day);
+      }
+    }
+
+    if (day == null) continue;
+
+    // Choose the series you want to plot:
+    // - newScore (overall score after workout)
+    // - or impactScore (per-workout impact)
+    final double? v = _asDouble(data['newScore']); // <— recommend this
+    if (v == null) continue;
+
+    out[DateTime(day.year, day.month, day.day)] = v;
+  }
+
+  return out;
+}
+
+double? _asDouble(final Object? v) {
+  if (v == null) return null;
+  if (v is num) return v.toDouble();
+  if (v is String) return double.tryParse(v.replaceAll(',', '.'));
+  return null;
+}
+
+
+List<DayImpactPoint> _last30PointsScore(
+  final Map<DateTime, double> scoreByDay,
+  final DateTime today,
+) {
+  final DateTime start = today.subtract(const Duration(days: 29));
+  final List<DayImpactPoint> out = <DayImpactPoint>[];
+
+  for (int i = 0; i < 30; i++) {
+    final DateTime d = DateTime(start.year, start.month, start.day + i);
+    final double? v = scoreByDay[d];
+    out.add(DayImpactPoint(index: i, date: d, score: v));
+  }
+  return out;
+}
+
