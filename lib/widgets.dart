@@ -697,14 +697,15 @@ class _WorkoutExecutionPageState extends State<WorkoutExecutionPage> {
           if (timerCompleted || widget.workout.baseReps != null)
             IconButton(
               onPressed: () async {
+                bool completed = widget.workout.baseReps != null
+                      ? managedRepetitions >= maxReps
+                      : true;
                 setState(() {
                   showTimer = false;
                   WorkoutStep workoutStep =
                       widget.workout.schedule[widget.scheduleEntryIndex];
 
-                  bool completed = widget.workout.baseReps != null
-                      ? managedRepetitions >= maxReps
-                      : true;
+                  
                   widget.workout.schedule[widget.scheduleEntryIndex] =
                       WorkoutStep(
                         timeOfDay: workoutStep.timeOfDay,
@@ -715,7 +716,7 @@ class _WorkoutExecutionPageState extends State<WorkoutExecutionPage> {
 
                 await uploadWorkoutToServer(widget.workout);
                 
-                Navigator.of(context).pop(true);
+                Navigator.of(context).pop(completed);
               },
               icon: Container(
                 width: 200,
