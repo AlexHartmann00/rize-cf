@@ -1,4 +1,6 @@
+import 'package:flutter/services.dart';
 import 'package:numberpicker/numberpicker.dart';
+import 'package:rize/audio_player.dart';
 import 'package:rize/base_widgets.dart';
 import 'package:rize/firestore.dart'
     show saveAnamnesisResponse, uploadWorkoutToServer, updateUserIntensityScore;
@@ -568,6 +570,8 @@ class _WorkoutExecutionPageState extends State<WorkoutExecutionPage> {
                       timerSeconds -= 1;
                     });
                     if (timerSeconds <= 0) {
+                      HapticFeedback.vibrate();
+                      //playTimerSound();
                       setState(() {
                         showTimer = false;
                         timerCompleted = true;

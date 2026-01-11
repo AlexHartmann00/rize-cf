@@ -26,6 +26,48 @@
       "languageVersion": "3.4"
     },
     {
+      "name": "audioplayers",
+      "rootUri": "file:///Users/alexhartmann/.pub-cache/hosted/pub.dev/audioplayers-6.5.1",
+      "packageUri": "lib/",
+      "languageVersion": "3.6"
+    },
+    {
+      "name": "audioplayers_android",
+      "rootUri": "file:///Users/alexhartmann/.pub-cache/hosted/pub.dev/audioplayers_android-5.2.1",
+      "packageUri": "lib/",
+      "languageVersion": "3.6"
+    },
+    {
+      "name": "audioplayers_darwin",
+      "rootUri": "file:///Users/alexhartmann/.pub-cache/hosted/pub.dev/audioplayers_darwin-6.3.0",
+      "packageUri": "lib/",
+      "languageVersion": "3.6"
+    },
+    {
+      "name": "audioplayers_linux",
+      "rootUri": "file:///Users/alexhartmann/.pub-cache/hosted/pub.dev/audioplayers_linux-4.2.1",
+      "packageUri": "lib/",
+      "languageVersion": "3.6"
+    },
+    {
+      "name": "audioplayers_platform_interface",
+      "rootUri": "file:///Users/alexhartmann/.pub-cache/hosted/pub.dev/audioplayers_platform_interface-7.1.1",
+      "packageUri": "lib/",
+      "languageVersion": "3.6"
+    },
+    {
+      "name": "audioplayers_web",
+      "rootUri": "file:///Users/alexhartmann/.pub-cache/hosted/pub.dev/audioplayers_web-5.1.1",
+      "packageUri": "lib/",
+      "languageVersion": "3.6"
+    },
+    {
+      "name": "audioplayers_windows",
+      "rootUri": "file:///Users/alexhartmann/.pub-cache/hosted/pub.dev/audioplayers_windows-4.2.1",
+      "packageUri": "lib/",
+      "languageVersion": "3.6"
+    },
+    {
       "name": "boolean_selector",
       "rootUri": "file:///Users/alexhartmann/.pub-cache/hosted/pub.dev/boolean_selector-2.1.2",
       "packageUri": "lib/",
@@ -150,6 +192,12 @@
       "rootUri": "file:///Users/alexhartmann/.pub-cache/hosted/pub.dev/firebase_core_web-3.3.0",
       "packageUri": "lib/",
       "languageVersion": "3.4"
+    },
+    {
+      "name": "fixnum",
+      "rootUri": "file:///Users/alexhartmann/.pub-cache/hosted/pub.dev/fixnum-1.1.1",
+      "packageUri": "lib/",
+      "languageVersion": "3.1"
     },
     {
       "name": "fl_chart",
@@ -278,6 +326,24 @@
       "languageVersion": "3.4"
     },
     {
+      "name": "path_provider",
+      "rootUri": "file:///Users/alexhartmann/.pub-cache/hosted/pub.dev/path_provider-2.1.5",
+      "packageUri": "lib/",
+      "languageVersion": "3.4"
+    },
+    {
+      "name": "path_provider_android",
+      "rootUri": "file:///Users/alexhartmann/.pub-cache/hosted/pub.dev/path_provider_android-2.2.22",
+      "packageUri": "lib/",
+      "languageVersion": "3.9"
+    },
+    {
+      "name": "path_provider_foundation",
+      "rootUri": "file:///Users/alexhartmann/.pub-cache/hosted/pub.dev/path_provider_foundation-2.5.1",
+      "packageUri": "lib/",
+      "languageVersion": "3.9"
+    },
+    {
       "name": "path_provider_linux",
       "rootUri": "file:///Users/alexhartmann/.pub-cache/hosted/pub.dev/path_provider_linux-2.2.1",
       "packageUri": "lib/",
@@ -392,6 +458,12 @@
       "languageVersion": "3.1"
     },
     {
+      "name": "synchronized",
+      "rootUri": "file:///Users/alexhartmann/.pub-cache/hosted/pub.dev/synchronized-3.4.0",
+      "packageUri": "lib/",
+      "languageVersion": "3.8"
+    },
+    {
       "name": "term_glyph",
       "rootUri": "file:///Users/alexhartmann/.pub-cache/hosted/pub.dev/term_glyph-1.2.2",
       "packageUri": "lib/",
@@ -408,6 +480,12 @@
       "rootUri": "file:///Users/alexhartmann/.pub-cache/hosted/pub.dev/typed_data-1.4.0",
       "packageUri": "lib/",
       "languageVersion": "3.5"
+    },
+    {
+      "name": "uuid",
+      "rootUri": "file:///Users/alexhartmann/.pub-cache/hosted/pub.dev/uuid-4.5.2",
+      "packageUri": "lib/",
+      "languageVersion": "3.0"
     },
     {
       "name": "vector_math",
