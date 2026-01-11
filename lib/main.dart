@@ -367,7 +367,6 @@ class _MyHomePageState extends State<MyHomePage> {
             userData.intensityScore <= level.maxScore,
       );
       globals.userData = userData;
-      await updateUserIntensityScore(userData.intensityScore);
     });
     super.initState();
   }

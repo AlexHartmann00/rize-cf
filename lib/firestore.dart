@@ -78,16 +78,16 @@ Future<void> saveAnamnesisResponse(AnamnesisQuestionnaire questionnaire) async {
   });
 }
 
-Future<void> updateUserIntensityScore(double intensityScore) async {
-  CollectionReference<Map<String, dynamic>> usersCollection = FirebaseFirestore
-      .instance
-      .collection('users');
+// Future<void> updateUserIntensityScore(double intensityScore) async {
+//   CollectionReference<Map<String, dynamic>> usersCollection = FirebaseFirestore
+//       .instance
+//       .collection('users');
 
-  //Create document if it does not exist
-  await usersCollection.doc(authServiceNotifier.value.currentUser!.uid).set({
-    'intensityScore': intensityScore,
-  }, SetOptions(merge: true));
-}
+//   //Create document if it does not exist
+//   await usersCollection.doc(authServiceNotifier.value.currentUser!.uid).set({
+//     'intensityScore': intensityScore,
+//   }, SetOptions(merge: true));
+// }
 
 Future<void> createUserDocument(String userId) {
   CollectionReference<Map<String, dynamic>> usersCollection = FirebaseFirestore
