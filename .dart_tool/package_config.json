@@ -206,6 +206,12 @@
       "languageVersion": "3.0"
     },
     {
+      "name": "infinite_listview",
+      "rootUri": "file:///Users/alexhartmann/.pub-cache/hosted/pub.dev/infinite_listview-1.1.0",
+      "packageUri": "lib/",
+      "languageVersion": "2.12"
+    },
+    {
       "name": "intl",
       "rootUri": "file:///Users/alexhartmann/.pub-cache/hosted/pub.dev/intl-0.20.2",
       "packageUri": "lib/",
@@ -258,6 +264,12 @@
       "rootUri": "file:///Users/alexhartmann/.pub-cache/hosted/pub.dev/meta-1.17.0",
       "packageUri": "lib/",
       "languageVersion": "3.5"
+    },
+    {
+      "name": "numberpicker",
+      "rootUri": "file:///Users/alexhartmann/.pub-cache/hosted/pub.dev/numberpicker-2.1.2",
+      "packageUri": "lib/",
+      "languageVersion": "2.12"
     },
     {
       "name": "path",
