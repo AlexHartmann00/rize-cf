@@ -150,6 +150,10 @@ def on_workout_written(
     if is_schedule_completed(schedule_before):
         return  # already completed before; do not reward again
 
+    #Increase improvement if multiple units were completed
+    num_units = len(schedule_after)
+    IMPACT_DELTA_FACTOR = num_units / 1.2
+
     impact_score = after.get("impactScore")
     if impact_score is None:
         print(f"Workout completed but impactScore missing: userId={user_id}, workoutId={workout_id}")
@@ -173,7 +177,7 @@ def on_workout_written(
             print(f"Invalid impactScore (not numeric): {impact_score} for workoutId={workout_id}")
             return
 
-        delta = compute_completion_delta(current, impact)
+        delta = compute_completion_delta(current, impact) * IMPACT_DELTA_FACTOR
         new_score = clamp_0_1(current + delta)
 
         # If clamping makes it identical, still record? Usually no.
