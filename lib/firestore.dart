@@ -176,6 +176,7 @@ Future<List<IntensityLevel>> loadIntensityLevels() async {
 
 Future<ScheduledWorkout?> loadDailyWorkoutPlan() async {
   String userId = authServiceNotifier.value.currentUser?.uid ?? '';
+  if(userId.isEmpty) return null;
 
     DocumentSnapshot<Map<String, dynamic>> snapshot = await FirebaseFirestore
       .instance
