@@ -202,6 +202,7 @@ class ScheduledWorkout extends Workout {
   }
 
   Future<void> saveAsDailyWorkoutPlan() async {
+    print('FB usage indirect: Saving daily workout plan');
     // SharedPreferences prefs = await SharedPreferences.getInstance();
     // Map<String, dynamic> jsonData = toJson();
     // DateTime now = DateTime.now();

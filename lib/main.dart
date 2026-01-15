@@ -1103,23 +1103,30 @@ class _ProfilePageState extends State<ProfilePage> {
 }
 
 class ProgressOverviewContent extends StatelessWidget {
-  const ProgressOverviewContent({super.key, required this.userId});
+  ProgressOverviewContent({super.key, required this.userId});
+  bool loaded = false;
 
   final String userId;
+  late CollectionReference<Map<String, Object?>> col;
+  late CollectionReference<Map<String, Object?>> scoreHistory;
 
   @override
   Widget build(final BuildContext context) {
-    final CollectionReference<Map<String, Object?>> col = FirebaseFirestore
+    if (!loaded) {
+      col = FirebaseFirestore
         .instance
         .collection('users')
         .doc(userId)
         .collection('workoutHistory');
 
-      final CollectionReference<Map<String, Object?>> scoreHistory = FirebaseFirestore
+      scoreHistory = FirebaseFirestore
         .instance
         .collection('users')
         .doc(userId)
         .collection('scoreHistory');
+      loaded = true;
+    }
+    
 
     return StreamBuilder<QuerySnapshot<Map<String, Object?>>>(
   stream: col.limit(500).snapshots(),

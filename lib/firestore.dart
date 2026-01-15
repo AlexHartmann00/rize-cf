@@ -47,6 +47,7 @@ Future<AnamnesisQuestionnaire> loadAnamnesisQuestionnaire() async {
 }
 
 Future<void> saveAnamnesisResponse(AnamnesisQuestionnaire questionnaire) async {
+  print('FB usage: Saving anamnesis response to Firestore');
   CollectionReference<Map<String, dynamic>> collection = FirebaseFirestore
       .instance
       .collection('userAnamnesis');
@@ -90,6 +91,7 @@ Future<void> saveAnamnesisResponse(AnamnesisQuestionnaire questionnaire) async {
 // }
 
 Future<void> createUserDocument(String userId) {
+  print('FB usage: Creating user document in Firestore');
   CollectionReference<Map<String, dynamic>> usersCollection = FirebaseFirestore
       .instance
       .collection('users');
@@ -113,6 +115,7 @@ Future<UserData> loadUserData(String userId) async {
 }
 
 Future<void> uploadWorkoutToServer(ScheduledWorkout workout) async {
+  print('FB usage: Uploading workout to Firestore');
   Map<String, dynamic> jsonData = workout.toJson();
   String jsonString = jsonEncode(jsonData);
 
@@ -130,7 +133,8 @@ Future<void> uploadWorkoutToServer(ScheduledWorkout workout) async {
       .doc(dateString)
       .set(jsonData);
 
-    await workout.saveAsDailyWorkoutPlan();
+    //This caused infinite recursion....
+    //await workout.saveAsDailyWorkoutPlan();
   }
 
 
@@ -196,6 +200,7 @@ Future<ScheduledWorkout?> loadDailyWorkoutPlan() async {
 }
 
 Future<void> deleteDailyWorkoutPlan() async {
+  print('FB usage: Deleting workout plan');
   String userId = authServiceNotifier.value.currentUser?.uid ?? '';
 
     await FirebaseFirestore
