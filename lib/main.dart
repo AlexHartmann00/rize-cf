@@ -969,17 +969,53 @@ class WorkoutLibraryPage extends StatefulWidget {
 }
 
 class _WorkoutLibraryPageState extends State<WorkoutLibraryPage> {
+  String searchString = '';
   @override
   Widget build(BuildContext context) {
-    return ListView.builder(
-      itemBuilder: (context, idx) {
-        print('Library debug: ${globals.workoutLibrary[idx].workoutType}');
-        return Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: WorkoutSummaryWidget(workout: globals.workoutLibrary[idx]),
-        );
-      },
-      itemCount: globals.workoutLibrary.length,
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(4),
+          child: TextFormField(
+            onChanged: (value) {
+              setState(() {
+                searchString = value.toLowerCase();
+              });
+            },
+            autocorrect: false,
+            decoration: InputDecoration(
+              hintText: 'Suche nach Workouts / Muskelgruppen',
+              hintStyle: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+              prefixIcon: Icon(Icons.search),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+          ),
+        ),
+        Expanded(
+          child: ListView.builder(
+            itemBuilder: (context, idx) {
+              print('Library debug: ${globals.workoutLibrary[idx].workoutType}');
+              Workout workout = globals.workoutLibrary[idx];
+              String challengeString = '${workout.name} ${workout.workoutType.name} ${workout.usedMuscleGroups.join(' ')}';
+              print(searchString);
+              print(challengeString);
+              if (searchString.isNotEmpty &&
+                  !challengeString
+                      .toLowerCase()
+                      .contains(searchString.toLowerCase())) {
+                return SizedBox.shrink();
+              }
+              return Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: WorkoutSummaryWidget(workout: globals.workoutLibrary[idx]),
+              );
+            },
+            itemCount: globals.workoutLibrary.length,
+          ),
+        ),
+      ],
     );
   }
 }

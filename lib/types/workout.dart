@@ -24,6 +24,14 @@ class Workout {
   double impactScore;
   String? videoExplanationUrl;
 
+  String get durationString => baseSeconds != null
+      ? '${(baseSeconds ?? 0)} Sekunden'
+      : '${(baseReps ?? 0)} Wiederholungen';
+
+  String get durationStringShort => baseSeconds != null
+      ? '${(baseSeconds ?? 0)} Sek.'
+      : '${(baseReps ?? 0)} Wdh.';
+
   ImpactLevel get impactLevel {
     if (impactScore < 0.33) {
       return ImpactLevel.low;
@@ -53,7 +61,7 @@ class Workout {
       name: json['name'] as String,
       description: json['description'] as String,
       coachingCues: json['coachingCues'] as String? ?? '',
-      usedMuscleGroups: (json['usedMuscleGroups'] ?? [])
+      usedMuscleGroups: (json['muscleGroups'] ?? [])
           .map<String>((e) => e as String)
           .toList(),
       baseReps: json['baseReps'] as int?,
@@ -72,7 +80,7 @@ class Workout {
     'name': name,
     'description': description,
     'coachingCues': coachingCues,
-    'usedMuscleGroups': usedMuscleGroups,
+    'muscleGroups': usedMuscleGroups,
     'baseReps': baseReps,
     'baseSeconds': baseSeconds,
     'impactLevel': impactLevel.name,

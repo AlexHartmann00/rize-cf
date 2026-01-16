@@ -41,8 +41,10 @@ class _WorkoutSummaryWidgetState extends State<WorkoutSummaryWidget> {
           padding: const EdgeInsets.all(8.0),
           child: Column(
             children: [
-              Text(workout.name),
-              Text(workout.workoutType.name),
+              Text(workout.name, style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),),
+              Text(workout.workoutType == WorkoutType.static
+                  ? 'Statisch'
+                  : 'Dynamisch'),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
@@ -71,12 +73,12 @@ class _WorkoutSummaryWidgetState extends State<WorkoutSummaryWidget> {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('${workout.baseSeconds} Sekunden'),
-                      Text('${workout.baseReps} Wiederholungen'),
+                      Text(workout.durationString),
                     ],
                   ),
                 ],
               ),
+              Text(workout.usedMuscleGroups.join(', ')),
             ],
           ),
         ),
