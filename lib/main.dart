@@ -1745,9 +1745,9 @@ class _ImpactChart extends StatelessWidget {
                     sideTitles: SideTitles(
                       showTitles: true,
                       reservedSize: 40,
-                      interval: (paddedMax - paddedMin) <= 0
+                      interval: ((paddedMax - paddedMin) <= 0
                           ? 0.05
-                          : (paddedMax - paddedMin) / 4,
+                          : (paddedMax - paddedMin) / 4),
                       getTitlesWidget: (final double value, final TitleMeta meta) {
                         return Text(
                           _fmt(value),
@@ -1759,6 +1759,22 @@ class _ImpactChart extends StatelessWidget {
                 ),
                 borderData: FlBorderData(show: false),
                 lineBarsData: <LineChartBarData>[
+                  LineChartBarData(
+                    spots: scoreSpots,
+                    isCurved: false,
+                    barWidth: 3,
+                    color: scoreColor,
+                    dotData: FlDotData(
+                      show: true,
+                      getDotPainter: (spot, percent, barData, index) {
+                        return FlDotCirclePainter(
+                          radius: 2.75,
+                          color: scoreColor,
+                        );
+                      },
+                    ),
+                    belowBarData: BarAreaData(show: false),
+                  ),
                   LineChartBarData(
                     spots: impactSpots,
                     isCurved: false,
@@ -1775,14 +1791,7 @@ class _ImpactChart extends StatelessWidget {
                     ),
                     belowBarData: BarAreaData(show: false),
                   ),
-                  LineChartBarData(
-                    spots: scoreSpots,
-                    isCurved: false,
-                    barWidth: 3,
-                    color: scoreColor,
-                    dotData: const FlDotData(show: true),
-                    belowBarData: BarAreaData(show: false),
-                  ),
+                  
                 ],
               ),
             ),
