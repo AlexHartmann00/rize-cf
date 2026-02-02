@@ -6,6 +6,7 @@ import 'package:rize/base_widgets.dart';
 import 'package:rize/firebase_options.dart';
 import 'package:rize/firestore.dart';
 import 'package:rize/globals.dart' as globals;
+import 'package:rize/helpers/muscle_visualizer.dart';
 import 'package:rize/slot_machine.dart' show SlotMachine, SlotMachineController;
 import 'package:rize/types/anamnesis.dart';
 import 'package:rize/types/config.dart' show IntensityLevel;
@@ -605,6 +606,7 @@ class _HomePageSlotMachineWidgetState extends State<HomePageSlotMachineWidget> {
               ),
               SizedBox(height: 100),
               WorkoutScheduleWidget(workout: globals.dailyWorkoutPlan!),
+              MuscleVisualization(muscleGroups: globals.dailyWorkoutPlan!.usedMuscleGroups),
               Expanded(child: SizedBox(height: 20)),
               // Text(
               //   globals.dailyWorkoutPlan!.durationString,
@@ -998,7 +1000,7 @@ class _WorkoutLibraryPageState extends State<WorkoutLibraryPage> {
             itemBuilder: (context, idx) {
               print('Library debug: ${globals.workoutLibrary[idx].workoutType}');
               Workout workout = globals.workoutLibrary[idx];
-              String challengeString = '${workout.name} ${workout.workoutType.name} ${workout.usedMuscleGroups.join(' ')}';
+              String challengeString = workout.filterString;
               print(searchString);
               print(challengeString);
               if (searchString.isNotEmpty &&

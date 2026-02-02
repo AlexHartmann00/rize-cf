@@ -79,6 +79,8 @@ flutter:
     - assets/data/workouts.json
     - assets/brand/Logo transparent.png
     - assets/brand/rize_logo_r.png
+    - assets/muscle_graphics/front/
+    - assets/muscle_graphics/back/
   # To add assets to your application, add an assets section, like this:
   # assets:
   #   - images/a_dot_burr.jpeg

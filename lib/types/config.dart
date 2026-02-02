@@ -95,6 +95,7 @@ class IntensityLevel {
       description: workout.description,
       coachingCues: workout.coachingCues,
       usedMuscleGroups: workout.usedMuscleGroups,
+      tags: workout.tags,
       baseReps: (workout.baseReps != null)
           ? (workout.baseReps! * newFactor > dynamicPerSetMax
                     ? dynamicPerSetMax / newFactor

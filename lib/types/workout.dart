@@ -18,11 +18,18 @@ class Workout {
   String description;
   String coachingCues;
   List<String> usedMuscleGroups;
+  List<String> tags;
   int? baseReps;
   int? baseSeconds;
   WorkoutType workoutType;
   double impactScore;
   String? videoExplanationUrl;
+
+  String get filterString {
+    String tagString = tags.join(' ');
+    String muscleGroupString = usedMuscleGroups.join(' ');
+    return '$name $description $tagString $muscleGroupString'.toLowerCase();
+  }
 
   String get durationString => baseSeconds != null
       ? '${(baseSeconds ?? 0)} Sekunden'
@@ -48,6 +55,7 @@ class Workout {
     required this.description,
     required this.coachingCues,
     required this.usedMuscleGroups,
+    required this.tags,
     required this.workoutType,
     required this.impactScore,
     this.baseReps,
@@ -64,6 +72,7 @@ class Workout {
       usedMuscleGroups: (json['muscleGroups'] ?? [])
           .map<String>((e) => e as String)
           .toList(),
+      tags: (json['tags'] ?? []).map<String>((e) => e as String).toList(),
       baseReps: json['baseReps'] as int?,
       baseSeconds: json['baseSeconds'] as int?,
       workoutType: WorkoutType.values.firstWhere(
@@ -81,6 +90,7 @@ class Workout {
     'description': description,
     'coachingCues': coachingCues,
     'muscleGroups': usedMuscleGroups,
+    'tags': tags,
     'baseReps': baseReps,
     'baseSeconds': baseSeconds,
     'impactLevel': impactLevel.name,
@@ -105,6 +115,7 @@ class ScheduledWorkout extends Workout {
     required super.description,
     required super.coachingCues,
     required super.usedMuscleGroups,
+    required super.tags,
     required super.workoutType,
     required super.impactScore,
     super.baseReps,
@@ -143,6 +154,7 @@ class ScheduledWorkout extends Workout {
       description: base.description,
       coachingCues: base.coachingCues,
       usedMuscleGroups: base.usedMuscleGroups,
+      tags: base.tags,
       workoutType: base.workoutType,
       impactScore: base.impactScore,
       baseReps: base.baseReps,
@@ -182,6 +194,7 @@ class ScheduledWorkout extends Workout {
       description: baseWorkout.description,
       coachingCues: baseWorkout.coachingCues,
       usedMuscleGroups: baseWorkout.usedMuscleGroups,
+      tags: baseWorkout.tags,
       workoutType: baseWorkout.workoutType,
       impactScore: baseWorkout.impactScore,
       baseReps: baseWorkout.baseReps,
