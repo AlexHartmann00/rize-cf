@@ -606,7 +606,7 @@ class _HomePageSlotMachineWidgetState extends State<HomePageSlotMachineWidget> {
               ),
               SizedBox(height: 100),
               WorkoutScheduleWidget(workout: globals.dailyWorkoutPlan!),
-              MuscleVisualization(muscleGroups: globals.dailyWorkoutPlan!.usedMuscleGroups),
+              MuscleVisualization(workout: globals.dailyWorkoutPlan!),
               Expanded(child: SizedBox(height: 20)),
               // Text(
               //   globals.dailyWorkoutPlan!.durationString,
