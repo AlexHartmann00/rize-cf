@@ -9,6 +9,7 @@ import 'package:rize/types/workout.dart';
 import 'package:rize/globals.dart' as globals;
 import 'package:flutter/material.dart' hide TimeOfDay;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 
 class WorkoutSummaryWidget extends StatefulWidget {
   Workout workout;
@@ -561,6 +562,7 @@ class _WorkoutExecutionPageState extends State<WorkoutExecutionPage> {
             ElevatedButton(
               onPressed: () {
                 setState(() {
+                  WakelockPlus.enable();
                   showTimer = true;
                   timerSeconds =
                       (widget.workout.baseSeconds ?? 0) *
@@ -701,6 +703,7 @@ class _WorkoutExecutionPageState extends State<WorkoutExecutionPage> {
             //   ],
             // ),
           if (timerCompleted || widget.workout.baseReps != null)
+
             IconButton(
               onPressed: () async {
                 bool completed = widget.workout.baseReps != null
@@ -708,6 +711,7 @@ class _WorkoutExecutionPageState extends State<WorkoutExecutionPage> {
                       : true;
                 setState(() {
                   showTimer = false;
+                  WakelockPlus.disable();
                   WorkoutStep workoutStep =
                       widget.workout.schedule[widget.scheduleEntryIndex];
 
