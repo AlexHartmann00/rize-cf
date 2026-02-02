@@ -1,14 +1,28 @@
-{
-  "exercises": [
+{"exercises": [
     {
       "id": "low_1",
       "name": "Wall Push Hold",
       "type": "static",
       "baseReps": null,
       "baseSeconds": 13,
-      "impactScore": 0.1,
-      "muscleGroups": ["Brust", "Schulter", "Trizeps", "Core", "keineSchulter"],
-      "description": "Stelle dich schräg vor eine Wand, setze die Hände etwa auf Brusthöhe auf und lehne dich mit gestrecktem Körper hinein. Baue aktiv Druck in die Wand auf, als würdest du sie wegschieben, und halte diese Spannung für die vorgesehene Zeit.",
+      "properties": [
+        {
+          "propertyType": null,
+          "helpText": null
+        }
+      ],
+      "impactScore": 0.10,
+      "muscleGroups": [
+        "Chest",
+        "Shoulders",
+        "Triceps",
+        "Abs"
+      ],
+      "tags": [
+        "Back",
+        "Shoulder"
+      ],
+      "description": "Stelle dich schräg vor eine Wand, setze die Hände etwa auf Brusthöhe auf und lehne dich mit gestrecktem Körper hinein. Baue aktiv Druck in die Wand auf, als würdest du sie wegschieben und halte diese Spannung.",
       "coachingCues": "Fersen fest in den Boden schieben und den Körper in einer geraden Linie von Kopf bis Ferse halten. Bauch und Gesäß anspannen, Schultern weg von den Ohren führen und ruhig durch die Nase ein- und ausatmen.",
       "videoExplanationUrl": "https://example.com/videos/wall-push-hold"
     },
@@ -18,8 +32,20 @@
       "type": "dynamic",
       "baseReps": 7,
       "baseSeconds": null,
+      "properties": [
+        {
+          "propertyType": null,
+          "helpText": null
+        }
+      ],
       "impactScore": 0.12,
-      "muscleGroups": ["Oberer Rücken", "Schulter", "keineSchulter"],
+      "muscleGroups": [
+        "Upper Back",
+        "Shoulders"
+      ],
+      "tags": [
+        "Shoulder"
+      ],
       "description": "Stelle dich aufrecht hin und ziehe die Schulterblätter kontrolliert nach hinten unten, ohne ins Hohlkreuz zu fallen. Die Arme bleiben dabei locker oder leicht angewinkelt an der Seite.",
       "coachingCues": "Brustbein anheben, als würdest du es nach vorn schieben, und die Schultern aktiv von den Ohren wegführen. Bewegung klein und kontrolliert halten und nicht mit Schwung arbeiten.",
       "videoExplanationUrl": "https://example.com/videos/scapular-retraction-standing"
@@ -30,28 +56,49 @@
       "type": "dynamic",
       "baseReps": 7,
       "baseSeconds": null,
+      "properties": [
+        {
+          "propertyType": null,
+          "helpText": null
+        }
+      ],
       "impactScore": 0.14,
       "muscleGroups": [
-        "Beinrückseite",
-        "Gesäß",
-        "Unterer Rücken",
-        "keinRücken"
+        "Hamstrings",
+        "Glutes",
+        "Lower Back"
+      ],
+      "tags": [
+        "Back"
       ],
       "description": "Stelle dich hüftbreit hin, schiebe die Hüfte weit nach hinten und neige den Oberkörper mit geradem Rücken nach vorn. Spanne die Beinrückseite an und richte dich wieder kontrolliert auf.",
-      "coachingCues": "Rücken neutral halten und den Blick schräg zum Boden richten, nicht in den Nacken gehen. Gewicht eher auf die Fersen bringen und die Bewegung aus der Hüfte einleiten, nicht aus dem unteren Rücken.",
+      "coachingCues": "Rücken neutral halten, den Kopf in Verlängerung zur Wirbelsäule und nicht in den Nacken ziehen. Gewicht eher auf die Fersen bringen und die Bewegung aus der Hüfte einleiten, nicht aus dem unteren Rücken.",
       "videoExplanationUrl": "https://example.com/videos/good-morning-bw"
     },
     {
       "id": "low_4",
-      "name": "Dead Bug",
+      "name": "Bird Dog",
       "type": "dynamic",
-      "baseReps": 7,
+      "baseReps": 6,
       "baseSeconds": null,
+      "properties": [
+        {
+          "propertyType": "unilateral",
+          "helpText": "Ein kompletter Satz pro Diagonale"
+        }
+      ],
       "impactScore": 0.16,
-      "muscleGroups": ["Core", "Bauch", "Unilateral"],
-      "description": "Lege dich in Rückenlage, hebe Arme und Beine an und stelle dir eine Tischposition über deinem Körper vor. Senke diagonal jeweils Arm und Bein langsam Richtung Boden ab und bringe sie wieder in die Ausgangsposition.",
-      "coachingCues": "Lendenwirbelsäule aktiv in die Unterlage drücken und die Rippen nach unten ziehen, damit der Core stabil bleibt. Bewegung langsam und kontrolliert führen und nur so weit absenken, wie du die Spannung in der Körpermitte halten kannst.",
-      "videoExplanationUrl": "https://example.com/videos/dead-bug"
+      "muscleGroups": [
+        "Lower Back",
+        "Abs",
+        "Glutes"
+      ],
+      "tags": [
+        "Back"
+      ],
+      "description": "Gehe in den Vierfüßlerstand, Hände unter den Schultern und Knie unter der Hüfte. Strecke nun diagonal einen Arm nach vorn und das gegenüberliegende Bein nach hinten, bevor du wieder in die Ausgangsposition zurückkehrst.",
+      "coachingCues": "Becken möglichst ruhig halten und vermeiden, in der Hüfte zu wackeln. Bauch sanft nach innen ziehen, Kopf in Verlängerung der Wirbelsäule halten und die Bewegung langsam, ohne Schwung ausführen.",
+      "videoExplanationUrl": "https://example.com/videos/bird-dog"
     },
     {
       "id": "low_5",
@@ -59,95 +106,151 @@
       "type": "static",
       "baseReps": null,
       "baseSeconds": 13,
+      "properties": [
+        {
+          "propertyType": null,
+          "helpText": null
+        }
+      ],
       "impactScore": 0.18,
-      "muscleGroups": ["Brust", "Schulter", "Trizeps", "Core", "keineSchulter"],
+      "muscleGroups": [
+        "Chest",
+        "Shoulders",
+        "Triceps",
+        "Abs"
+      ],
+      "tags": [
+        "Back",
+        "Shoulder"
+      ],
       "description": "Gehe in eine Liegestützposition auf den Knien und stütze dich mit den Händen unter den Schultern ab. Halte den Körper von Kopf bis Knien in einer stabilen, geraden Linie.",
       "coachingCues": "Bauch und Gesäß aktiv anspannen, damit der Rücken nicht ins Hohlkreuz fällt. Hände fest in den Boden drücken, Schultern stabil halten und ruhig weiteratmen, ohne die Luft anzuhalten.",
-      "videoExplanationUrl": "https://example.com/videos/knee-pushup-hold"
+      "videoExplanationUrl": "https://example.com/videos/knee-push-up-hold"
     },
     {
       "id": "low_6",
+      "name": "Wall Sit",
+      "type": "static",
+      "baseReps": null,
+      "baseSeconds": 13,
+      "properties": [
+        {
+          "propertyType": null,
+          "helpText": null
+        }
+      ],
+      "impactScore": 0.20,
+      "muscleGroups": [
+        "Quadriceps",
+        "Glutes",
+        "Abs"
+      ],
+      "tags": [
+        "Knee"
+      ],
+      "description": "Lehne den Rücken an eine Wand und rutsche nach unten, bis Knie und Hüfte ungefähr einen 90-Grad-Winkel bilden. Halte diese Sitzposition, ohne dich mit den Händen an den Beinen abzustützen.",
+      "coachingCues": "Rücken vollständig an die Wand bringen, Gewicht auf die Fersen verlagern und die Knie nicht nach innen kippen lassen. Bauch leicht anspannen, Brust aufrecht halten und ruhig weiteratmen.",
+      "videoExplanationUrl": "https://example.com/videos/wall-sit"
+    },
+    {
+      "id": "low_7",
       "name": "Prone W Pull",
       "type": "dynamic",
       "baseReps": 7,
       "baseSeconds": null,
+      "properties": [
+        {
+          "propertyType": null,
+          "helpText": null
+        }
+      ],
       "impactScore": 0.22,
-      "muscleGroups": ["Oberer Rücken", "Bizeps", "Schulter", "keineSchulter"],
+      "muscleGroups": [
+        "Upper Back",
+        "Shoulders"
+      ],
+      "tags": [
+        "Back",
+        "Shoulder"
+      ],
       "description": "Lege dich in Bauchlage, forme mit den Armen ein W neben deinem Kopf und hebe die Arme leicht vom Boden ab. Ziehe die Schulterblätter kontrolliert nach hinten unten und lasse die Arme wieder minimal absenken.",
       "coachingCues": "Nacken lang halten, Blick zum Boden richten und Stirn nur leicht angehoben lassen. Fokus auf Spannung zwischen den Schulterblättern legen, Bewegung klein, präzise und ohne Schwung ausführen.",
       "videoExplanationUrl": "https://example.com/videos/prone-w-pull"
     },
     {
-      "id": "low_7",
+      "id": "low_8",
+      "name": "Dead Bug",
+      "type": "dynamic",
+      "baseReps": 6,
+      "baseSeconds": null,
+      "properties": [
+        {
+          "propertyType": "unilateral",
+          "helpText": "Ein kompletter Satz pro Diagonale"
+        }
+      ],
+      "impactScore": 0.24,
+      "muscleGroups": [
+        "Abs"
+      ],
+      "tags": [
+        "Back"
+      ],
+      "description": "Lege dich in Rückenlage, hebe Arme und Beine an. Senke immer die gleiche Diagonale langsam Richtung Boden ab und bringe sie wieder in die Ausgangsposition.",
+      "coachingCues": "Lendenwirbelsäule aktiv in die Unterlage drücken und die Rippen nach unten ziehen, damit der Core stabil bleibt. Bewegung langsam kontrolliert ausführen und nur so weit absenken, wie du die Spannung in der Körpermitte halten kannst.",
+      "videoExplanationUrl": "https://example.com/videos/dead-bug"
+    },
+    {
+      "id": "low_9",
       "name": "Glute Bridge",
       "type": "dynamic",
       "baseReps": 8,
       "baseSeconds": null,
-      "impactScore": 0.24,
+      "properties": [
+        {
+          "propertyType": null,
+          "helpText": null
+        }
+      ],
+      "impactScore": 0.26,
       "muscleGroups": [
-        "Gesäß",
-        "Beinrückseite",
-        "Unterer Rücken",
-        "keinRücken"
+        "Glutes",
+        "Hamstrings",
+        "Lower Back"
+      ],
+      "tags": [
+        "Back"
       ],
       "description": "Lege dich auf den Rücken, stelle die Füße hüftbreit auf und hebe das Becken nach oben, bis Knie, Hüfte und Schultern eine Linie bilden. Senke das Becken anschließend kontrolliert wieder ab, ohne komplett zu entspannen.",
       "coachingCues": "Fersen aktiv in den Boden drücken, Gesäß am höchsten Punkt hart anspannen und die Knie nicht nach außen oder innen wegkippen lassen. Lendenwirbelsäule stabil halten und die Bewegung nicht ins Hohlkreuz ziehen.",
       "videoExplanationUrl": "https://example.com/videos/glute-bridge"
     },
     {
-      "id": "low_8",
+      "id": "low_10",
       "name": "Knee Push-Up Shouldertap",
       "type": "dynamic",
       "baseReps": 6,
       "baseSeconds": null,
-      "impactScore": 0.25,
-      "muscleGroups": [
-        "Brust",
-        "Schulter",
-        "Trizeps",
-        "Core",
-        "keineSchulter",
-        "Unilateral"
+      "properties": [
+        {
+          "propertyType": null,
+          "helpText": null
+        }
       ],
-      "description": "Gehe in eine Liegestützposition auf den Knien und stütze dich stabil über den Armen ab. Tippe nun abwechselnd mit einer Hand zur gegenüberliegenden Schulter, während du die Körperlinie so ruhig wie möglich hältst.",
-      "coachingCues": "Becken stabil halten und seitliches Wegkippen vermeiden, indem du den Core fest anspannst. Füße bzw. Knie leicht breiter setzen für mehr Stabilität und jede Wiederholung langsam und kontrolliert ausführen.",
-      "videoExplanationUrl": "https://example.com/videos/knee-push-up-shouldertap"
-    },
-    {
-      "id": "low_9",
-      "name": "Bird Dog",
-      "type": "dynamic",
-      "baseReps": 7,
-      "baseSeconds": null,
-      "impactScore": 0.26,
-      "muscleGroups": [
-        "Core",
-        "Unterer Rücken",
-        "Gesäß",
-        "keinRücken",
-        "Unilateral"
-      ],
-      "description": "Gehe in den Vierfüßlerstand, Hände unter den Schultern und Knie unter der Hüfte. Strecke nun diagonal einen Arm nach vorn und das gegenüberliegende Bein nach hinten, bevor du wieder in die Ausgangsposition zurückkehrst.",
-      "coachingCues": "Becken möglichst ruhig halten und vermeiden, in der Hüfte zu wackeln. Bauch sanft nach innen ziehen, Kopf in Verlängerung der Wirbelsäule halten und die Bewegung langsam, ohne Schwung ausführen.",
-      "videoExplanationUrl": "https://example.com/videos/bird-dog"
-    },
-    {
-      "id": "low_10",
-      "name": "Plank Hold",
-      "type": "static",
-      "baseReps": null,
-      "baseSeconds": 13,
       "impactScore": 0.28,
       "muscleGroups": [
-        "Core",
-        "Bauch",
-        "Unterer Rücken",
-        "keinRücken",
-        "keineSchulter"
+        "Chest",
+        "Shoulders",
+        "Triceps",
+        "Abs"
       ],
-      "description": "Gehe in den Unterarmstütz und stelle die Füße hüftbreit auf, sodass dein Körper eine Linie von Kopf bis Ferse bildet. Halte diese Position, ohne in der Hüfte durchzuhängen oder das Becken anzuheben.",
-      "coachingCues": "Bauch und Gesäß fest anspannen, damit die Lendenwirbelsäule stabil bleibt. Schultern aktiv vom Ohr wegziehen, Unterarme in den Boden drücken und ruhig, aber gleichmäßig weiteratmen.",
-      "videoExplanationUrl": "https://example.com/videos/plank-hold"
+      "tags": [
+        "Back",
+        "Shoulder"
+      ],
+      "description": "Gehe in eine Liegestützposition auf den Knien und stütze dich stabil über den Armen ab. Tippe nun abwechselnd mit einer Hand zur gegenüberliegenden Schulter für eine Wiederholung, während du die Körperlinie so ruhig wie möglich hältst.",
+      "coachingCues": "Becken stabil halten und seitliches Wegkippen vermeiden, indem du den Core fest anspannst. Füße bzw. Knie leicht breiter setzen für mehr Stabilität und jede Wiederholung langsam und kontrolliert ausführen.",
+      "videoExplanationUrl": "https://example.com/videos/knee-push-up-shouldertap"
     },
     {
       "id": "low_11",
@@ -155,8 +258,21 @@
       "type": "static",
       "baseReps": null,
       "baseSeconds": 12,
-      "impactScore": 0.3,
-      "muscleGroups": ["Core", "Bauch", "keineSchulter", "Unilateral"],
+      "properties": [
+        {
+          "propertyType": "unilateral",
+          "helpText": "Ein kompletter Satz pro Seite"
+        }
+      ],
+      "impactScore": 0.30,
+      "muscleGroups": [
+        "Obliques",
+        "Abs"
+      ],
+      "tags": [
+        "Back",
+        "Shoulder"
+      ],
       "description": "Lege dich seitlich ab, stütze dich auf dem Unterarm auf und winkle die Knie an. Hebe nun Hüfte und Oberschenkel vom Boden ab, sodass du eine gerade Linie von Kopf bis Knie bildest.",
       "coachingCues": "Schulter exakt über dem Ellenbogen ausrichten und die Hüfte aktiv nach oben schieben. Seitliche Bauchmuskulatur bewusst anspannen und den Körper nicht nach vorn oder hinten wegkippen lassen.",
       "videoExplanationUrl": "https://example.com/videos/side-plank-knees-down"
@@ -167,8 +283,22 @@
       "type": "static",
       "baseReps": null,
       "baseSeconds": 12,
+      "properties": [
+        {
+          "propertyType": null,
+          "helpText": null
+        }
+      ],
       "impactScore": 0.32,
-      "muscleGroups": ["Oberer Rücken", "Bizeps", "keineSchulter"],
+      "muscleGroups": [
+        "Upper Back",
+        "Shoulders",
+        "Biceps"
+      ],
+      "tags": [
+        "Back",
+        "Shoulder"
+      ],
       "description": "Befestige ein Handtuch sicher an einem festen Punkt und lehne den Oberkörper leicht zurück, während du beide Enden fest greifst. Baue nun Zugspannung auf, als würdest du dich heranziehen, und halte diese Position.",
       "coachingCues": "Ellenbogen dicht am Körper halten und die Schulterblätter aktiv nach hinten unten ziehen. Brustbein anheben, Kopf in Verlängerung der Wirbelsäule halten und gleichmäßig weiteratmen, ohne mit dem Oberkörper zu wippen.",
       "videoExplanationUrl": "https://example.com/videos/towel-row-static-hold"
@@ -179,15 +309,22 @@
       "type": "dynamic",
       "baseReps": 6,
       "baseSeconds": null,
-      "impactScore": 0.36,
-      "muscleGroups": [
-        "Gesäß",
-        "Beinrückseite",
-        "Core",
-        "keinRücken",
-        "Unilateral"
+      "properties": [
+        {
+          "propertyType": null,
+          "helpText": null
+        }
       ],
-      "description": "Gehe in die Brückenposition, hebe das Becken an und halte die Hüfte stabil. Hebe nun abwechselnd ein Bein leicht vom Boden ab, als würdest du im Liegen marschieren.",
+      "impactScore": 0.33,
+      "muscleGroups": [
+        "Glutes",
+        "Hamstrings",
+        "Abs"
+      ],
+      "tags": [
+        "Back"
+      ],
+      "description": "Gehe in die Brückenposition, hebe das Becken an und halte die Hüfte stabil. Hebe nun abwechselnd ein Bein leicht vom Boden ab für eine Wiederholung, als würdest du im Liegen marschieren.",
       "coachingCues": "Becken möglichst ruhig halten und nicht zur Seite wegkippen lassen. Gesäß aktiv angespannt halten, Bauch nach innen ziehen und jeden Schritt langsam und kontrolliert setzen.",
       "videoExplanationUrl": "https://example.com/videos/marching-bridge"
     },
@@ -197,13 +334,20 @@
       "type": "static",
       "baseReps": null,
       "baseSeconds": 12,
-      "impactScore": 0.4,
+      "properties": [
+        {
+          "propertyType": "unilateral",
+          "helpText": "Ein kompletter Satz pro Seite"
+        }
+      ],
+      "impactScore": 0.36,
       "muscleGroups": [
-        "Beinvorderseite",
-        "Gesäß",
-        "Core",
-        "keinKnie",
-        "Unilateral"
+        "Quadriceps",
+        "Glutes",
+        "Abs"
+      ],
+      "tags": [
+        "Knee"
       ],
       "description": "Gehe in einen tiefen Ausfallschritt, setze den vorderen Fuß flach auf und den hinteren Fuß auf den Ballen. Senke das hintere Knie Richtung Boden ab und halte die Position, ohne zu wippen.",
       "coachingCues": "Vorderes Knie stabil über dem Fuß halten und nicht nach innen wegfallen lassen. Oberkörper aufrecht lassen, Bauch anspannen und das Gewicht gleichmäßig über Vorder- und Hinterbein verteilen.",
@@ -211,15 +355,28 @@
     },
     {
       "id": "low_15",
-      "name": "Wall Sit",
+      "name": "Plank Hold",
       "type": "static",
       "baseReps": null,
       "baseSeconds": 13,
-      "impactScore": 0.44,
-      "muscleGroups": ["Beinvorderseite", "Gesäß", "Core", "keinKnie"],
-      "description": "Lehne den Rücken an eine Wand und rutsche nach unten, bis Knie und Hüfte ungefähr einen 90-Grad-Winkel bilden. Halte diese Sitzposition, ohne dich mit den Händen an den Beinen abzustützen.",
-      "coachingCues": "Rücken vollständig an die Wand bringen, Gewicht auf die Fersen verlagern und die Knie nicht nach innen kippen lassen. Bauch leicht anspannen, Brust aufrecht halten und ruhig weiteratmen.",
-      "videoExplanationUrl": "https://example.com/videos/wall-sit"
+      "properties": [
+        {
+          "propertyType": null,
+          "helpText": null
+        }
+      ],
+      "impactScore": 0.38,
+      "muscleGroups": [
+        "Abs",
+        "Lower Back"
+      ],
+      "tags": [
+        "Back",
+        "Shoulder"
+      ],
+      "description": "Gehe in den Unterarmstütz und stelle die Füße hüftbreit auf, sodass dein Körper eine Linie von Kopf bis Ferse bildet. Halte diese Position, ohne in der Hüfte durchzuhängen oder das Becken anzuheben.",
+      "coachingCues": "Bauch und Gesäß fest anspannen, damit die Lendenwirbelsäule stabil bleibt. Schultern aktiv vom Ohr wegziehen, Unterarme in den Boden drücken und ruhig, aber gleichmäßig weiteratmen.",
+      "videoExplanationUrl": "https://example.com/videos/plank-hold"
     },
     {
       "id": "medium_1",
@@ -227,11 +384,26 @@
       "type": "dynamic",
       "baseReps": 6,
       "baseSeconds": null,
-      "impactScore": 0.4,
-      "muscleGroups": ["Brust", "Schulter", "Trizeps", "Core", "keineSchulter"],
+      "properties": [
+        {
+          "propertyType": null,
+          "helpText": null
+        }
+      ],
+      "impactScore": 0.40,
+      "muscleGroups": [
+        "Chest",
+        "Shoulders",
+        "Triceps",
+        "Abs"
+      ],
+      "tags": [
+        "Back",
+        "Shoulder"
+      ],
       "description": "Gehe in eine klassische Liegestützposition mit gestreckten Beinen und Händen unter den Schultern. Senke den Körper kontrolliert in Richtung Boden und drücke dich anschließend wieder kraftvoll nach oben.",
       "coachingCues": "Körper in einer Linie von Kopf bis Ferse halten und Bauch sowie Gesäß fest anspannen. Ellenbogen etwa 45 Grad zum Körper führen, nicht nach außen wegklappen lassen und die Bewegung ruhig kontrollieren.",
-      "videoExplanationUrl": "https://example.com/videos/pushup"
+      "videoExplanationUrl": "https://example.com/videos/push-up"
     },
     {
       "id": "medium_2",
@@ -239,101 +411,201 @@
       "type": "dynamic",
       "baseReps": 6,
       "baseSeconds": null,
+      "properties": [
+        {
+          "propertyType": null,
+          "helpText": null
+        }
+      ],
       "impactScore": 0.42,
-      "muscleGroups": ["Oberer Rücken", "Schulter", "keineSchulter"],
+      "muscleGroups": [
+        "Upper Back",
+        "Shoulders"
+      ],
+      "tags": [
+        "Back",
+        "Shoulder"
+      ],
       "description": "Lege dich in Bauchlage, strecke die Arme seitlich auf Schulterhöhe aus und hebe sie leicht vom Boden ab, sodass ein T entsteht. Ziehe die Schulterblätter aktiv zusammen und lasse die Arme wieder minimal sinken.",
       "coachingCues": "Daumen leicht nach oben drehen, um die Schulterposition zu optimieren, und den Nacken lang halten. Bewegung klein und präzise führen, nicht mit Schwung arbeiten und die Spannung im oberen Rücken bewusst wahrnehmen.",
       "videoExplanationUrl": "https://example.com/videos/prone-t-pull"
     },
     {
       "id": "medium_3",
-      "name": "Towel Row",
+      "name": "Walkout to Push-Up",
       "type": "dynamic",
-      "baseReps": 6,
+      "baseReps": 5,
       "baseSeconds": null,
+      "properties": [
+        {
+          "propertyType": null,
+          "helpText": null
+        }
+      ],
       "impactScore": 0.44,
-      "muscleGroups": ["Oberer Rücken", "Bizeps", "keineSchulter"],
-      "description": "Befestige ein Handtuch an einem stabilen Punkt, lehne dich mit gestreckten Armen leicht zurück und baue Zugspannung auf. Ziehe dich nun mit den Armen kontrolliert nach vorn und lasse den Körper wieder langsam zurückgleiten.",
-      "coachingCues": "Brustbein anheben, Schultern nach hinten unten setzen und die Ellenbogen dicht am Körper führen. Den Körper als Einheit bewegen, Bauch anspannen und die Bewegung ohne Ruck ausführen.",
-      "videoExplanationUrl": "https://example.com/videos/towel-row"
+      "muscleGroups": [
+        "Chest",
+        "Shoulders",
+        "Triceps",
+        "Abs"
+      ],
+      "tags": [
+        "Back",
+        "Shoulder"
+      ],
+      "description": "Starte im Stand, beuge dich nach vorn und wandere mit den Händen Schritt für Schritt in eine Liegestützposition. Führe optional einen Liegestütz aus und laufe anschließend mit den Händen wieder zurück zu den Füßen, um aufzustehen.",
+      "coachingCues": "Knie nur so weit beugen, wie es sich gut anfühlt, und die Wirbelsäule kontrolliert bewegen. Core aktiv halten, um beim Heraus- und Zurücklaufen nicht ins Hohlkreuz zu fallen, und den Bewegungsfluss ruhig halten.",
+      "videoExplanationUrl": "https://example.com/videos/walkout-to-push-up"
     },
     {
       "id": "medium_4",
-      "name": "Prone Y Hold",
-      "type": "static",
-      "baseReps": null,
-      "baseSeconds": 11,
-      "impactScore": 0.46,
-      "muscleGroups": ["Oberer Rücken", "Schulter", "keineSchulter"],
-      "description": "Lege dich in Bauchlage und forme mit den Armen ein Y über dem Kopf, die Daumen zeigen nach oben. Hebe die Arme leicht vom Boden ab und halte die Spannung im oberen Rücken und in der hinteren Schulter.",
-      "coachingCues": "Blick zum Boden richten, Nacken lang halten und den Bauch leicht anspannen, damit der Rücken nicht überstreckt. Arme nicht zu hoch reißen, sondern die Spannung zwischen den Schulterblättern bewusst halten.",
-      "videoExplanationUrl": "https://example.com/videos/prone-y-hold"
-    },
-    {
-      "id": "medium_5",
       "name": "Squat Hold",
       "type": "static",
       "baseReps": null,
       "baseSeconds": 11,
-      "impactScore": 0.5,
-      "muscleGroups": ["Beinvorderseite", "Gesäß", "Core", "keinKnie"],
+      "properties": [
+        {
+          "propertyType": null,
+          "helpText": null
+        }
+      ],
+      "impactScore": 0.46,
+      "muscleGroups": [
+        "Quadriceps",
+        "Glutes",
+        "Abs"
+      ],
+      "tags": [
+        "Knee"
+      ],
       "description": "Gehe in eine Kniebeuge, als würdest du dich auf einen unsichtbaren Stuhl setzen, und halte die Position auf einer angenehmen, aber fordernden Tiefe. Der Oberkörper bleibt dabei aufrecht und die Fersen am Boden.",
       "coachingCues": "Knie in Linie mit den Füßen halten und nicht nach innen kollabieren lassen. Bauchspannung aufbauen, Brust anheben und den Blick nach vorn oder leicht schräg nach unten richten, ohne ins Hohlkreuz zu fallen.",
       "videoExplanationUrl": "https://example.com/videos/squat-hold"
     },
     {
-      "id": "medium_6",
-      "name": "Hollow Hold",
+      "id": "medium_5",
+      "name": "Bear Crawl Hold",
       "type": "static",
       "baseReps": null,
       "baseSeconds": 11,
-      "impactScore": 0.52,
-      "muscleGroups": ["Core", "Bauch"],
-      "description": "Lege dich auf den Rücken, hebe Arme und Beine leicht vom Boden ab und forme einen stabilen Hohlkörper. Nur der untere Rücken bleibt dabei fest mit dem Boden verbunden.",
-      "coachingCues": "Lendenwirbelsäule aktiv in die Unterlage drücken und die Rippen nach unten ziehen. Kinn leicht zur Brust nehmen, Spannung im gesamten Rumpf halten und ruhig weiteratmen, ohne die Luft anzuhalten.",
-      "videoExplanationUrl": "https://example.com/videos/hollow-hold"
+      "properties": [
+        {
+          "propertyType": null,
+          "helpText": null
+        }
+      ],
+      "impactScore": 0.48,
+      "muscleGroups": [
+        "Quadriceps",
+        "Abs",
+        "Shoulders"
+      ],
+      "tags": [
+        "Shoulder",
+        "Knee"
+      ],
+      "description": "Gehe in den Vierfüßlerstand und hebe beide Knie wenige Zentimeter vom Boden ab, ohne die Position der Wirbelsäule zu verändern. Halte diese Haltung, als würdest du gleich loskrabbeln, aber bleibe statisch.",
+      "coachingCues": "Rücken neutral halten, Bauch nach innen ziehen und den Blick zwischen die Hände richten. Knie knapp über dem Boden schweben lassen, Hände und Füße fest in den Boden drücken und ruhig weiteratmen.",
+      "videoExplanationUrl": "https://example.com/videos/bear-crawl-hold"
+    },
+    {
+      "id": "medium_6",
+      "name": "Towel Row",
+      "type": "dynamic",
+      "baseReps": 6,
+      "baseSeconds": null,
+      "properties": [
+        {
+          "propertyType": null,
+          "helpText": null
+        }
+      ],
+      "impactScore": 0.50,
+      "muscleGroups": [
+        "Upper Back",
+        "Shoulders",
+        "Biceps"
+      ],
+      "tags": [
+        "Back",
+        "Shoulder"
+      ],
+      "description": "Befestige ein Handtuch an einem stabilen Punkt, lehne dich mit gestreckten Armen leicht zurück und baue Zugspannung auf. Ziehe dich nun mit den Armen kontrolliert nach vorn und lasse den Körper wieder langsam zurückgleiten.",
+      "coachingCues": "Brustbein anheben, Schultern nach hinten unten setzen und die Ellenbogen dicht am Körper führen. Den Körper als Einheit bewegen, Bauch anspannen und die Bewegung ohne Ruck ausführen.",
+      "videoExplanationUrl": "https://example.com/videos/towel-row"
     },
     {
       "id": "medium_7",
       "name": "Reverse Lunge",
       "type": "dynamic",
-      "baseReps": 6,
+      "baseReps": 4,
       "baseSeconds": null,
-      "impactScore": 0.56,
-      "muscleGroups": ["Beinvorderseite", "Gesäß", "keinKnie", "Unilateral"],
+      "properties": [
+        {
+          "propertyType": "unilateral",
+          "helpText": "Ein kompletter Satz pro Seite"
+        }
+      ],
+      "impactScore": 0.52,
+      "muscleGroups": [
+        "Quadriceps",
+        "Glutes"
+      ],
+      "tags": [
+        "Knee"
+      ],
       "description": "Stehe aufrecht und setze einen Fuß kontrolliert nach hinten in einen Ausfallschritt. Senke das hintere Knie Richtung Boden ab und drücke dich dann wieder in den Stand zurück.",
       "coachingCues": "Vorderes Knie stabil über dem Fuß halten und nicht über die Fußspitze hinausschieben. Oberkörper aufrecht lassen, Bauch anspannen und bewusst aus dem vorderen Bein wieder nach oben drücken.",
       "videoExplanationUrl": "https://example.com/videos/reverse-lunge"
     },
     {
       "id": "medium_8",
-      "name": "Push-Up Ankle Tap",
-      "type": "dynamic",
-      "baseReps": 6,
-      "baseSeconds": null,
-      "impactScore": 0.6,
-      "muscleGroups": [
-        "Core",
-        "Schulter",
-        "keineSchulter",
-        "keinCardio",
-        "Unilateral"
-      ],
-      "description": "Führe einen Liegestütz aus und tippe am oberen Punkt abwechselnd mit einer Hand das gegenüberliegende Sprunggelenk, indem du die Hüfte leicht nach hinten schiebst. Kehre danach wieder in die stabile Liegestützposition zurück.",
-      "coachingCues": "Core fest anspannen, um das Becken stabil zu halten, und nicht ins Hohlkreuz fallen. Bewegung kontrolliert und bewusst ausführen, nicht ins Hasten kommen, und gleichmäßig weiteratmen.",
-      "videoExplanationUrl": "https://example.com/videos/push-up-ankle-tap"
-    },
-    {
-      "id": "medium_9",
       "name": "Hip Lift Extended",
       "type": "dynamic",
       "baseReps": 6,
       "baseSeconds": null,
-      "impactScore": 0.6,
-      "muscleGroups": ["Gesäß", "Beinrückseite", "keinRücken", "Unilateral"],
+      "properties": [
+        {
+          "propertyType": "unilateral",
+          "helpText": "Ein kompletter Satz pro Seite"
+        }
+      ],
+      "impactScore": 0.54,
+      "muscleGroups": [
+        "Glutes",
+        "Hamstrings"
+      ],
+      "tags": [],
       "description": "Lege dich in Rückenlage und strecke ein Bein aus, während das andere angewinkelt bleibt. Hebe nun das Becken einbeinig an und senke es kontrolliert wieder ab, ohne die Hüfte zur Seite kippen zu lassen.",
       "coachingCues": "Ferse des Standbeins aktiv in den Boden drücken und Gesäß bewusst anspannen. Bauch leicht nach innen ziehen, um die Lendenwirbelsäule zu stabilisieren, und die Bewegung ruhig und ohne Schwung ausführen.",
       "videoExplanationUrl": "https://example.com/videos/hip-lift-extended"
+    },
+    {
+      "id": "medium_9",
+      "name": "Push-Up Ankle Tap",
+      "type": "dynamic",
+      "baseReps": 6,
+      "baseSeconds": null,
+      "properties": [
+        {
+          "propertyType": null,
+          "helpText": null
+        }
+      ],
+      "impactScore": 0.56,
+      "muscleGroups": [
+        "Chest",
+        "Shoulders",
+        "Triceps",
+        "Abs"
+      ],
+      "tags": [
+        "Back",
+        "Shoulder"
+      ],
+      "description": "Führe einen Liegestütz aus und tippe am oberen Punkt abwechselnd mit einer Hand das gegenüberliegende Sprunggelenk, indem du die Hüfte leicht nach hinten schiebst. Kehre danach wieder in die stabile Liegestützposition zurück.",
+      "coachingCues": "Core fest anspannen, um das Becken stabil zu halten, und nicht ins Hohlkreuz fallen. Bewegung kontrolliert und bewusst ausführen, nicht ins Hasten kommen, und gleichmäßig weiteratmen.",
+      "videoExplanationUrl": "https://example.com/videos/push-up-ankle-tap"
     },
     {
       "id": "medium_10",
@@ -341,17 +613,24 @@
       "type": "dynamic",
       "baseReps": 6,
       "baseSeconds": null,
-      "impactScore": 0.61,
-      "muscleGroups": [
-        "Brust",
-        "Schulter",
-        "Trizeps",
-        "Core",
-        "keineSchulter",
-        "keinCardio",
-        "Unilateral"
+      "properties": [
+        {
+          "propertyType": null,
+          "helpText": null
+        }
       ],
-      "description": "Starte in einer Liegestützposition, senke den Körper kontrolliert ab und drücke dich wieder nach oben. Am oberen Punkt drehst du den Oberkörper zur Seite auf und streckst einen Arm Richtung Decke, bevor du zur Mitte zurückkehrst.",
+      "impactScore": 0.58,
+      "muscleGroups": [
+        "Chest",
+        "Shoulders",
+        "Triceps",
+        "Abs"
+      ],
+      "tags": [
+        "Back",
+        "Shoulder"
+      ],
+      "description": "Starte in einer Liegestützposition, senke den Körper kontrolliert ab und drücke dich wieder nach oben. Am oberen Punkt drehst du den Oberkörper im Wechsel zu einer Seite auf und streckst einen Arm Richtung Decke, bevor du in die Ausgangsposition zurückkehrst.",
       "coachingCues": "Hüfte stabil halten und darauf achten, dass der Körper bei der Rotation nicht wegkippt. Core fest anspannen, Blick der Hand folgen lassen und jede Wiederholung kontrolliert ausführen, ohne ins Hohlkreuz zu fallen.",
       "videoExplanationUrl": "https://example.com/videos/push-up-with-rotation"
     },
@@ -361,90 +640,150 @@
       "type": "static",
       "baseReps": null,
       "baseSeconds": 11,
-      "impactScore": 0.62,
-      "muscleGroups": ["Core", "Bauch", "keineSchulter", "Unilateral"],
+      "properties": [
+        {
+          "propertyType": "unilateral",
+          "helpText": "Ein kompletter Satz pro Seite"
+        }
+      ],
+      "impactScore": 0.6,
+      "muscleGroups": [
+        "Obliques",
+        "Abs"
+      ],
+      "tags": [
+        "Back",
+        "Shoulder"
+      ],
       "description": "Gehe in den Seitstütz auf dem Unterarm und strecke die Beine, sodass du auf der Fußaußenkante aufliegst. Hebe die Hüfte an, bis dein Körper eine gerade Linie von Kopf bis Fuß bildet, und halte diese Position.",
       "coachingCues": "Schulter über dem Ellenbogen positionieren, Hüfte aktiv nach oben drücken und nicht absinken lassen. Seitliche Bauchspannung bewusst halten, Brust nach vorn ausrichten und ruhig weiteratmen.",
       "videoExplanationUrl": "https://example.com/videos/side-plank-extended"
     },
     {
       "id": "medium_12",
-      "name": "Bear Crawl Hold",
+      "name": "Single Leg Deadlift Hold",
       "type": "static",
       "baseReps": null,
       "baseSeconds": 11,
-      "impactScore": 0.66,
-      "muscleGroups": ["Core", "Schulter", "Beinvorderseite", "keineSchulter"],
-      "description": "Gehe in den Vierfüßlerstand und hebe beide Knie wenige Zentimeter vom Boden ab, ohne die Position der Wirbelsäule zu verändern. Halte diese Haltung, als würdest du gleich loskrabbeln, aber bleibe statisch.",
-      "coachingCues": "Rücken neutral halten, Bauch nach innen ziehen und den Blick zwischen die Hände richten. Knie knapp über dem Boden schweben lassen, Hände und Füße fest in den Boden drücken und ruhig weiteratmen.",
-      "videoExplanationUrl": "https://example.com/videos/bear-crawl-hold"
+      "properties": [
+        {
+          "propertyType": "unilateral",
+          "helpText": "Ein kompletter Satz pro Seite"
+        }
+      ],
+      "impactScore": 0.62,
+      "muscleGroups": [
+        "Glutes",
+        "Hamstrings",
+        "Abs"
+      ],
+      "tags": [],
+      "description": "Stehe auf einem Bein und kippe aus der Hüfte nach vorne, bis Oberkörper und freies Bein eine Linie bilden. Das Standbein bleibt leicht gebeugt. Halte die Position stabil, ohne dass Becken oder Oberkörper rotieren.",
+      "coachingCues": "Standfuß fest in den Boden drücken, Hüfte des Spielbeins aktiv nach hinten schieben. Becken bleibt waagerecht, Rücken lang, Blick zum Boden. Spannung in Gesäß und Beinrückseite halten, nicht ins Hohlkreuz ziehen. Atmung ruhig und kontrolliert.",
+      "videoExplanationUrl": "https://example.com/videos/single-leg-deadlift-hold"
     },
     {
       "id": "medium_13",
+      "name": "Hollow Hold",
+      "type": "static",
+      "baseReps": null,
+      "baseSeconds": 9,
+      "properties": [
+        {
+          "propertyType": null,
+          "helpText": null
+        }
+      ],
+      "impactScore": 0.64,
+      "muscleGroups": [
+        "Abs"
+      ],
+      "tags": [
+        "Back"
+      ],
+      "description": "Lege dich auf den Rücken, hebe Arme und Beine leicht vom Boden ab und forme einen stabilen Hohlkörper. Nur der untere Rücken bleibt dabei fest mit dem Boden verbunden.",
+      "coachingCues": "Lendenwirbelsäule aktiv in die Unterlage drücken und die Rippen nach unten ziehen. Kinn leicht zur Brust nehmen, Spannung im gesamten Rumpf halten und ruhig weiteratmen, ohne die Luft anzuhalten.",
+      "videoExplanationUrl": "https://example.com/videos/hollow-hold"
+    },
+    {
+      "id": "medium_14",
       "name": "Slow Mountain Climbers",
       "type": "dynamic",
       "baseReps": 6,
       "baseSeconds": null,
-      "impactScore": 0.68,
+      "properties": [
+        {
+          "propertyType": null,
+          "helpText": null
+        }
+      ],
+      "impactScore": 0.66,
       "muscleGroups": [
-        "Core",
-        "Hüftbeuger",
-        "Schulter",
-        "keineSchulter",
-        "keinCardio",
-        "Unilateral"
+        "Quadriceps",
+        "Abs",
+        "Shoulders"
+      ],
+      "tags": [
+        "Shoulder",
+        "Back",
+        "Knee",
+        "Cardio"
       ],
       "description": "Gehe in eine stabile Liegestützposition auf den Händen und ziehe ein Knie langsam und kontrolliert Richtung Brust. Setze den Fuß wieder zurück und wechsle die Seite, ohne dass die Hüfte stark auf- und abwandert.",
       "coachingCues": "Core fest anspannen und das Becken ruhig halten, damit der Rücken stabil bleibt. Hände aktiv in den Boden drücken, Schultern weg von den Ohren führen und jede Wiederholung bewusst langsam ausführen.",
       "videoExplanationUrl": "https://example.com/videos/slow-mountain-climbers"
     },
     {
-      "id": "medium_14",
-      "name": "Walkout to Push-Up",
-      "type": "dynamic",
-      "baseReps": 5,
-      "baseSeconds": null,
-      "impactScore": 0.72,
-      "muscleGroups": [
-        "Core",
-        "Schulter",
-        "Beinvorderseite",
-        "keineSchulter",
-        "keinCardio"
+      "id": "medium_15",
+      "name": "Prone Y Hold",
+      "type": "static",
+      "baseReps": null,
+      "baseSeconds": 11,
+      "properties": [
+        {
+          "propertyType": null,
+          "helpText": null
+        }
       ],
-      "description": "Starte im Stand, beuge dich nach vorn und wandere mit den Händen Schritt für Schritt in eine Liegestützposition. Führe optional einen Liegestütz aus und laufe anschließend mit den Händen wieder zurück zu den Füßen, um aufzustehen.",
-      "coachingCues": "Knie nur so weit beugen, wie es sich gut anfühlt, und die Wirbelsäule kontrolliert bewegen. Core aktiv halten, um beim Heraus- und Zurücklaufen nicht ins Hohlkreuz zu fallen, und den Bewegungsfluss ruhig halten.",
-      "videoExplanationUrl": "https://example.com/videos/walkout-to-push-up"
+      "impactScore": 0.68,
+      "muscleGroups": [
+        "Upper Back",
+        "Shoulders"
+      ],
+      "tags": [
+        "Back",
+        "Shoulder"
+      ],
+      "description": "Lege dich in Bauchlage und forme mit den Armen ein Y über dem Kopf, die Daumen zeigen nach oben. Hebe die Arme leicht vom Boden ab und halte die Spannung im oberen Rücken und in der hinteren Schulter.",
+      "coachingCues": "Blick zum Boden richten, Nacken lang halten und den Bauch leicht anspannen, damit der Rücken nicht überstreckt. Arme nicht zu hoch reißen, sondern die Spannung zwischen den Schulterblättern bewusst halten.",
+      "videoExplanationUrl": "https://example.com/videos/prone-y-hold"
     },
     {
-      "id": "medium_15",
+      "id": "high_1",
       "name": "Push-Up Iso Hold bottom",
       "type": "static",
       "baseReps": null,
       "baseSeconds": 9,
-      "impactScore": 0.75,
-      "muscleGroups": ["Brust", "Schulter", "Trizeps", "Core", "keineSchulter"],
+      "properties": [
+        {
+          "propertyType": null,
+          "helpText": null
+        }
+      ],
+      "impactScore": 0.70,
+      "muscleGroups": [
+        "Chest",
+        "Shoulders",
+        "Triceps",
+        "Abs"
+      ],
+      "tags": [
+        "Back",
+        "Shoulder"
+      ],
       "description": "Gehe in eine Liegestützposition und senke den Körper bis etwa auf Ellenbogenhöhe ab. Halte diese tiefe Position, ohne dich komplett abzulegen oder nach oben zu drücken.",
       "coachingCues": "Ellenbogen etwa 90 Grad gebeugt halten, Bauch und Gesäß stark anspannen und den Körper in einer Linie stabilisieren. Schultern nicht zu den Ohren ziehen, Hände aktiv in den Boden drücken und ruhig weiteratmen.",
-      "videoExplanationUrl": "https://example.com/videos/pushup-iso-bottom"
-    },
-    {
-      "id": "high_1",
-      "name": "Single Leg Deadlift Hold",
-      "type": "static",
-      "baseReps": null,
-      "baseSeconds": 11,
-      "impactScore": 0.6,
-      "muscleGroups": [
-        "Beinrückseite",
-        "Gesäß",
-        "Core",
-        "Unilateral",
-        "keinKnie"
-      ],
-      "description": "Stehe auf einem Bein und kippe aus der Hüfte nach vorne, bis Oberkörper und freies Bein eine Linie bilden. Das Standbein bleibt leicht gebeugt. Halte die Position stabil, ohne dass Becken oder Oberkörper rotieren.",
-      "coachingCues": "Standfuß fest in den Boden drücken, Hüfte des Spielbeins aktiv nach hinten schieben. Becken bleibt waagerecht, Rücken lang, Blick zum Boden. Spannung in Gesäß und Beinrückseite halten, nicht ins Hohlkreuz ziehen. Atmung ruhig und kontrolliert.",
-      "videoExplanationUrl": "https://example.com/videos/single-leg-deadlift-hold"
+      "videoExplanationUrl": "https://example.com/videos/push-up-iso-bottom"
     },
     {
       "id": "high_2",
@@ -452,14 +791,22 @@
       "type": "dynamic",
       "baseReps": 6,
       "baseSeconds": null,
-      "impactScore": 0.65,
+      "properties": [
+        {
+          "propertyType": null,
+          "helpText": null
+        }
+      ],
+      "impactScore": 0.72,
       "muscleGroups": [
-        "Oberer Rücken",
-        "Schulter",
-        "Core",
-        "Unterer Rücken",
-        "keineSchulter",
-        "keinRücken"
+        "Upper Back",
+        "Shoulders",
+        "Abs",
+        "Lower Back"
+      ],
+      "tags": [
+        "Back",
+        "Shoulder"
       ],
       "description": "Lege dich in Bauchlage, hebe Arme und Beine leicht vom Boden ab und führe eine kontrollierte Schwimmbewegung aus. Die Arme bewegen sich in einem sanften Bogen, während die Beine in kleiner Amplitude mitarbeiten.",
       "coachingCues": "Blick zum Boden halten, Nacken lang lassen und Bauch leicht anspannen, damit der Rücken nicht überstreckt. Bewegung klein, fließend und kontrolliert führen, ohne ins Hohlkreuz zu ziehen.",
@@ -467,72 +814,106 @@
     },
     {
       "id": "high_3",
+      "name": "Jump Squat",
+      "type": "dynamic",
+      "baseReps": 3,
+      "baseSeconds": null,
+      "properties": [
+        {
+          "propertyType": null,
+          "helpText": null
+        }
+      ],
+      "impactScore": 0.74,
+      "muscleGroups": [
+        "Quadriceps",
+        "Glutes",
+        "Hamstrings",
+        "Abs"
+      ],
+      "tags": [
+        "Knee",
+        "Cardio"
+      ],
+      "description": "Gehe in eine Kniebeuge und springe aus der tiefen Position explosiv nach oben ab. Lande weich und rolle sofort wieder in die nächste Kniebeuge zurück.",
+      "coachingCues": "Beim Landen zuerst über den Fußballen abfedern und das Gewicht dann auf die Fersen bringen, Knie stabil halten. Core anspannen, Oberkörper aufrecht lassen und nur so hochspringen, wie du kontrolliert landen kannst.",
+      "videoExplanationUrl": "https://example.com/videos/jump-squat"
+    },
+    {
+      "id": "high_4",
       "name": "V-Hold",
       "type": "static",
       "baseReps": null,
       "baseSeconds": 9,
-      "impactScore": 0.7,
-      "muscleGroups": ["Core", "Bauch"],
+      "properties": [
+        {
+          "propertyType": null,
+          "helpText": null
+        }
+      ],
+      "impactScore": 0.76,
+      "muscleGroups": [
+        "Abs"
+      ],
+      "tags": [
+        "Back"
+      ],
       "description": "Setze dich aufrecht hin, lehne den Oberkörper leicht nach hinten und hebe die Beine an, bis ein V zwischen Oberkörper und Beinen entsteht. Strecke die Arme parallel zu den Beinen aus und halte die Position mit Spannung im Rumpf.",
       "coachingCues": "Bauch hart anspannen, Brustbein anheben und den Blick nach vorn richten. Nicht ins Hohlkreuz fallen, lieber die Knie leicht beugen, wenn die Spannung sonst nicht gehalten werden kann, und ruhig weiteratmen.",
       "videoExplanationUrl": "https://example.com/videos/v-hold"
     },
     {
-      "id": "high_4",
-      "name": "Archer Push-Ups",
-      "type": "dynamic",
-      "baseReps": 4,
-      "baseSeconds": null,
-      "impactScore": 0.75,
-      "muscleGroups": [
-        "Brust",
-        "Schulter",
-        "Trizeps",
-        "Core",
-        "keineSchulter",
-        "keinCardio",
-        "Unilateral"
+      "id": "high_5",
+      "name": "One Arm Push-Up Iso Hold",
+      "type": "static",
+      "baseReps": null,
+      "baseSeconds": 6,
+      "properties": [
+        {
+          "propertyType": "unilateral",
+          "helpText": "Ein kompletter Satz pro Seite"
+        }
       ],
-      "description": "Nimm eine breite Liegestützposition ein und verlagere dein Körpergewicht zur Seite, indem du dich hauptsächlich auf einen Arm absenkst. Der andere Arm bleibt seitlich gestreckt, während du dich wieder kraftvoll zur Mitte zurückdrückst und die Seite wechselst.",
-      "coachingCues": "Gewicht deutlich auf den Arbeitsarm bringen, Core fest anspannen und den Körper in einer Linie halten. Gestreckten Arm nicht einknicken lassen, Bewegung langsam und kontrolliert führen und nur so tief gehen, wie du stabil bleibst.",
-      "videoExplanationUrl": "https://example.com/videos/archer-push-ups"
+      "impactScore": 0.78,
+      "muscleGroups": [
+        "Chest",
+        "Shoulders",
+        "Triceps",
+        "Abs"
+      ],
+      "tags": [
+        "Back",
+        "Shoulder"
+      ],
+      "description": "Gehe in eine Liegestützposition und stütze dich nur auf einen Arm, während der andere hinter dem Rücken oder seitlich am Körper liegt. Halte den Körper in einer stabilen Linie, ohne in Hüfte oder Rumpf wegzuknicken.",
+      "coachingCues": "Füße breit aufstellen, um mehr Stabilität zu bekommen, und den Core maximal anspannen. Hüfte nicht aufdrehen, Schulter über dem Stützarm halten und trotz hoher Spannung gleichmäßig weiteratmen.",
+      "videoExplanationUrl": "https://example.com/videos/one-arm-push-up-iso-hold"
     },
     {
-      "id": "high_5",
-      "name": "One Arm Towel Row (Door Handle)",
+      "id": "high_6",
+      "name": "One Arm Towel Row",
       "type": "dynamic",
       "baseReps": 4,
       "baseSeconds": null,
-      "impactScore": 0.75,
+      "properties": [
+        {
+          "propertyType": "unilateral",
+          "helpText": "Ein kompletter Satz pro Seite"
+        }
+      ],
+      "impactScore": 0.80,
       "muscleGroups": [
-        "Oberer Rücken",
-        "Bizeps",
-        "Unterarme",
-        "keineSchulter",
-        "Unilateral"
+        "Upper Back",
+        "Shoulders",
+        "Biceps"
+      ],
+      "tags": [
+        "Back",
+        "Shoulder"
       ],
       "description": "Schlinge ein stabiles Handtuch durch eine fest verriegelte Türklinke und greife beide Enden mit einer Hand. Lehne den Körper nach hinten und ziehe dich einarmig kontrolliert zur Türklinke heran.",
       "coachingCues": "Tür sicher blockieren und vorab prüfen, dass sie sich nicht öffnet. Schulter des arbeitenden Arms nach hinten unten ziehen, Core festhalten und Rotation im Oberkörper vermeiden.",
       "videoExplanationUrl": "https://example.com/videos/one-arm-towel-row"
-    },
-    {
-      "id": "high_6",
-      "name": "Jump Squat",
-      "type": "dynamic",
-      "baseReps": 3,
-      "baseSeconds": null,
-      "impactScore": 0.76,
-      "muscleGroups": [
-        "Beinvorderseite",
-        "Gesäß",
-        "Beinrückseite",
-        "Core",
-        "keinKnie",
-        "keinCardio"
-      ],
-      "description": "Gehe in eine Kniebeuge und springe aus der tiefen Position explosiv nach oben ab. Lande weich und rolle sofort wieder in die nächste Kniebeuge zurück.",
-      "coachingCues": "Beim Landen zuerst über den Fußballen abfedern und das Gewicht dann auf die Fersen bringen, Knie stabil halten. Core anspannen, Oberkörper aufrecht lassen und nur so hoch springen, wie du kontrolliert landen kannst.",
-      "videoExplanationUrl": "https://example.com/videos/jump-squat"
     },
     {
       "id": "high_7",
@@ -540,19 +921,26 @@
       "type": "dynamic",
       "baseReps": 4,
       "baseSeconds": null,
-      "impactScore": 0.78,
-      "muscleGroups": [
-        "Gesäß",
-        "Beinrückseite",
-        "Core",
-        "Schulter",
-        "Unterer Rücken",
-        "keineSchulter",
-        "keinRücken",
-        "keinCardio",
-        "Unilateral"
+      "properties": [
+        {
+          "propertyType": null,
+          "helpText": null
+        }
       ],
-      "description": "Stütze dich in der Reverse-Plank-Position auf Hände oder Unterarme und hebe das Gesäß an, sodass dein Körper eine Linie bildet. Ziehe nun abwechselnd ein Knie dynamisch Richtung Brust, ohne dass die Hüfte stark absinkt.",
+      "impactScore": 0.82,
+      "muscleGroups": [
+        "Glutes",
+        "Hamstrings",
+        "Abs",
+        "Shoulders",
+        "Lower Back"
+      ],
+      "tags": [
+        "Back",
+        "Shoulder",
+        "Cardio"
+      ],
+      "description": "Stütze dich in der Reverse Plank Position auf Hände oder Unterarme und hebe das Gesäß an, sodass dein Körper eine Linie bildet. Ziehe nun abwechselnd ein Knie dynamisch Richtung Brust, ohne dass die Hüfte stark absinkt.",
       "coachingCues": "Hüfte aktiv hochhalten, Schultergürtel stabil lassen und den Bauch fest anspannen. Bewegung kontrolliert und rhythmisch ausführen, nicht ins Hohlkreuz fallen und die Atmung fließen lassen.",
       "videoExplanationUrl": "https://example.com/videos/reverse-plank-high-knees"
     },
@@ -562,13 +950,23 @@
       "type": "dynamic",
       "baseReps": 4,
       "baseSeconds": null,
-      "impactScore": 0.8,
+      "properties": [
+        {
+          "propertyType": null,
+          "helpText": null
+        }
+      ],
+      "impactScore": 0.84,
       "muscleGroups": [
-        "Core",
-        "Schulter",
-        "Hüftbeuger",
-        "keineSchulter",
-        "keinCardio"
+        "Quadriceps",
+        "Abs",
+        "Shoulders"
+      ],
+      "tags": [
+        "Shoulder",
+        "Back",
+        "Knee",
+        "Cardio"
       ],
       "description": "Gehe in eine stabile Unterarmstützposition und springe mit den Füßen gleichzeitig seitlich nach außen und wieder zusammen. Der Oberkörper bleibt dabei möglichst ruhig und stabil.",
       "coachingCues": "Bauch fest anspannen, Becken ruhig halten und nicht ins Hohlkreuz fallen. Sprungweite so wählen, dass du die Kontrolle behältst, und ein gleichmäßiges, aber nicht hektisches Tempo finden.",
@@ -576,34 +974,55 @@
     },
     {
       "id": "high_9",
+      "name": "Side Plank Elbow To Knee",
+      "type": "dynamic",
+      "baseReps": 5,
+      "baseSeconds": null,
+      "properties": [
+        {
+          "propertyType": "unilateral",
+          "helpText": "Ein kompletter Satz pro Seite"
+        }
+      ],
+      "impactScore": 0.86,
+      "muscleGroups": [
+        "Obliques",
+        "Abs"
+      ],
+      "tags": [
+        "Back",
+        "Shoulder"
+      ],
+      "description": "Gehe in die Seitstützposition auf dem Unterarm und hebe das obere Bein an. Führe nun das obere Knie und den oberen Ellenbogen kontrolliert zueinander und strecke danach wieder in die Ausgangsposition.",
+      "coachingCues": "Hüfte hoch und stabil halten, Brust nach vorn ausrichten und die Spannung in der seitlichen Bauchmuskulatur bewusst spüren. Bewegung ruhig verkürzen, nicht reißen, und auf eine gleichmäßige Atmung achten.",
+      "videoExplanationUrl": "https://example.com/videos/side-plank-elbow-to-knee"
+    },
+    {
+      "id": "high_10",
       "name": "Push-Up to Plank Hold",
       "type": "static",
       "baseReps": null,
       "baseSeconds": 9,
-      "impactScore": 0.8,
-      "muscleGroups": [
-        "Brust",
-        "Schulter",
-        "Trizeps",
-        "Core",
-        "keineSchulter",
-        "Unilateral"
+      "properties": [
+        {
+          "propertyType": null,
+          "helpText": null
+        }
       ],
-      "description": "Gehe in eine stabile Liegestützposition, senke dich auf beide Unterarme in den Plank ab. Strecke nun einen Arm nach vorn aus, während du die Position mit dem restlichen Körper stabil hältst. Unterarm wieder absetzen und zurück in die Liegestützposition.",
+      "impactScore": 0.88,
+      "muscleGroups": [
+        "Abs",
+        "Chest",
+        "Shoulders",
+        "Triceps"
+      ],
+      "tags": [
+        "Back",
+        "Shoulder"
+      ],
+      "description": "Gehe in eine stabile Liegestützposition, senke dich auf beide Unterarme in den Plank ab. Strecke nun im Wechsel einen Arm nach vorn aus, während du die Position mit dem restlichen Körper stabil hältst. Unterarm wieder absetzen und zurück in die Liegestützposition.",
       "coachingCues": "Füße breiter stellen, um mehr Stabilität zu haben, und Bauch sowie Gesäß fest anspannen. Hüfte nicht wegdrehen, Schulter über dem Stützarm stabilisieren und ruhig weiteratmen, trotz hoher Spannung.",
-      "videoExplanationUrl": "https://example.com/videos/pushup-to-reach-hold"
-    },
-    {
-      "id": "high_10",
-      "name": "Side Plank Elbow-to-Knee",
-      "type": "dynamic",
-      "baseReps": 5,
-      "baseSeconds": null,
-      "impactScore": 0.8,
-      "muscleGroups": ["Core", "Bauch", "keineSchulter", "Unilateral"],
-      "description": "Gehe in die Seitstützposition auf dem Unterarm und hebe das obere Bein an. Führe nun das obere Knie und den oberen Ellenbogen kontrolliert zueinander und strecke danach wieder in die Ausgangsposition.",
-      "coachingCues": "Hüfte hoch und stabil halten, Brust nach vorn ausrichten und die Spannung in der seitlichen Bauchmuskulatur bewusst spüren. Bewegung ruhig verkürzen, nicht reißen, und auf eine gleichmäßige Atmung achten.",
-      "videoExplanationUrl": "https://example.com/videos/side-plank-elbow-to-knee"
+      "videoExplanationUrl": "https://example.com/videos/push-up-to-reach-hold"
     },
     {
       "id": "high_11",
@@ -611,13 +1030,20 @@
       "type": "static",
       "baseReps": null,
       "baseSeconds": 8,
-      "impactScore": 0.84,
+      "properties": [
+        {
+          "propertyType": null,
+          "helpText": null
+        }
+      ],
+      "impactScore": 0.90,
       "muscleGroups": [
-        "Beinrückseite",
-        "Gesäß",
-        "Core",
-        "keinKnie",
-        "keinRücken"
+        "Glutes",
+        "Hamstrings",
+        "Abs"
+      ],
+      "tags": [
+        "Back"
       ],
       "description": "Lege dich auf den Rücken, stelle die Füße weiter vom Gesäß entfernt auf als bei der normalen Glute Bridge und hebe das Becken an, bis Knie, Hüfte und Schultern eine Linie bilden. Halte die Position isometrisch, ohne die Spannung zu verlieren.",
       "coachingCues": "Fersen fest in den Boden drücken und die Zehen leicht anheben, um die Beinrückseite stärker zu treffen. Becken neutral halten, Rippen nach unten ziehen und das Gesäß am höchsten Punkt aktiv anspannen. Nicht ins Hohlkreuz ziehen und gleichmäßig weiteratmen.",
@@ -629,12 +1055,19 @@
       "type": "static",
       "baseReps": null,
       "baseSeconds": 7,
-      "impactScore": 0.88,
+      "properties": [
+        {
+          "propertyType": null,
+          "helpText": null
+        }
+      ],
+      "impactScore": 0.92,
       "muscleGroups": [
-        "Oberer Rücken",
-        "Unterer Rücken",
-        "keinRücken",
-        "keineSchulter"
+        "Upper Back",
+        "Lower Back"
+      ],
+      "tags": [
+        "Back"
       ],
       "description": "Lege dich in Bauchlage, hebe Arme und Beine leicht an und ziehe die Ellenbogen Richtung Hüfte, als würdest du etwas kräftig heranziehen. Halte diese gespannte Superman-Position über den gesamten Körper.",
       "coachingCues": "Bauch leicht anspannen, Blick zum Boden halten und vermeiden, den Kopf in den Nacken zu legen. Spannung im Rücken gleichmäßig verteilen und nicht ins extreme Hohlkreuz gehen, Atmung ruhig fließen lassen.",
@@ -642,37 +1075,52 @@
     },
     {
       "id": "high_13",
-      "name": "One Arm Push-Up Iso Hold",
-      "type": "static",
-      "baseReps": null,
-      "baseSeconds": 6,
-      "impactScore": 0.92,
-      "muscleGroups": [
-        "Brust",
-        "Schulter",
-        "Trizeps",
-        "Core",
-        "keineSchulter",
-        "Unilateral"
+      "name": "Archer Push-Up",
+      "type": "dynamic",
+      "baseReps": 4,
+      "baseSeconds": null,
+      "properties": [
+        {
+          "propertyType": null,
+          "helpText": null
+        }
       ],
-      "description": "Gehe in eine Liegestützposition und stütze dich nur auf einen Arm, während der andere hinter dem Rücken oder seitlich am Körper liegt. Halte den Körper in einer stabilen Linie, ohne in Hüfte oder Rumpf wegzuknicken.",
-      "coachingCues": "Füße breit aufstellen, um mehr Stabilität zu bekommen, und den Core maximal anspannen. Hüfte nicht aufdrehen, Schulter über dem Stützarm halten und trotz hoher Spannung gleichmäßig weiteratmen.",
-      "videoExplanationUrl": "https://example.com/videos/one-arm-push-up-iso-hold"
+      "impactScore": 0.94,
+      "muscleGroups": [
+        "Chest",
+        "Shoulders",
+        "Triceps",
+        "Abs"
+      ],
+      "tags": [
+        "Back",
+        "Shoulder"
+      ],
+      "description": "Nimm eine breite Liegestützposition ein und verlagere dein Körpergewicht zur Seite, indem du dich hauptsächlich auf einen Arm absenkst. Der andere Arm bleibt seitlich gestreckt, während du dich wieder kraftvoll zur Mitte zurückdrückst und die Seite wechselst.",
+      "coachingCues": "Gewicht deutlich auf den Arbeitsarm bringen, Core fest anspannen und den Körper in einer Linie halten. Gestreckten Arm nicht einknicken lassen, Bewegung langsam und kontrolliert führen und nur so tief gehen, wie du stabil bleibst.",
+      "videoExplanationUrl": "https://example.com/videos/archer-push-up"
     },
     {
       "id": "high_14",
       "name": "Split Lunge Jumps",
       "type": "dynamic",
-      "baseReps": 3,
+      "baseReps": 2,
       "baseSeconds": null,
-      "impactScore": 0.94,
+      "properties": [
+        {
+          "propertyType": "unilateral",
+          "helpText": "Ein kompletter Satz pro Seite"
+        }
+      ],
+      "impactScore": 0.96,
       "muscleGroups": [
-        "Beinvorderseite",
-        "Gesäß",
-        "Core",
-        "keinKnie",
-        "keinCardio",
-        "Unilateral"
+        "Quadriceps",
+        "Glutes",
+        "Abs"
+      ],
+      "tags": [
+        "Knee",
+        "Cardio"
       ],
       "description": "Starte in einem tiefen Ausfallschritt und springe explosiv nach oben, während du in der Luft die Beinposition wechselst. Lande kontrolliert wieder im Ausfallschritt und setze die Sprünge im Wechsel fort.",
       "coachingCues": "Aufrechte Haltung bewahren, weich landen und die Knie stabil über den Füßen halten. Sprunghöhe nur so wählen, dass du sicher kontrollieren kannst, und auf einen rhythmischen Bewegungsablauf achten.",
@@ -684,16 +1132,25 @@
       "type": "dynamic",
       "baseReps": 3,
       "baseSeconds": null,
-      "impactScore": 0.96,
+      "properties": [
+        {
+          "propertyType": null,
+          "helpText": null
+        }
+      ],
+      "impactScore": 0.98,
       "muscleGroups": [
-        "Core",
-        "Beinvorderseite",
-        "Gesäß",
-        "Schulter",
-        "Brust",
-        "keineSchulter",
-        "keinKnie",
-        "keinCardio"
+        "Quadriceps",
+        "Abs",
+        "Glutes",
+        "Shoulders",
+        "Chest"
+      ],
+      "tags": [
+        "Back",
+        "Shoulder",
+        "Knee",
+        "Cardio"
       ],
       "description": "Starte im Stand, gehe in die Hocke, setze die Hände auf den Boden und springe oder steige in eine Liegestützposition zurück. Führe optional einen Liegestütz aus, springe mit den Füßen wieder nach vorn und beende die Wiederholung mit einem Strecksprung nach oben.",
       "coachingCues": "Bewegung in einem fließenden, aber kontrollierten Rhythmus ausführen und das Tempo nur so hoch wählen, wie die Technik sauber bleibt. Knie stabil halten, Core anspannen und beim Sprung weich landen, um Gelenke zu schonen.",
