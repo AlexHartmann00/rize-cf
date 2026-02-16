@@ -22,6 +22,9 @@ class MuscleVisualization extends StatelessWidget {
   Widget build(BuildContext context) {
     //print('Muscle groups to visualize: ${workout.muscleGroups}, ${'assets/muscle_graphics/front/${workout.muscleGroups[0].toLowerCase()}.png'}');
     Color intensityColor = Color.lerp(Colors.green, Colors.red, workout.impactScore)!;
+
+    //TODO: Muscle group color gradient (ordered, first is most used)
+
     return Container(
       decoration: BoxDecoration(
         border: Border.all(color: Colors.grey),
