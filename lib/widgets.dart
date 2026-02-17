@@ -547,32 +547,53 @@ class _WorkoutExecutionPageState extends State<WorkoutExecutionPage> {
       body: Column(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          Row(),
-          Text(
-            widget.workout.name,
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-              fontSize: 22,
-            ),
+          Column(
+            children: [
+              Row(),
+              Text(
+                widget.workout.name,
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                  fontSize: 28,
+                ),
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.flag_circle, color: Colors.white,),
+                  Text((widget.scheduleEntryIndex + 1).toString(), style: TextStyle(color: Colors.white),),
+                  SizedBox(width: 5,),
+                  Icon(widget.workout.workoutType == WorkoutType.dynamic ? Icons.repeat : Icons.timer, color: Colors.white,),
+                  Text(widget.workout.workoutType == WorkoutType.dynamic ? maxReps.toString() : ((widget.workout.baseSeconds ?? 0) *
+                      widget.workout.intensityFactor).toString(), style: TextStyle(color: Colors.white),)
+                ],
+              ),
+            ],
           ),
-          Text(
-            'Runde ${widget.scheduleEntryIndex + 1}',
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-              fontSize: 22,
+          // Text(
+          //   'Runde ${widget.scheduleEntryIndex + 1}',
+          //   style: TextStyle(
+          //     fontWeight: FontWeight.bold,
+          //     color: Colors.white,
+          //     fontSize: 16,
+          //   ),
+          // ),
+          if(widget.workout.videoExplanationUrl != null && widget.workout.videoExplanationUrl!.contains('yout'))
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: YoutubeVideo(videoId: widget.workout.youtubeVideoId),
             ),
-          ),
           //if(widget.workout.baseSeconds != null)
-          Text(
-            '${widget.workout.durationString}',
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-              fontSize: 18,
-            ),
-          ),
+
+          // Text(
+          //   'Runde ${widget.scheduleEntryIndex + 1}: ${widget.workout.durationString}',
+          //   style: TextStyle(
+          //     fontWeight: FontWeight.bold,
+          //     color: Colors.white,
+          //     fontSize: 18,
+          //   ),
+          // ),
           if (widget.workout.baseSeconds != null &&
               !showTimer &&
               !timerCompleted)
@@ -614,40 +635,51 @@ class _WorkoutExecutionPageState extends State<WorkoutExecutionPage> {
               ),
             ),
           if (widget.workout.baseReps != null)
-          Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              NumberPicker(
-                axis: Axis.vertical,
-                value: managedRepetitions.clamp(0, maxReps),
-                minValue: 0,
-                maxValue: maxReps,
-                itemHeight: 50,
-                itemWidth: 90,
-                step: 1,
-                haptics: true,
-                selectedTextStyle: const TextStyle(
-                  fontSize: 34,
-                  fontWeight: FontWeight.w900,
-                  color: Colors.white,
-                ),
-                textStyle: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.white.withOpacity(0.45),
-                ),
-                onChanged: (int v) => setState(() => managedRepetitions = v),
+          Container(
+            // decoration: BoxDecoration(
+            //   borderRadius: BorderRadius.circular(20),
+            //   border: Border.all(color: Colors.white),
+            //   color: Colors.transparent
+            // ),
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                 
+                  NumberPicker(
+                    axis: Axis.vertical,
+                    value: managedRepetitions.clamp(0, maxReps),
+                    minValue: 0,
+                    maxValue: maxReps,
+                    itemHeight: 50,
+                    itemWidth: 90,
+                    step: 1,
+                    haptics: true,
+                    selectedTextStyle: const TextStyle(
+                      fontSize: 34,
+                      fontWeight: FontWeight.w900,
+                      color: Colors.white,
+                    ),
+                    textStyle: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white.withOpacity(0.45),
+                    ),
+                    onChanged: (int v) => setState(() => managedRepetitions = v),
+                  ),
+                  const SizedBox(height: 10),
+                  const Text(
+                    'Wiederholungen geschafft',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 10),
-              const Text(
-                'Wiederholungen geschafft',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 25,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
+            ),
           ),
             // Column(
             //   children: [
