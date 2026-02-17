@@ -8,6 +8,7 @@ import 'package:rize/types/anamnesis.dart';
 import 'package:rize/types/workout.dart';
 import 'package:rize/globals.dart' as globals;
 import 'package:flutter/material.dart' hide TimeOfDay;
+import 'package:rize/youtube.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
@@ -111,6 +112,10 @@ class _WorkoutDetailsPageState extends State<WorkoutDetailsPage> {
                 widget.workout.name,
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 25),
               ),
+              if(widget.workout.videoExplanationUrl != null && widget.workout.videoExplanationUrl!.contains('youtu'))
+                ...[
+                  YoutubeVideo(videoId: widget.workout.youtubeVideoId)
+                ],
               Divider(),
               Text(
                 'Beschreibung',
@@ -428,7 +433,7 @@ class _WorkoutScheduleWidgetState extends State<WorkoutScheduleWidget> {
                     }
                   }
 
-                  bool completed = await Navigator.of(context).push(
+                  bool? completed = await Navigator.of(context).push(
                     MaterialPageRoute(
                       builder: (_) => WorkoutExecutionPage(
                         workout: widget.workout,
@@ -436,17 +441,20 @@ class _WorkoutScheduleWidgetState extends State<WorkoutScheduleWidget> {
                       ),
                     ),
                   );
-                  setState(() {
-                    completedUnits++;
-                    if (completedUnits > plannedUnits) {
-                      completedUnits = plannedUnits;
-                    }
-                    widget.workout.schedule[entryIndex] = WorkoutStep(
-                      timeOfDay: timeOfDay,
-                      plannedUnits: plannedUnits,
-                      completedUnits: completedUnits,
-                    );
-                  });
+                  if(completed != null && completed){
+                    setState(() {
+                      completedUnits++;
+                      if (completedUnits > plannedUnits) {
+                        completedUnits = plannedUnits;
+                      }
+                      widget.workout.schedule[entryIndex] = WorkoutStep(
+                        timeOfDay: timeOfDay,
+                        plannedUnits: plannedUnits,
+                        completedUnits: completedUnits,
+                      );
+                    });
+                  }
+                  
                   // setState(() {
                   //   completedUnits++;
                   //   if(completedUnits > plannedUnits) {

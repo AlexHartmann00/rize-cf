@@ -47,5 +47,22 @@
 	<true/>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
+	<key>io.flutter.embedded_views_preview</key>
+	<true/>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoadsInWebContent</key>
+		<true/>
+	</dict>
+
+	<key>WKAppBoundDomains</key>
+	<array>
+		<string>youtube.com</string>
+		<string>www.youtube.com</string>
+		<string>m.youtube.com</string>
+		<string>youtube-nocookie.com</string>
+		<string>googlevideo.com</string>
+	</array>
+
 </dict>
 </plist>

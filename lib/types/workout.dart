@@ -31,6 +31,18 @@ class Workout {
     return '$name $description $tagString $muscleGroupString'.toLowerCase();
   }
 
+  String get youtubeVideoId{
+    if(videoExplanationUrl == null){
+      return '';
+    }
+
+    if(!videoExplanationUrl!.contains('youtu')){
+      return '';
+    }
+
+    return videoExplanationUrl!.split('/').last;
+  }
+
   String get durationString => baseSeconds != null
       ? '${(baseSeconds ?? 0)} Sekunden'
       : '${(baseReps ?? 0)} Wiederholungen';
@@ -188,20 +200,10 @@ class ScheduledWorkout extends Workout {
     }
     int intensityFactor = json['intensityFactor'] as int? ?? 1;
 
-    return ScheduledWorkout(
-      id: baseWorkout.id,
-      name: baseWorkout.name,
-      description: baseWorkout.description,
-      coachingCues: baseWorkout.coachingCues,
-      usedMuscleGroups: baseWorkout.usedMuscleGroups,
-      tags: baseWorkout.tags,
-      workoutType: baseWorkout.workoutType,
-      impactScore: baseWorkout.impactScore,
-      baseReps: baseWorkout.baseReps,
-      baseSeconds: baseWorkout.baseSeconds,
-      videoExplanationUrl: baseWorkout.videoExplanationUrl,
-      schedule: schedule,
-      intensityFactor: intensityFactor,
+    return ScheduledWorkout.fromBaseWorkout(
+      baseWorkout,
+      schedule,
+      intensityFactor
     );
   }
 

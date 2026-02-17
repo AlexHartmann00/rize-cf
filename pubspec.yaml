@@ -44,6 +44,7 @@ dependencies:
   numberpicker: ^2.1.2
   audioplayers: ^6.5.1
   wakelock_plus: ^1.4.0
+  youtube_player_iframe: ^5.2.2
 
 dev_dependencies:
   flutter_launcher_icons: "^0.14.4"
