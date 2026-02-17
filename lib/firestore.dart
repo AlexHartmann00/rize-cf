@@ -116,6 +116,7 @@ Future<UserData> loadUserData(String userId) async {
 
 Future<void> uploadWorkoutToServer(ScheduledWorkout workout) async {
   print('FB usage: Uploading workout to Firestore');
+  print('FB usage: Workout properties: ${workout.properties}');
   Map<String, dynamic> jsonData = workout.toJson();
   String jsonString = jsonEncode(jsonData);
 

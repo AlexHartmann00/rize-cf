@@ -122,6 +122,15 @@ class _WorkoutDetailsPageState extends State<WorkoutDetailsPage> {
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22),
               ),
               Text(widget.workout.description),
+              if(widget.workout.isUnilateral)
+                ...[
+                  Divider(),
+                  Text(
+                    'Dies ist eine einseitige Übung',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22),
+                  ),
+                  Text(widget.workout.unilateralHelpText!)
+                ],
               Divider(),
               Text(
                 'Tipps',

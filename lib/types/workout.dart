@@ -12,6 +12,31 @@ enum WorkoutType { static, dynamic }
 
 enum ImpactLevel { low, medium, high }
 
+class WorkoutProperty{
+  String propertyType;
+  String helpText;
+
+  WorkoutProperty({required this.propertyType, required this.helpText});
+
+  factory WorkoutProperty.nullProperty(){
+    return WorkoutProperty(propertyType: '', helpText: '');
+  }
+
+  factory WorkoutProperty.fromJSON(Map<String,dynamic> json){
+    if(json['propertyType'] == null){
+      return WorkoutProperty.nullProperty();
+    }
+    return WorkoutProperty(propertyType: json['propertyType'], helpText: json['helpText']);
+  }
+
+  Map<String, dynamic> toJson(){
+    return {
+      'propertyType' : propertyType,
+      'helpText' : helpText
+    };
+  }
+}
+
 class Workout {
   String id;
   String name;
@@ -24,11 +49,30 @@ class Workout {
   WorkoutType workoutType;
   double impactScore;
   String? videoExplanationUrl;
+  List<WorkoutProperty>? properties;
 
   String get filterString {
     String tagString = tags.join(' ');
     String muscleGroupString = usedMuscleGroups.join(' ');
     return '$name $description $tagString $muscleGroupString'.toLowerCase();
+  }
+
+  bool get isUnilateral{
+    for(WorkoutProperty prop in properties ?? []){
+      if(prop.propertyType == 'unilateral'){
+        return true;
+      }
+    }
+    return false;
+  }
+
+  String? get unilateralHelpText{
+    for(WorkoutProperty prop in properties ?? []){
+      if(prop.propertyType == 'unilateral'){
+        return prop.helpText;
+      }
+    }
+    return null;
   }
 
   String get youtubeVideoId{
@@ -73,6 +117,7 @@ class Workout {
     this.baseReps,
     this.baseSeconds,
     this.videoExplanationUrl,
+    this.properties
   });
 
   factory Workout.fromJson(Map<String, dynamic> json) {
@@ -93,6 +138,9 @@ class Workout {
       ),
       impactScore: (json['impactScore'] as num?)?.toDouble() ?? 0.0,
       videoExplanationUrl: json['videoExplanationUrl'] as String?,
+      properties: (json['properties'] ?? [])
+          .map<WorkoutProperty>((e) => WorkoutProperty.fromJSON(e))
+          .toList()
     );
   }
 
@@ -109,6 +157,7 @@ class Workout {
     'workoutType': workoutType.name,
     'impactScore': impactScore,
     'videoExplanationUrl': videoExplanationUrl,
+    'properties' : properties != null ? properties!.map((e) => e.toJson()).toList() : []
   };
 }
 
@@ -133,6 +182,7 @@ class ScheduledWorkout extends Workout {
     super.baseReps,
     super.baseSeconds,
     super.videoExplanationUrl,
+    super.properties,
     // own field
     required this.schedule,
     required this.intensityFactor,
@@ -172,6 +222,7 @@ class ScheduledWorkout extends Workout {
       baseReps: base.baseReps,
       baseSeconds: base.baseSeconds,
       videoExplanationUrl: base.videoExplanationUrl,
+      properties : base.properties,
       schedule: schedule,
       intensityFactor:
           intensityFactor, // Default intensity factor, can be adjusted as needed

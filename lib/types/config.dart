@@ -111,6 +111,7 @@ class IntensityLevel {
       workoutType: workout.workoutType,
       impactScore: workout.impactScore,
       videoExplanationUrl: workout.videoExplanationUrl,
+      properties: workout.properties,
       schedule: workout.schedule,
       intensityFactor: newFactor,
     );
