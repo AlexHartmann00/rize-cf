@@ -24,7 +24,7 @@ class _RizeScaffoldState extends State<RizeScaffold> {
           gradient: RadialGradient(
             radius: 1.3,
             focal: Alignment.topLeft,
-            stops: [0, 0.88,1],
+            stops: [0, 0.55,1],
             colors: [Colors.blue.shade200, Colors.blue.shade900, Colors.black],
           )//LinearGradient(colors: [Theme.of(context).primaryColor, Color(0xaa72c6ef)], begin: Alignment.bottomCenter, end: Alignment.topCenter)
         ),
