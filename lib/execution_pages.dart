@@ -229,7 +229,7 @@ class WorkoutTimerIndicator extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final progress =
-        totalSeconds == 0 ? 0.0 : remainingSeconds / totalSeconds;
+        1 - (totalSeconds == 0 ? 0.0 : remainingSeconds / totalSeconds);
 
     return SizedBox(
       width: 240,
@@ -244,7 +244,7 @@ class WorkoutTimerIndicator extends StatelessWidget {
             child: CircularProgressIndicator(
               value: 1,
               strokeWidth: 14,
-              color: Colors.white.withOpacity(0.08),
+              color: Colors.white,
             ),
           ),
 
@@ -256,7 +256,7 @@ class WorkoutTimerIndicator extends StatelessWidget {
               value: progress,
               strokeWidth: 14,
               strokeCap: StrokeCap.round, // rounded edges ✅
-              backgroundColor: Colors.transparent,
+              backgroundColor: Colors.white.withOpacity(0.08),
             ),
           ),
 
@@ -400,12 +400,14 @@ class FinishButton extends StatelessWidget {
         ),
         padding: const EdgeInsets.all(8),
         child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
             Text(
               'Runde abschließen',
               style: TextStyle(
                 color: Theme.of(context).primaryColorDark,
                 fontWeight: FontWeight.bold,
+                fontSize: 18
               ),
             ),
             const SizedBox(width: 10),
