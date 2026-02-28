@@ -10,6 +10,17 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 enum WorkoutType { static, dynamic }
 
+WorkoutType workoutTypeFromString(String type) {
+  switch (type.toLowerCase()) {
+    case 'static':
+      return WorkoutType.static;
+    case 'dynamic':
+      return WorkoutType.dynamic;
+    default:
+      throw ArgumentError('Unknown workout type: $type');
+  }
+}
+
 enum ImpactLevel { low, medium, high }
 
 class WorkoutProperty{
@@ -132,10 +143,7 @@ class Workout {
       tags: (json['tags'] ?? []).map<String>((e) => e as String).toList(),
       baseReps: json['baseReps'] as int?,
       baseSeconds: json['baseSeconds'] as int?,
-      workoutType: WorkoutType.values.firstWhere(
-        (e) => e.name.contains(json['workoutType'] as String? ?? 'static'),
-        orElse: () => WorkoutType.static,
-      ),
+      workoutType: workoutTypeFromString(json['type'] as String? ?? 'static'),
       impactScore: (json['impactScore'] as num?)?.toDouble() ?? 0.0,
       videoExplanationUrl: json['videoExplanationUrl'] as String?,
       properties: (json['properties'] ?? [])
@@ -154,7 +162,7 @@ class Workout {
     'baseReps': baseReps,
     'baseSeconds': baseSeconds,
     'impactLevel': impactLevel.name,
-    'workoutType': workoutType.name,
+    'type': workoutType.name,
     'impactScore': impactScore,
     'videoExplanationUrl': videoExplanationUrl,
     'properties' : properties != null ? properties!.map((e) => e.toJson()).toList() : []

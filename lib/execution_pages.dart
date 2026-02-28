@@ -53,22 +53,26 @@ class WorkoutExecutionHeader extends StatelessWidget {
         (workout.baseSeconds ?? 0) * workout.intensityFactor;
 
     return Column(
+      mainAxisAlignment: MainAxisAlignment.start,
       children: [
         Text(
           workout.name,
+          textAlign: TextAlign.center,
           style: const TextStyle(
             fontWeight: FontWeight.bold,
             color: Colors.white,
-            fontSize: 28,
+            fontSize: 50,
+            
           ),
         ),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
+          spacing: 5,
           children: [
             const Icon(Icons.flag_circle, color: Colors.white),
             Text(
               (scheduleEntryIndex + 1).toString(),
-              style: const TextStyle(color: Colors.white),
+              style: const TextStyle(color: Colors.white, fontSize: 30),
             ),
             const SizedBox(width: 5),
             Icon(
@@ -81,7 +85,7 @@ class WorkoutExecutionHeader extends StatelessWidget {
               workout.workoutType == WorkoutType.dynamic
                   ? maxReps.toString()
                   : seconds.toString(),
-              style: const TextStyle(color: Colors.white),
+              style: const TextStyle(color: Colors.white, fontSize: 30),
             ),
           ],
         ),
@@ -170,12 +174,14 @@ class _StaticWorkoutExecutionPageState
     return RizeScaffold(
       appBar: rizeAppBar,
       body: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        mainAxisAlignment: MainAxisAlignment.start,
         children: [
           WorkoutExecutionHeader(
             workout: widget.workout,
             scheduleEntryIndex: widget.scheduleEntryIndex,
           ),
+
+          Expanded(child: SizedBox(),),
 
           if (!showTimer && !timerCompleted)
             IconButton(onPressed: startTimer, icon: Row(
@@ -193,25 +199,96 @@ class _StaticWorkoutExecutionPageState
               ],
             )),
             
-
+          
           if (showTimer)
-            Text(
-              timerSeconds.toString(),
-              style: const TextStyle(
-                fontSize: 48,
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-              ),
+            WorkoutTimerIndicator(
+              remainingSeconds: timerSeconds,
+              totalSeconds: totalSeconds,
             ),
 
           if (timerCompleted)
             FinishButton(onPressed: finishRound),
+
+          SizedBox(height: 50),
         ],
       ),
     );
   }
 }
 
+class WorkoutTimerIndicator extends StatelessWidget {
+  final int remainingSeconds;
+  final int totalSeconds;
+
+  const WorkoutTimerIndicator({
+    super.key,
+    required this.remainingSeconds,
+    required this.totalSeconds,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final progress =
+        totalSeconds == 0 ? 0.0 : remainingSeconds / totalSeconds;
+
+    return SizedBox(
+      width: 240,
+      height: 240,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          /// Background ring
+          SizedBox(
+            width: 240,
+            height: 240,
+            child: CircularProgressIndicator(
+              value: 1,
+              strokeWidth: 14,
+              color: Colors.white.withOpacity(0.08),
+            ),
+          ),
+
+          /// Progress ring
+          SizedBox(
+            width: 240,
+            height: 240,
+            child: CircularProgressIndicator(
+              value: progress,
+              strokeWidth: 14,
+              strokeCap: StrokeCap.round, // rounded edges ✅
+              backgroundColor: Colors.transparent,
+            ),
+          ),
+
+          /// Center content
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                remainingSeconds.toString(),
+                style: const TextStyle(
+                  fontSize: 72,
+                  fontWeight: FontWeight.w900,
+                  color: Colors.white,
+                  height: 1,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                "Sekunden",
+                style: TextStyle(
+                  fontSize: 18,
+                  color: Colors.white.withOpacity(0.75),
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
 class DynamicWorkoutExecutionPage extends StatefulWidget {
   final ScheduledWorkout workout;
   final int scheduleEntryIndex;
@@ -260,7 +337,7 @@ class _DynamicWorkoutExecutionPageState
     return RizeScaffold(
       appBar: rizeAppBar,
       body: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        mainAxisAlignment: MainAxisAlignment.start,
         children: [
           WorkoutExecutionHeader(
             workout: widget.workout,
