@@ -133,7 +133,7 @@ class Workout {
       baseReps: json['baseReps'] as int?,
       baseSeconds: json['baseSeconds'] as int?,
       workoutType: WorkoutType.values.firstWhere(
-        (e) => e.name.contains(json['type'] as String? ?? 'static'),
+        (e) => e.name.contains(json['workoutType'] as String? ?? 'static'),
         orElse: () => WorkoutType.static,
       ),
       impactScore: (json['impactScore'] as num?)?.toDouble() ?? 0.0,
