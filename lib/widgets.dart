@@ -2,6 +2,7 @@ import 'package:flutter/services.dart';
 import 'package:numberpicker/numberpicker.dart';
 import 'package:rize/audio_player.dart';
 import 'package:rize/base_widgets.dart';
+import 'package:rize/execution_pages.dart';
 import 'package:rize/firestore.dart'
     show saveAnamnesisResponse, uploadWorkoutToServer, updateUserIntensityScore;
 import 'package:rize/types/anamnesis.dart';
@@ -513,297 +514,228 @@ class _WorkoutScheduleWidgetState extends State<WorkoutScheduleWidget> {
   }
 }
 
-class WorkoutExecutionPage extends StatefulWidget {
-  ScheduledWorkout workout;
-  int scheduleEntryIndex;
-  WorkoutExecutionPage({
-    super.key,
-    required this.workout,
-    required this.scheduleEntryIndex,
-  });
+// class WorkoutExecutionPage extends StatefulWidget {
+//   ScheduledWorkout workout;
+//   int scheduleEntryIndex;
+//   WorkoutExecutionPage({
+//     super.key,
+//     required this.workout,
+//     required this.scheduleEntryIndex,
+//   });
 
-  @override
-  State<WorkoutExecutionPage> createState() => _WorkoutExecutionPageState();
-}
+//   @override
+//   State<WorkoutExecutionPage> createState() => _WorkoutExecutionPageState();
+// }
 
-class _WorkoutExecutionPageState extends State<WorkoutExecutionPage> {
-  //TODO: Possibility to start another set of reps/seconds if the user wants to do more than planned
-  //TODO: Implement thresholds etc. on Firebase side
-  //TODO: Login via Apple and Google
-  //TODO: After workout, show feedback icons for workout difficulty (1-5)
-  //10 sec timer before start of the timer "get into position"
-  //+/- buttons for reps-dependent workouts
+// class _WorkoutExecutionPageState extends State<WorkoutExecutionPage> {
+//   //TODO: Possibility to start another set of reps/seconds if the user wants to do more than planned
+//   //TODO: Implement thresholds etc. on Firebase side
+//   //TODO: Login via Apple and Google
+//   //TODO: After workout, show feedback icons for workout difficulty (1-5)
+//   //10 sec timer before start of the timer "get into position"
+//   //+/- buttons for reps-dependent workouts
 
-  bool showTimer = false;
-  int timerSeconds = 0;
-  bool timerCompleted = false;
-  int managedRepetitions = 0;
-  @override
-  Widget build(BuildContext context) {
-    final int maxReps =
-    (widget.workout.baseReps ?? 0) * widget.workout.intensityFactor;
-    return RizeScaffold(
-      appBar: rizeAppBar,
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          Column(
-            children: [
-              Row(),
-              Text(
-                widget.workout.name,
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                  fontSize: 28,
-                ),
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.flag_circle, color: Colors.white,),
-                  Text((widget.scheduleEntryIndex + 1).toString(), style: TextStyle(color: Colors.white),),
-                  SizedBox(width: 5,),
-                  Icon(widget.workout.workoutType == WorkoutType.dynamic ? Icons.repeat : Icons.timer, color: Colors.white,),
-                  Text(widget.workout.workoutType == WorkoutType.dynamic ? maxReps.toString() : ((widget.workout.baseSeconds ?? 0) *
-                      widget.workout.intensityFactor).toString(), style: TextStyle(color: Colors.white),)
-                ],
-              ),
-            ],
-          ),
-          // Text(
-          //   'Runde ${widget.scheduleEntryIndex + 1}',
-          //   style: TextStyle(
-          //     fontWeight: FontWeight.bold,
-          //     color: Colors.white,
-          //     fontSize: 16,
-          //   ),
-          // ),
-          if(widget.workout.videoExplanationUrl != null && widget.workout.videoExplanationUrl!.contains('yout'))
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: YoutubeVideo(videoId: widget.workout.youtubeVideoId),
-            ),
-          //if(widget.workout.baseSeconds != null)
+//   bool showTimer = false;
+//   int timerSeconds = 0;
+//   bool timerCompleted = false;
+//   int managedRepetitions = 0;
+//   @override
+//   Widget build(BuildContext context) {
+//     final int maxReps =
+//     (widget.workout.baseReps ?? 0) * widget.workout.intensityFactor;
+//     return RizeScaffold(
+//       appBar: rizeAppBar,
+//       body: Column(
+//         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+//         children: [
+//           Column(
+//             children: [
+//               Row(),
+//               Text(
+//                 widget.workout.name,
+//                 style: TextStyle(
+//                   fontWeight: FontWeight.bold,
+//                   color: Colors.white,
+//                   fontSize: 28,
+//                 ),
+//               ),
+//               Row(
+//                 mainAxisAlignment: MainAxisAlignment.center,
+//                 children: [
+//                   Icon(Icons.flag_circle, color: Colors.white,),
+//                   Text((widget.scheduleEntryIndex + 1).toString(), style: TextStyle(color: Colors.white),),
+//                   SizedBox(width: 5,),
+//                   Icon(widget.workout.workoutType == WorkoutType.dynamic ? Icons.repeat : Icons.timer, color: Colors.white,),
+//                   Text(widget.workout.workoutType == WorkoutType.dynamic ? maxReps.toString() : ((widget.workout.baseSeconds ?? 0) *
+//                       widget.workout.intensityFactor).toString(), style: TextStyle(color: Colors.white),)
+//                 ],
+//               ),
+//             ],
+//           ),
+//           // Text(
+//           //   'Runde ${widget.scheduleEntryIndex + 1}',
+//           //   style: TextStyle(
+//           //     fontWeight: FontWeight.bold,
+//           //     color: Colors.white,
+//           //     fontSize: 16,
+//           //   ),
+//           // ),
+//           if(widget.workout.videoExplanationUrl != null && widget.workout.videoExplanationUrl!.contains('yout'))
+//             Padding(
+//               padding: const EdgeInsets.all(8.0),
+//               child: YoutubeVideo(videoId: widget.workout.youtubeVideoId),
+//             ),
+//           //if(widget.workout.baseSeconds != null)
 
-          // Text(
-          //   'Runde ${widget.scheduleEntryIndex + 1}: ${widget.workout.durationString}',
-          //   style: TextStyle(
-          //     fontWeight: FontWeight.bold,
-          //     color: Colors.white,
-          //     fontSize: 18,
-          //   ),
-          // ),
-          if (widget.workout.baseSeconds != null &&
-              !showTimer &&
-              !timerCompleted)
-            ElevatedButton(
-              onPressed: () {
-                setState(() {
-                  WakelockPlus.enable();
-                  showTimer = true;
-                  timerSeconds =
-                      (widget.workout.baseSeconds ?? 0) *
-                      widget.workout.intensityFactor;
-                  Future.doWhile(() async {
-                    if (!mounted) return false;
-                    await Future.delayed(Duration(seconds: 1));
-                    setState(() {
-                      timerSeconds -= 1;
-                    });
-                    if (timerSeconds <= 0) {
-                      HapticFeedback.vibrate();
-                      //playTimerSound();
-                      setState(() {
-                        showTimer = false;
-                        timerCompleted = true;
-                      });
-                    }
-                    return showTimer;
-                  });
-                });
-              },
-              child: Text('Timer starten'),
-            ),
-          if (showTimer && widget.workout.baseSeconds != null)
-            Text(
-              timerSeconds.toString(),
-              style: TextStyle(
-                fontSize: 48,
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          if (widget.workout.baseReps != null)
-          Container(
-            // decoration: BoxDecoration(
-            //   borderRadius: BorderRadius.circular(20),
-            //   border: Border.all(color: Colors.white),
-            //   color: Colors.transparent
-            // ),
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
+//           // Text(
+//           //   'Runde ${widget.scheduleEntryIndex + 1}: ${widget.workout.durationString}',
+//           //   style: TextStyle(
+//           //     fontWeight: FontWeight.bold,
+//           //     color: Colors.white,
+//           //     fontSize: 18,
+//           //   ),
+//           // ),
+//           if (widget.workout.baseSeconds != null &&
+//               !showTimer &&
+//               !timerCompleted)
+//             ElevatedButton(
+//               onPressed: () {
+//                 setState(() {
+//                   WakelockPlus.enable();
+//                   showTimer = true;
+//                   timerSeconds =
+//                       (widget.workout.baseSeconds ?? 0) *
+//                       widget.workout.intensityFactor;
+//                   Future.doWhile(() async {
+//                     if (!mounted) return false;
+//                     await Future.delayed(Duration(seconds: 1));
+//                     setState(() {
+//                       timerSeconds -= 1;
+//                     });
+//                     if (timerSeconds <= 0) {
+//                       HapticFeedback.vibrate();
+//                       //playTimerSound();
+//                       setState(() {
+//                         showTimer = false;
+//                         timerCompleted = true;
+//                       });
+//                     }
+//                     return showTimer;
+//                   });
+//                 });
+//               },
+//               child: Text('Timer starten'),
+//             ),
+//           if (showTimer && widget.workout.baseSeconds != null)
+//             Text(
+//               timerSeconds.toString(),
+//               style: TextStyle(
+//                 fontSize: 48,
+//                 color: Colors.white,
+//                 fontWeight: FontWeight.bold,
+//               ),
+//             ),
+//           if (widget.workout.baseReps != null)
+//           Container(
+//             // decoration: BoxDecoration(
+//             //   borderRadius: BorderRadius.circular(20),
+//             //   border: Border.all(color: Colors.white),
+//             //   color: Colors.transparent
+//             // ),
+//             child: Padding(
+//               padding: const EdgeInsets.all(8.0),
+//               child: Column(
+//                 mainAxisSize: MainAxisSize.min,
+//                 children: [
                  
-                  NumberPicker(
-                    axis: Axis.vertical,
-                    value: managedRepetitions.clamp(0, maxReps),
-                    minValue: 0,
-                    maxValue: maxReps,
-                    itemHeight: 50,
-                    itemWidth: 90,
-                    step: 1,
-                    haptics: true,
-                    selectedTextStyle: const TextStyle(
-                      fontSize: 34,
-                      fontWeight: FontWeight.w900,
-                      color: Colors.white,
-                    ),
-                    textStyle: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white.withOpacity(0.45),
-                    ),
-                    onChanged: (int v) => setState(() => managedRepetitions = v),
-                  ),
-                  const SizedBox(height: 10),
-                  const Text(
-                    'Wiederholungen geschafft',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-            // Column(
-            //   children: [
-            //     Row(
-            //       mainAxisAlignment: MainAxisAlignment.center,
-            //       children: [
-            //         IconButton(
-            //           onPressed: () {
-            //             setState(() {
-            //               if (managedRepetitions == 0) return;
-            //               managedRepetitions--;
-            //             });
-            //           },
-            //           icon: Container(
-            //             decoration: BoxDecoration(
-            //               color: Colors.white,
-            //               borderRadius: BorderRadius.circular(5),
-            //             ),
-            //             child: Padding(
-            //               padding: const EdgeInsets.all(8.0),
-            //               child: Icon(Icons.remove),
-            //             ),
-            //           ),
-            //         ),
-            //         Container(
-            //           width: 50,
-            //           height: 50,
-            //           decoration: BoxDecoration(
-            //             color: Colors.white,
-            //             borderRadius: BorderRadius.circular(5),
-            //           ),
-            //           child: Center(
-            //             child: Text(
-            //               managedRepetitions.toString(),
-            //               style: TextStyle(
-            //                 fontSize: 25,
-            //                 fontWeight: FontWeight.bold,
-            //               ),
-            //             ),
-            //           ),
-            //         ),
-            //         IconButton(
-            //           onPressed: () {
-            //             setState(() {
-            //               managedRepetitions++;
-            //               widget.workout.int
-            //             });
-            //           },
-            //           icon: Container(
-            //             decoration: BoxDecoration(
-            //               color: Colors.white,
-            //               borderRadius: BorderRadius.circular(5),
-            //             ),
-            //             child: Padding(
-            //               padding: const EdgeInsets.all(8.0),
-            //               child: Icon(Icons.add),
-            //             ),
-            //           ),
-            //         ),
-            //       ],
-            //     ),
-            //     Text(
-            //       'Wiederholungen geschafft',
-            //       style: TextStyle(
-            //         color: Colors.white,
-            //         fontSize: 25,
-            //         fontWeight: FontWeight.bold,
-            //       ),
-            //     ),
-            //   ],
-            // ),
-          if (timerCompleted || widget.workout.baseReps != null)
+//                   NumberPicker(
+//                     axis: Axis.vertical,
+//                     value: managedRepetitions.clamp(0, maxReps),
+//                     minValue: 0,
+//                     maxValue: maxReps,
+//                     itemHeight: 50,
+//                     itemWidth: 90,
+//                     step: 1,
+//                     haptics: true,
+//                     selectedTextStyle: const TextStyle(
+//                       fontSize: 34,
+//                       fontWeight: FontWeight.w900,
+//                       color: Colors.white,
+//                     ),
+//                     textStyle: TextStyle(
+//                       fontSize: 20,
+//                       fontWeight: FontWeight.w700,
+//                       color: Colors.white.withOpacity(0.45),
+//                     ),
+//                     onChanged: (int v) => setState(() => managedRepetitions = v),
+//                   ),
+//                   const SizedBox(height: 10),
+//                   const Text(
+//                     'Wiederholungen geschafft',
+//                     style: TextStyle(
+//                       color: Colors.white,
+//                       fontSize: 20,
+//                       fontWeight: FontWeight.bold,
+//                     ),
+//                   ),
+//                 ],
+//               ),
+//             ),
+//           ),
+//           if (timerCompleted || widget.workout.baseReps != null)
 
-            IconButton(
-              onPressed: () async {
-                bool completed = widget.workout.baseReps != null
-                      ? managedRepetitions >= maxReps
-                      : true;
-                setState(() {
-                  showTimer = false;
-                  WakelockPlus.disable();
-                  WorkoutStep workoutStep =
-                      widget.workout.schedule[widget.scheduleEntryIndex];
+//             IconButton(
+//               onPressed: () async {
+//                 bool completed = widget.workout.baseReps != null
+//                       ? managedRepetitions >= maxReps
+//                       : true;
+//                 setState(() {
+//                   showTimer = false;
+//                   WakelockPlus.disable();
+//                   WorkoutStep workoutStep =
+//                       widget.workout.schedule[widget.scheduleEntryIndex];
 
                   
-                  widget.workout.schedule[widget.scheduleEntryIndex] =
-                      WorkoutStep(
-                        timeOfDay: workoutStep.timeOfDay,
-                        plannedUnits: workoutStep.plannedUnits,
-                        completedUnits: completed ? workoutStep.plannedUnits : 0,
-                      );
-                });
+//                   widget.workout.schedule[widget.scheduleEntryIndex] =
+//                       WorkoutStep(
+//                         timeOfDay: workoutStep.timeOfDay,
+//                         plannedUnits: workoutStep.plannedUnits,
+//                         completedUnits: completed ? workoutStep.plannedUnits : 0,
+//                       );
+//                 });
 
-                await uploadWorkoutToServer(widget.workout);
+//                 await uploadWorkoutToServer(widget.workout);
                 
-                Navigator.of(context).pop(completed);
-              },
-              icon: Container(
-                width: 200,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  border: Border.all(color: Colors.transparent),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Row(
-                    children: [
-                      Text(
-                        'Runde abschließen',
-                        style: TextStyle(
-                          color: Theme.of(context).primaryColorDark,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      SizedBox(width: 10),
-                      Icon(Icons.check, color: Colors.green),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-}
+//                 Navigator.of(context).pop(completed);
+//               },
+//               icon: Container(
+//                 width: 200,
+//                 decoration: BoxDecoration(
+//                   color: Colors.white,
+//                   border: Border.all(color: Colors.transparent),
+//                   borderRadius: BorderRadius.circular(20),
+//                 ),
+//                 child: Padding(
+//                   padding: const EdgeInsets.all(8.0),
+//                   child: Row(
+//                     children: [
+//                       Text(
+//                         'Runde abschließen',
+//                         style: TextStyle(
+//                           color: Theme.of(context).primaryColorDark,
+//                           fontWeight: FontWeight.bold,
+//                         ),
+//                       ),
+//                       SizedBox(width: 10),
+//                       Icon(Icons.check, color: Colors.green),
+//                     ],
+//                   ),
+//                 ),
+//               ),
+//             ),
+//         ],
+//       ),
+//     );
+//   }
+// }
+
