@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 from typing import Any, Tuple
 
-from firebase_admin import initialize_app, firestore
+from firebase_admin import initialize_app, firestore, messaging
 from firebase_functions import firestore_fn, scheduler_fn
 
 
@@ -112,6 +112,44 @@ def compute_completion_delta(current_score: float, impact_score: float) -> float
     return base + bonus
 
 
+def parse_spin_reminder_time(value: Any) -> Tuple[int, int] | None:
+    """
+    Parses times like '8:0', '08:00', etc.
+    Returns (hour, minute) or None.
+    """
+    if not isinstance(value, str):
+        return None
+
+    parts = value.strip().split(":")
+    if len(parts) != 2:
+        return None
+
+    try:
+        hour = int(parts[0])
+        minute = int(parts[1])
+    except Exception:
+        return None
+
+    if not (0 <= hour <= 23 and 0 <= minute <= 59):
+        return None
+
+    return hour, minute
+
+
+def is_time_due_with_tolerance(
+    now_dt: datetime,
+    target_hour: int,
+    target_minute: int,
+    tolerance_minutes: int = 5,
+) -> bool:
+    """
+    True iff current local time is within tolerance of the target time.
+    """
+    now_total = now_dt.hour * 60 + now_dt.minute
+    target_total = target_hour * 60 + target_minute
+    return abs(now_total - target_total) <= tolerance_minutes
+
+
 # -------------------------------------------------------------------
 # Function 1: Trigger on workoutHistory create/update (reward once)
 # -------------------------------------------------------------------
@@ -150,7 +188,7 @@ def on_workout_written(
     if is_schedule_completed(schedule_before):
         return  # already completed before; do not reward again
 
-    #Increase improvement if multiple units were completed
+    # Increase improvement if multiple units were completed
     num_units = len(schedule_after)
     IMPACT_DELTA_FACTOR = num_units / 1.2
 
@@ -334,3 +372,89 @@ def nightly_intensity_decay(event: scheduler_fn.ScheduledEvent) -> None:
         batch.commit()
 
     print(f"Nightly decay complete for date {y_id}.")
+
+
+# -------------------------------------------------------------------
+# Function 3: Scheduled spin reminder notifications
+# -------------------------------------------------------------------
+
+@scheduler_fn.on_schedule(
+    schedule="every 6 minutes",
+    timezone="Europe/Berlin",
+)
+def send_spin_reminders(event: scheduler_fn.ScheduledEvent) -> None:
+    """
+    Every 6 minutes:
+      - Iterate over users
+      - Check whether spinReminderTime is set (e.g. '8:0')
+      - If current local time is within 5 minutes of that reminder time:
+          - Check whether users/{userId}/workoutHistory/{today} exists
+          - If not, send push notification to fcmToken if set
+    """
+    now = datetime.now(TZ)
+    today_id = now.strftime("%Y-%m-%d")
+
+    users_ref = get_db().collection("users")
+    user_docs = users_ref.stream()
+
+    processed = 0
+    sent = 0
+
+    for user_snap in user_docs:
+        processed += 1
+        user_id = user_snap.id
+        user_data = user_snap.to_dict() or {}
+
+        try:
+            spin_reminder_time = user_data.get("spinReminderTime")
+            if not spin_reminder_time:
+                continue
+
+            parsed = parse_spin_reminder_time(spin_reminder_time)
+            if parsed is None:
+                print(f"Invalid spinReminderTime for user {user_id}: {spin_reminder_time}")
+                continue
+
+            reminder_hour, reminder_minute = parsed
+
+            if not is_time_due_with_tolerance(
+                now_dt=now,
+                target_hour=reminder_hour,
+                target_minute=reminder_minute,
+                tolerance_minutes=5,
+            ):
+                continue
+
+            workout_ref = users_ref.document(user_id).collection("workoutHistory").document(today_id)
+            workout_snap = workout_ref.get()
+
+            if workout_snap.exists:
+                continue
+
+            fcm_token = user_data.get("fcmToken")
+            if not isinstance(fcm_token, str) or not fcm_token.strip():
+                continue
+
+            message = messaging.Message(
+                token=fcm_token,
+                notification=messaging.Notification(
+                    title="Spin-Erinnerung",
+                    body="Du hast noch keinen Spin durchgeführt. Hole das jetzt nach!",
+                ),
+                data={
+                    "type": "spin_reminder",
+                    "date": today_id,
+                },
+            )
+
+            messaging.send(message)
+            sent += 1
+            print(f"Sent spin reminder to user {user_id}")
+
+        except Exception as e:
+            print(f"Error processing spin reminder for user {user_id}: {e}")
+
+    print(
+        f"Spin reminder run complete for {today_id} at {now.strftime('%H:%M')} "
+        f"(processed={processed}, sent={sent})."
+    )

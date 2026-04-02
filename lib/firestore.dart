@@ -9,6 +9,7 @@ import 'package:rize/types/config.dart' show IntensityLevel;
 import 'package:rize/types/user.dart';
 import 'package:rize/types/workout.dart';
 import 'package:intl/intl.dart';
+import 'package:rize/utils.dart' show Time;
 
 Future<List<Workout>> loadWorkoutCollection() async {
   CollectionReference<Map<String, dynamic>> collection = FirebaseFirestore
@@ -110,8 +111,22 @@ Future<UserData> loadUserData(String userId) async {
     return UserData.fromJson(docSnap.data()!);
   } else {
     // Return default UserData if no data exists
-    return UserData(intensityScore: 0.0);
+    return UserData(intensityScore: 0.0, spinReminderTime: null);
   }
+}
+
+Future<void> updateUserFCMToken(String? fcmToken) async {
+  print('FB usage: Updating user FCM token in Firestore');
+  String userId = authServiceNotifier.value.currentUser?.uid ?? '';
+  if (userId.isEmpty) return;
+
+  CollectionReference<Map<String, dynamic>> usersCollection = FirebaseFirestore
+      .instance
+      .collection('users');
+
+  await usersCollection.doc(userId).update({
+    'fcmToken': fcmToken,
+  });
 }
 
 Future<void> uploadWorkoutToServer(ScheduledWorkout workout) async {
@@ -211,4 +226,17 @@ Future<void> deleteDailyWorkoutPlan() async {
       .collection('workoutHistory')
       .doc(DateFormat('yyyy-MM-dd').format(DateTime.now()))
       .delete();
+}
+
+Future<void> updateSpinReminderTime(Time? newTime) async {
+  print('FB usage: Updating spin reminder time');
+  String userId = authServiceNotifier.value.currentUser?.uid ?? '';
+
+    await FirebaseFirestore
+      .instance
+      .collection('users')
+      .doc(userId)
+      .update({
+        'spinReminderTime': newTime != null ? '${newTime.hour}:${newTime.minute}' : null,
+      });
 }

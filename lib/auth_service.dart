@@ -1,4 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:rize/firestore.dart';
 
@@ -20,6 +21,21 @@ class AuthService {
     try {
       UserCredential userCredential = await _firebaseAuth
           .signInWithEmailAndPassword(email: email, password: password);
+
+      FirebaseMessaging messaging = FirebaseMessaging.instance;
+      await messaging.requestPermission(
+        alert: true,
+        announcement: false,
+        badge: true,
+        carPlay: false,
+        criticalAlert: false,
+        provisional: false,
+        sound: true,
+      );
+      String? apnsToken = await messaging.getAPNSToken();
+      String? fcmToken = await messaging.getToken();
+      await updateUserFCMToken(fcmToken);
+
       return userCredential;
     } catch (e) {
       print('Error signing in: $e');
