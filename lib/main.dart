@@ -32,8 +32,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  await Firebase.initializeApp();
   authServiceNotifier.value.authStateChanges.listen((user) {
     if (user != null) {
       loadUserData(user.uid).then((userData) {
@@ -73,20 +72,22 @@ void main() async {
     );
 
     FirebaseMessaging messaging = FirebaseMessaging.instance;
-      await messaging.requestPermission(
-        alert: true,
-        announcement: false,
-        badge: true,
-        carPlay: false,
-        criticalAlert: false,
-        provisional: false,
-        sound: true,
-      );
-      await Future.delayed(Duration(seconds: 1));
-      String? apnsToken = await messaging.getAPNSToken();
-      await Future.delayed(Duration(seconds: 1));
-      //String? fcmToken = await messaging.getToken();
-      //await updateUserFCMToken(fcmToken);
+    await messaging.requestPermission(
+      alert: true,
+      announcement: true,
+      badge: true,
+      carPlay: false,
+      criticalAlert: false,
+      provisional: true,
+      sound: true,
+      providesAppNotificationSettings: true
+    );
+    await Future.delayed(Duration(seconds: 1));
+    String? apnsToken = await messaging.getAPNSToken();
+    print('APNs Token: $apnsToken');
+    await Future.delayed(Duration(seconds: 1));
+    String? fcmToken = await messaging.getToken();
+    await updateUserFCMToken(fcmToken);
 
     globals.userData = userData;
   }

@@ -9,7 +9,7 @@
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
-	<string>com.example.fitnessApp</string>
+	<string>de.coach-flo.rize</string>
 	<key>PROJECT_ID</key>
 	<string>rize-11838</string>
 	<key>STORAGE_BUCKET</key>
@@ -25,6 +25,6 @@
 	<key>IS_SIGNIN_ENABLED</key>
 	<true></true>
 	<key>GOOGLE_APP_ID</key>
-	<string>1:1004261898852:ios:42a07e11533ae9f01b7d71</string>
+	<string>1:1004261898852:ios:9eb7b8a91f02b8c41b7d71</string>
 </dict>
 </plist>
