@@ -30,11 +30,7 @@ class WelcomeBrandHero extends StatelessWidget {
               ),
             ],
           ),
-          child: const Icon(
-            Icons.bolt_rounded,
-            color: Colors.white,
-            size: 48,
-          ),
+          child: Image.asset('assets/brand/Logo transparent.png', height: 48,)
         ),
         const SizedBox(height: 22),
         Text(
