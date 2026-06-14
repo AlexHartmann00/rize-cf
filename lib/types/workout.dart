@@ -1,7 +1,6 @@
 import 'dart:convert';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:rize/auth_service.dart';
 import 'package:rize/firestore.dart';
 import 'package:rize/utils.dart' as utils;
 import 'package:rize/types/muscle_group.dart';

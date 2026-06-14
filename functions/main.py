@@ -1,16 +1,17 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta
-from zoneinfo import ZoneInfo
 from typing import Any, Tuple
+from zoneinfo import ZoneInfo
 
-from firebase_admin import initialize_app, firestore, messaging
+from firebase_admin import firestore, initialize_app, messaging
 from firebase_functions import firestore_fn, scheduler_fn
 
 
 initialize_app()
 
 _db = None
+
 
 def get_db():
     global _db
@@ -22,9 +23,9 @@ def get_db():
 TZ = ZoneInfo("Europe/Berlin")
 
 
-# ----------------------------
-# Helpers
-# ----------------------------
+# -------------------------------------------------------------------
+# General helpers
+# -------------------------------------------------------------------
 
 def clamp_0_1(x: float) -> float:
     if x < 0.0:
@@ -42,15 +43,18 @@ def is_schedule_completed(schedule: Any) -> bool:
     for entry in schedule:
         if not isinstance(entry, dict):
             return False
+
         completed = entry.get("completedUnits", 0) or 0
         planned = entry.get("plannedUnits", 0) or 0
+
         try:
             completed_i = int(completed)
-        except Exception:
+        except (TypeError, ValueError):
             completed_i = 0
+
         try:
             planned_i = int(planned)
-        except Exception:
+        except (TypeError, ValueError):
             planned_i = 0
 
         if completed_i < planned_i:
@@ -78,44 +82,56 @@ def schedule_sums(schedule: Any) -> Tuple[int, int, bool]:
             finished = False
             continue
 
-        c = entry.get("completedUnits", 0) or 0
-        p = entry.get("plannedUnits", 0) or 0
+        completed = entry.get("completedUnits", 0) or 0
+        planned = entry.get("plannedUnits", 0) or 0
 
         try:
-            c_i = int(c)
-        except Exception:
-            c_i = 0
+            completed_i = int(completed)
+        except (TypeError, ValueError):
+            completed_i = 0
 
         try:
-            p_i = int(p)
-        except Exception:
-            p_i = 0
+            planned_i = int(planned)
+        except (TypeError, ValueError):
+            planned_i = 0
 
-        sum_completed += c_i
-        sum_planned += p_i
+        sum_completed += completed_i
+        sum_planned += planned_i
 
-        if c_i < p_i:
+        if completed_i < planned_i:
             finished = False
 
     return sum_completed, sum_planned, finished
 
 
-def compute_completion_delta(current_score: float, impact_score: float) -> float:
+def compute_completion_delta(
+    current_score: float,
+    impact_score: float,
+) -> float:
     """
-    Increase rule (your spec):
-      Δ = 0.004 + 0.1*(impactScore - currentScore) if impactScore > currentScore, else 0.004
+    Increase rule:
+      delta = 0.004 + 0.1 * (impactScore - currentScore)
+      if impactScore > currentScore, otherwise 0.004.
     """
     base = 0.004
     bonus = 0.0
+
     if impact_score > current_score:
         bonus = 0.1 * (impact_score - current_score)
+
     return base + bonus
 
 
+# -------------------------------------------------------------------
+# Push-notification helpers
+# -------------------------------------------------------------------
+
 def parse_spin_reminder_time(value: Any) -> Tuple[int, int] | None:
     """
-    Parses times like '8:0', '08:00', etc.
-    Returns (hour, minute) or None.
+    Parses reminder times such as "8:0" and "08:00".
+
+    Returns:
+      (hour, minute), or None when the value is invalid.
     """
     if not isinstance(value, str):
         return None
@@ -127,44 +143,119 @@ def parse_spin_reminder_time(value: Any) -> Tuple[int, int] | None:
     try:
         hour = int(parts[0])
         minute = int(parts[1])
-    except Exception:
+    except (TypeError, ValueError):
         return None
 
-    if not (0 <= hour <= 23 and 0 <= minute <= 59):
+    if not 0 <= hour <= 23:
+        return None
+
+    if not 0 <= minute <= 59:
         return None
 
     return hour, minute
 
 
-def is_time_due_with_tolerance(
+def is_reminder_due(
     now_dt: datetime,
     target_hour: int,
     target_minute: int,
-    tolerance_minutes: int = 5,
+    window_minutes: int = 10,
 ) -> bool:
     """
-    True iff current local time is within tolerance of the target time.
+    Returns True only after the configured reminder time and within the
+    configured delivery window.
+
+    A one-sided window prevents notifications from being sent before the
+    user's selected time.
     """
     now_total = now_dt.hour * 60 + now_dt.minute
     target_total = target_hour * 60 + target_minute
-    return abs(now_total - target_total) <= tolerance_minutes
+    minutes_after_target = now_total - target_total
+
+    return 0 <= minutes_after_target < window_minutes
+
+
+def build_spin_reminder_message(
+    fcm_token: str,
+    today_id: str,
+) -> messaging.Message:
+    """
+    Builds one cross-platform notification message.
+
+    The top-level notification is understood by both Android and iOS.
+    Platform-specific settings request prompt delivery and the default sound.
+    """
+    return messaging.Message(
+        token=fcm_token,
+        notification=messaging.Notification(
+            title="Zeit für Deinen Daily Spin",
+            body=(
+                "Dein heutiges Training wartet auf Dich. "
+                "Ein kurzer Impuls reicht."
+            ),
+        ),
+        data={
+            "type": "spin_reminder",
+            "date": today_id,
+            "route": "/home",
+        },
+        android=messaging.AndroidConfig(
+            priority="high",
+            ttl=timedelta(hours=2),
+            notification=messaging.AndroidNotification(
+                sound="default",
+            ),
+        ),
+        apns=messaging.APNSConfig(
+            headers={
+                "apns-priority": "10",
+                "apns-push-type": "alert",
+                "apns-expiration": str(
+                    int((datetime.now().timestamp()) + 2 * 60 * 60)
+                ),
+            },
+            payload=messaging.APNSPayload(
+                aps=messaging.Aps(
+                    sound="default",
+                ),
+            ),
+        ),
+    )
+
+
+def remove_invalid_fcm_token(
+    user_ref: firestore.DocumentReference,
+    user_id: str,
+) -> None:
+    user_ref.set(
+        {
+            "fcmToken": firestore.DELETE_FIELD,
+            "fcmTokenInvalidatedAt": firestore.SERVER_TIMESTAMP,
+        },
+        merge=True,
+    )
+    print(f"Removed invalid FCM token for user {user_id}.")
 
 
 # -------------------------------------------------------------------
-# Function 1: Trigger on workoutHistory create/update (reward once)
+# Function 1: Trigger on workoutHistory create/update
 # -------------------------------------------------------------------
 
-@firestore_fn.on_document_written(document="users/{userId}/workoutHistory/{workoutId}")
+@firestore_fn.on_document_written(
+    document="users/{userId}/workoutHistory/{workoutId}"
+)
 def on_workout_written(
-    event: firestore_fn.Event[firestore_fn.Change[firestore_fn.DocumentSnapshot]],
+    event: firestore_fn.Event[
+        firestore_fn.Change[firestore_fn.DocumentSnapshot]
+    ],
 ):
     """
-    Fires on create + update + delete for:
+    Fires on create, update and delete for:
       users/{userId}/workoutHistory/{workoutId}
 
-    If workout transitions from NOT completed -> completed (based on schedule),
-    increase users/{userId}.intensityScore once, clamp to [0,1],
-    and append to users/{userId}/scoreHistory.
+    If a workout transitions from incomplete to completed, increase the
+    user's intensityScore once, clamp it to [0, 1], and append a score-history
+    entry.
     """
     user_id = event.params["userId"]
     workout_id = event.params["workoutId"]
@@ -172,29 +263,36 @@ def on_workout_written(
     before_snap = event.data.before
     after_snap = event.data.after
 
-    # Ignore deletes
+    # Ignore deletes.
     if after_snap is None or not after_snap.exists:
         return
 
     after = after_snap.to_dict() or {}
-    before = (before_snap.to_dict() if before_snap and before_snap.exists else {}) or {}
+    before = (
+        before_snap.to_dict()
+        if before_snap is not None and before_snap.exists
+        else {}
+    ) or {}
 
     schedule_after = after.get("schedule")
     schedule_before = before.get("schedule")
 
-    # Only act on transition: NOT completed → completed
+    # Only reward the transition from incomplete to complete.
     if not is_schedule_completed(schedule_after):
         return
-    if is_schedule_completed(schedule_before):
-        return  # already completed before; do not reward again
 
-    # Increase improvement if multiple units were completed
-    num_units = len(schedule_after)
-    IMPACT_DELTA_FACTOR = num_units / 1.2
+    if is_schedule_completed(schedule_before):
+        return
+
+    number_of_units = len(schedule_after)
+    impact_delta_factor = number_of_units / 1.2
 
     impact_score = after.get("impactScore")
     if impact_score is None:
-        print(f"Workout completed but impactScore missing: userId={user_id}, workoutId={workout_id}")
+        print(
+            "Workout completed but impactScore is missing: "
+            f"userId={user_id}, workoutId={workout_id}"
+        )
         return
 
     user_ref = get_db().collection("users").document(user_id)
@@ -206,23 +304,27 @@ def on_workout_written(
 
         try:
             current = float(user_data.get("intensityScore", 0.0) or 0.0)
-        except Exception:
+        except (TypeError, ValueError):
             current = 0.0
 
         try:
             impact = float(impact_score)
-        except Exception:
-            print(f"Invalid impactScore (not numeric): {impact_score} for workoutId={workout_id}")
+        except (TypeError, ValueError):
+            print(
+                "Invalid impactScore: "
+                f"value={impact_score}, workoutId={workout_id}"
+            )
             return
 
-        delta = compute_completion_delta(current, impact) * IMPACT_DELTA_FACTOR
+        delta = (
+            compute_completion_delta(current, impact)
+            * impact_delta_factor
+        )
         new_score = clamp_0_1(current + delta)
 
-        # If clamping makes it identical, still record? Usually no.
         if new_score == current:
             return
 
-        # Update user doc
         transaction.set(
             user_ref,
             {
@@ -235,10 +337,9 @@ def on_workout_written(
             merge=True,
         )
 
-        # Append to scoreHistory (auto-id)
-        hist_ref = user_ref.collection("scoreHistory").document()
+        history_ref = user_ref.collection("scoreHistory").document()
         transaction.set(
-            hist_ref,
+            history_ref,
             {
                 "ts": firestore.SERVER_TIMESTAMP,
                 "type": "workout_completed",
@@ -251,37 +352,41 @@ def on_workout_written(
             merge=False,
         )
 
-    txn = get_db().transaction()
-    txn_update(txn)
+    transaction = get_db().transaction()
+    txn_update(transaction)
 
 
 # -------------------------------------------------------------------
-# Function 2: Scheduled daily decay shortly after midnight
+# Function 2: Daily intensity decay
 # -------------------------------------------------------------------
 
 @scheduler_fn.on_schedule(
-    schedule="5 0 * * *",  # 00:05 every day
+    schedule="5 0 * * *",
     timezone="Europe/Berlin",
 )
-def nightly_intensity_decay(event: scheduler_fn.ScheduledEvent) -> None:
+def nightly_intensity_decay(
+    event: scheduler_fn.ScheduledEvent,
+) -> None:
     """
-    Each day shortly after midnight:
-      - Look at yesterday's workout doc (id = YYYY-mm-dd).
-      - If missing: intensityScore -= 0.01
-      - If present but not finished: intensityScore -= 0.01 * (1 - sumCompleted/sumPlanned)
-      - If finished: no change
-      - Clamp intensityScore to [0, 1]
-      - Append each change to users/{userId}/scoreHistory
+    Shortly after midnight:
+
+      - Inspect yesterday's workout document.
+      - Apply the full decay when no workout exists.
+      - Apply proportional decay when the workout is incomplete.
+      - Apply no decay when it is complete.
+      - Clamp intensityScore to [0, 1].
+      - Append each change to scoreHistory.
     """
     now = datetime.now(TZ)
-    yesterday = (now.date() - timedelta(days=1))
-    y_id = yesterday.strftime("%Y-%m-%d")
+    yesterday = now.date() - timedelta(days=1)
+    yesterday_id = yesterday.strftime("%Y-%m-%d")
 
     users_ref = get_db().collection("users")
     user_docs = users_ref.stream()
 
     batch = get_db().batch()
     writes = 0
+    affected_users = 0
 
     for user_snap in user_docs:
         user_id = user_snap.id
@@ -289,37 +394,42 @@ def nightly_intensity_decay(event: scheduler_fn.ScheduledEvent) -> None:
 
         try:
             current = float(user_data.get("intensityScore", 0.0) or 0.0)
-        except Exception:
+        except (TypeError, ValueError):
             current = 0.0
 
         user_ref = users_ref.document(user_id)
-        workout_ref = user_ref.collection("workoutHistory").document(y_id)
+        workout_ref = (
+            user_ref
+            .collection("workoutHistory")
+            .document(yesterday_id)
+        )
         workout_snap = workout_ref.get()
 
         penalty = 0.0
-        completion_ratio = None  # for history/debug
+        completion_ratio = None
 
         if not workout_snap.exists:
-            # No workout yesterday -> full penalty
             penalty = 0.01
             completion_ratio = 0.0
         else:
             workout = workout_snap.to_dict() or {}
             schedule = workout.get("schedule")
-            sum_completed, sum_planned, finished = schedule_sums(schedule)
+
+            (
+                sum_completed,
+                sum_planned,
+                finished,
+            ) = schedule_sums(schedule)
 
             if finished:
                 penalty = 0.0
                 completion_ratio = 1.0
             else:
                 ratio = 0.0
+
                 if sum_planned > 0:
                     ratio = sum_completed / sum_planned
-                    # clamp ratio into [0,1]
-                    if ratio < 0.0:
-                        ratio = 0.0
-                    elif ratio > 1.0:
-                        ratio = 1.0
+                    ratio = max(0.0, min(1.0, ratio))
 
                 completion_ratio = ratio
                 penalty = 0.01 * (1.0 - ratio)
@@ -331,27 +441,25 @@ def nightly_intensity_decay(event: scheduler_fn.ScheduledEvent) -> None:
         if new_score == current:
             continue
 
-        # Update user doc
         batch.set(
             user_ref,
             {
                 "intensityScore": new_score,
                 "intensityScoreLastDecay": penalty,
-                "intensityScoreDecayDate": y_id,
+                "intensityScoreDecayDate": yesterday_id,
                 "intensityScoreUpdatedAt": firestore.SERVER_TIMESTAMP,
             },
             merge=True,
         )
         writes += 1
 
-        # Append to scoreHistory (auto-id)
-        hist_ref = user_ref.collection("scoreHistory").document()
+        history_ref = user_ref.collection("scoreHistory").document()
         batch.set(
-            hist_ref,
+            history_ref,
             {
                 "ts": firestore.SERVER_TIMESTAMP,
                 "type": "daily_decay",
-                "date": y_id,
+                "date": yesterday_id,
                 "previousScore": current,
                 "delta": -penalty,
                 "newScore": new_score,
@@ -361,8 +469,9 @@ def nightly_intensity_decay(event: scheduler_fn.ScheduledEvent) -> None:
             merge=False,
         )
         writes += 1
+        affected_users += 1
 
-        # Firestore batch limit is 500 writes
+        # Stay safely below Firestore's 500-write batch limit.
         if writes >= 450:
             batch.commit()
             batch = get_db().batch()
@@ -371,90 +480,205 @@ def nightly_intensity_decay(event: scheduler_fn.ScheduledEvent) -> None:
     if writes > 0:
         batch.commit()
 
-    print(f"Nightly decay complete for date {y_id}.")
+    print(
+        "Nightly decay complete: "
+        f"date={yesterday_id}, affectedUsers={affected_users}"
+    )
 
 
 # -------------------------------------------------------------------
-# Function 3: Scheduled spin reminder notifications
+# Function 3: Daily Spin reminder notifications
 # -------------------------------------------------------------------
 
 @scheduler_fn.on_schedule(
-    schedule="every 6 minutes",
+    schedule="*/5 * * * *",
     timezone="Europe/Berlin",
 )
-def send_spin_reminders(event: scheduler_fn.ScheduledEvent) -> None:
+def send_spin_reminders(
+    event: scheduler_fn.ScheduledEvent,
+) -> None:
     """
-    Every 6 minutes:
-      - Iterate over users
-      - Check whether spinReminderTime is set (e.g. '8:0')
-      - If current local time is within 5 minutes of that reminder time:
-          - Check whether users/{userId}/workoutHistory/{today} exists
-          - If not, send push notification to fcmToken if set
+    Every five minutes:
+
+      - Read each user's spinReminderTime.
+      - Send only at or shortly after that time.
+      - Skip the user when today's workoutHistory document already exists.
+      - Skip when a reminder was already sent today.
+      - Send an Android/iOS notification with explicit delivery options.
+      - Remove stale registration tokens.
+      - Write detailed summary logs for diagnosis.
+
+    The existing workout-document check is intentionally preserved:
+    any users/{userId}/workoutHistory/{today} document suppresses the reminder.
     """
     now = datetime.now(TZ)
     today_id = now.strftime("%Y-%m-%d")
 
     users_ref = get_db().collection("users")
-    user_docs = users_ref.stream()
 
     processed = 0
+    configured = 0
+    due = 0
     sent = 0
 
-    for user_snap in user_docs:
+    skipped_existing_workout = 0
+    skipped_already_sent = 0
+    missing_tokens = 0
+    invalid_reminder_times = 0
+    invalid_tokens = 0
+    send_failures = 0
+
+    for user_snap in users_ref.stream():
         processed += 1
+
         user_id = user_snap.id
         user_data = user_snap.to_dict() or {}
+        user_ref = users_ref.document(user_id)
 
         try:
-            spin_reminder_time = user_data.get("spinReminderTime")
-            if not spin_reminder_time:
+            raw_reminder_time = user_data.get("spinReminderTime")
+            if not raw_reminder_time:
                 continue
 
-            parsed = parse_spin_reminder_time(spin_reminder_time)
+            configured += 1
+
+            parsed = parse_spin_reminder_time(raw_reminder_time)
             if parsed is None:
-                print(f"Invalid spinReminderTime for user {user_id}: {spin_reminder_time}")
+                invalid_reminder_times += 1
+                print(
+                    "Invalid spinReminderTime: "
+                    f"userId={user_id}, value={raw_reminder_time!r}"
+                )
                 continue
 
             reminder_hour, reminder_minute = parsed
 
-            if not is_time_due_with_tolerance(
+            if not is_reminder_due(
                 now_dt=now,
                 target_hour=reminder_hour,
                 target_minute=reminder_minute,
-                tolerance_minutes=5,
+                window_minutes=10,
             ):
                 continue
 
-            workout_ref = users_ref.document(user_id).collection("workoutHistory").document(today_id)
+            due += 1
+
+            # Prevent duplicate reminders during the ten-minute send window.
+            if user_data.get("lastSpinReminderDate") == today_id:
+                skipped_already_sent += 1
+                continue
+
+            # Intentionally preserve the application's existing semantics:
+            # any workout document for today suppresses the reminder.
+            workout_ref = (
+                user_ref
+                .collection("workoutHistory")
+                .document(today_id)
+            )
             workout_snap = workout_ref.get()
 
             if workout_snap.exists:
+                skipped_existing_workout += 1
                 continue
 
-            fcm_token = user_data.get("fcmToken")
-            if not isinstance(fcm_token, str) or not fcm_token.strip():
+            raw_token = user_data.get("fcmToken")
+            if not isinstance(raw_token, str) or not raw_token.strip():
+                missing_tokens += 1
+                print(f"No usable FCM token for user {user_id}.")
                 continue
 
-            message = messaging.Message(
-                token=fcm_token,
-                notification=messaging.Notification(
-                    title="Spin-Erinnerung",
-                    body="Du hast noch keinen Spin durchgeführt. Hole das jetzt nach!",
-                ),
-                data={
-                    "type": "spin_reminder",
-                    "date": today_id,
-                },
+            fcm_token = raw_token.strip()
+            message = build_spin_reminder_message(
+                fcm_token=fcm_token,
+                today_id=today_id,
             )
 
-            messaging.send(message)
-            sent += 1
-            print(f"Sent spin reminder to user {user_id}")
+            try:
+                message_id = messaging.send(message)
 
-        except Exception as e:
-            print(f"Error processing spin reminder for user {user_id}: {e}")
+            except messaging.UnregisteredError as error:
+                invalid_tokens += 1
+                print(
+                    "FCM token is no longer registered: "
+                    f"userId={user_id}, error={error}"
+                )
+                remove_invalid_fcm_token(user_ref, user_id)
+                continue
+
+            except messaging.SenderIdMismatchError as error:
+                send_failures += 1
+                print(
+                    "FCM sender-ID mismatch. The token was created by a "
+                    "different Firebase project: "
+                    f"userId={user_id}, error={error}"
+                )
+                continue
+
+            except messaging.ThirdPartyAuthError as error:
+                send_failures += 1
+                print(
+                    "FCM/APNs authentication failed. Check the APNs key or "
+                    "certificate in Firebase: "
+                    f"userId={user_id}, error={error}"
+                )
+                continue
+
+            except messaging.QuotaExceededError as error:
+                send_failures += 1
+                print(
+                    "FCM quota exceeded: "
+                    f"userId={user_id}, error={error}"
+                )
+                continue
+
+            except Exception as error:
+                send_failures += 1
+                print(
+                    "FCM send failed: "
+                    f"userId={user_id}, "
+                    f"errorType={type(error).__name__}, "
+                    f"error={error}"
+                )
+                continue
+
+            # Only mark the reminder as sent after FCM accepted it.
+            user_ref.set(
+                {
+                    "lastSpinReminderDate": today_id,
+                    "lastSpinReminderSentAt":
+                        firestore.SERVER_TIMESTAMP,
+                    "lastSpinReminderMessageId": message_id,
+                },
+                merge=True,
+            )
+
+            sent += 1
+            print(
+                "Spin reminder accepted by FCM: "
+                f"userId={user_id}, messageId={message_id}"
+            )
+
+        except Exception as error:
+            send_failures += 1
+            print(
+                "Unexpected reminder-processing error: "
+                f"userId={user_id}, "
+                f"errorType={type(error).__name__}, "
+                f"error={error}"
+            )
 
     print(
-        f"Spin reminder run complete for {today_id} at {now.strftime('%H:%M')} "
-        f"(processed={processed}, sent={sent})."
+        "Spin reminder run complete: "
+        f"date={today_id}, "
+        f"time={now.strftime('%H:%M:%S')}, "
+        f"processed={processed}, "
+        f"configured={configured}, "
+        f"due={due}, "
+        f"sent={sent}, "
+        f"existingWorkout={skipped_existing_workout}, "
+        f"alreadySent={skipped_already_sent}, "
+        f"missingToken={missing_tokens}, "
+        f"invalidReminderTime={invalid_reminder_times}, "
+        f"invalidToken={invalid_tokens}, "
+        f"sendFailures={send_failures}"
     )

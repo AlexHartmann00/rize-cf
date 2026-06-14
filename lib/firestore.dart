@@ -3,7 +3,7 @@ library;
 import 'dart:convert';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:rize/auth_service.dart';
+import 'package:rize/helpers/auth_service.dart';
 import 'package:rize/types/anamnesis.dart';
 import 'package:rize/types/config.dart' show IntensityLevel;
 import 'package:rize/types/user.dart';

@@ -2,9 +2,9 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
-import 'package:rize/auth_service.dart';
 import 'package:rize/base_widgets.dart';
 import 'package:rize/firestore.dart';
+import 'package:rize/helpers/auth_service.dart';
 import 'package:rize/main.dart' show ProfilePage;
 import 'package:rize/pages/workout_details_page.dart';
 import 'package:rize/widgets/slot_machine.dart';
