@@ -23,8 +23,7 @@ class WorkoutExecutionPage extends StatefulWidget {
   final int scheduleEntryIndex;
 
   @override
-  State<WorkoutExecutionPage> createState() =>
-      _WorkoutExecutionPageState();
+  State<WorkoutExecutionPage> createState() => _WorkoutExecutionPageState();
 }
 
 class _WorkoutExecutionPageState extends State<WorkoutExecutionPage> {
@@ -39,8 +38,7 @@ class _WorkoutExecutionPageState extends State<WorkoutExecutionPage> {
 
   int get _target => workoutTargetValue(widget.workout);
 
-  bool get _isDynamic =>
-      widget.workout.workoutType == WorkoutType.dynamic;
+  bool get _isDynamic => widget.workout.workoutType == WorkoutType.dynamic;
 
   bool get _isUnilateral => widget.workout.isUnilateral;
 
@@ -96,27 +94,25 @@ class _WorkoutExecutionPageState extends State<WorkoutExecutionPage> {
   void _startStaticTimer() {
     _timer?.cancel();
 
-    _timer = Timer.periodic(
-      const Duration(seconds: 1),
-      (Timer timer) async {
-        if (!mounted || _phase != WorkoutExecutionPhase.active) return;
+    _timer = Timer.periodic(const Duration(seconds: 1), (Timer timer) async {
+      if (!mounted || _phase != WorkoutExecutionPhase.active) return;
 
-        if (_remainingSeconds <= 1) {
-          timer.cancel();
-          setState(() => _remainingSeconds = 0);
-          await _completeCurrentSubStep();
-          return;
-        }
+      if (_remainingSeconds <= 1) {
+        timer.cancel();
+        setState(() => _remainingSeconds = 0);
+        await SystemSound.play(SystemSoundType.alert);
+        await _completeCurrentSubStep();
+        return;
+      }
 
-        setState(() => _remainingSeconds -= 1);
+      setState(() => _remainingSeconds -= 1);
 
-        if (_remainingSeconds <= 3) {
-          await HapticFeedback.mediumImpact();
-        } else if (_remainingSeconds % 5 == 0) {
-          await HapticFeedback.selectionClick();
-        }
-      },
-    );
+      if (_remainingSeconds <= 3) {
+        await HapticFeedback.mediumImpact();
+      } else if (_remainingSeconds % 5 == 0) {
+        await HapticFeedback.selectionClick();
+      }
+    });
   }
 
   Future<void> _incrementRep() async {
@@ -141,6 +137,12 @@ class _WorkoutExecutionPageState extends State<WorkoutExecutionPage> {
     await HapticFeedback.lightImpact();
   }
 
+  void _setRepValue(int value) {
+    if (_phase != WorkoutExecutionPhase.active || !_isDynamic) return;
+    setState(() => _currentValue = value);
+    HapticFeedback.selectionClick();
+  }
+
   Future<void> _completeCurrentSubStep() async {
     _timer?.cancel();
     if (!mounted) return;
@@ -153,9 +155,7 @@ class _WorkoutExecutionPageState extends State<WorkoutExecutionPage> {
 
     setState(() {
       _phase = WorkoutExecutionPhase.completed;
-      if (_isDynamic) {
-        _currentValue = _target;
-      } else {
+      if (!_isDynamic) {
         _remainingSeconds = 0;
       }
     });
@@ -281,8 +281,10 @@ class _WorkoutExecutionPageState extends State<WorkoutExecutionPage> {
       final WorkoutStep currentStep =
           widget.workout.schedule[widget.scheduleEntryIndex];
 
-      widget.workout.schedule[widget.scheduleEntryIndex] =
-          completedWorkoutStep(currentStep);
+      widget.workout.schedule[widget.scheduleEntryIndex] = completedWorkoutStep(
+        currentStep,
+        actualValue: _isDynamic ? _currentValue : _target,
+      );
 
       await uploadWorkoutToServer(widget.workout);
       await WakelockPlus.disable();
@@ -324,8 +326,8 @@ class _WorkoutExecutionPageState extends State<WorkoutExecutionPage> {
                     side: _currentSide,
                     secondSideReached:
                         _currentSide == WorkoutExecutionSide.right ||
-                            _phase == WorkoutExecutionPhase.completed ||
-                            _phase == WorkoutExecutionPhase.saving,
+                        _phase == WorkoutExecutionPhase.completed ||
+                        _phase == WorkoutExecutionPhase.saving,
                   ),
                 ],
                 const SizedBox(height: 18),
@@ -346,7 +348,9 @@ class _WorkoutExecutionPageState extends State<WorkoutExecutionPage> {
             children: <Widget>[
               if (_isUnilateral &&
                   widget.workout.unilateralHelpText != null &&
-                  widget.workout.unilateralHelpText!.trim().isNotEmpty) ...<Widget>[
+                  widget.workout.unilateralHelpText!
+                      .trim()
+                      .isNotEmpty) ...<Widget>[
                 _UnilateralHelpCard(
                   text: widget.workout.unilateralHelpText!.trim(),
                 ),
@@ -395,9 +399,10 @@ class _WorkoutExecutionPageState extends State<WorkoutExecutionPage> {
                       target: _target,
                       paused: _phase == WorkoutExecutionPhase.paused,
                       onIncrement: _incrementRep,
+                      onChanged: _setRepValue,
                       onDecrement: _decrementRep,
                       onPauseToggle: _togglePause,
-                      onFinishEarly: _requestFinishEarly,
+                      onFinishEarly: _completeCurrentSubStep,
                     )
                   : StaticTimerControl(
                       remainingSeconds: _remainingSeconds,
@@ -451,11 +456,7 @@ class _SideProgressHeader extends StatelessWidget {
             completed: secondSideReached,
           ),
         ),
-        Container(
-          width: 28,
-          height: 2,
-          color: Colors.white.withOpacity(0.14),
-        ),
+        Container(width: 28, height: 2, color: Colors.white.withOpacity(0.14)),
         Expanded(
           child: _SideStep(
             label: 'Rechts',
@@ -484,8 +485,8 @@ class _SideStep extends StatelessWidget {
     final Color color = completed
         ? rizeGreen
         : active
-            ? rizeCyan
-            : Colors.white.withOpacity(0.32);
+        ? rizeCyan
+        : Colors.white.withOpacity(0.32);
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
@@ -587,10 +588,7 @@ class _UnilateralHelpCard extends StatelessWidget {
 }
 
 class _SideTransitionCard extends StatelessWidget {
-  const _SideTransitionCard({
-    required this.onContinue,
-    this.helpText,
-  });
+  const _SideTransitionCard({required this.onContinue, this.helpText});
 
   final VoidCallback onContinue;
   final String? helpText;
@@ -625,9 +623,9 @@ class _SideTransitionCard extends StatelessWidget {
               'Linke Seite geschafft',
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w900,
-                  ),
+                color: Colors.white,
+                fontWeight: FontWeight.w900,
+              ),
             ),
             const SizedBox(height: 8),
             Text(

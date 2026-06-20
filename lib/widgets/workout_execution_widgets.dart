@@ -1,5 +1,5 @@
-
 import 'package:flutter/material.dart';
+import 'package:numberpicker/numberpicker.dart';
 import 'package:rize/helpers/rize_style_helpers.dart';
 import 'package:rize/helpers/workout_execution_helpers.dart';
 import 'package:rize/types/workout.dart';
@@ -39,9 +39,9 @@ class WorkoutExecutionTopBar extends StatelessWidget {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w900,
-                    ),
+                  color: Colors.white,
+                  fontWeight: FontWeight.w900,
+                ),
               ),
               const SizedBox(height: 2),
               Text(
@@ -123,10 +123,10 @@ class WorkoutReadyCard extends StatelessWidget {
                 'Bereit für Deine Runde?',
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: -0.6,
-                    ),
+                  color: Colors.white,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: -0.6,
+                ),
               ),
               const SizedBox(height: 8),
               Text(
@@ -166,10 +166,7 @@ class WorkoutReadyCard extends StatelessWidget {
         ),
         if (video != null) ...<Widget>[
           const SizedBox(height: 14),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(22),
-            child: video!,
-          ),
+          ClipRRect(borderRadius: BorderRadius.circular(22), child: video!),
         ],
       ],
     );
@@ -177,10 +174,7 @@ class WorkoutReadyCard extends StatelessWidget {
 }
 
 class WorkoutCountdownView extends StatelessWidget {
-  const WorkoutCountdownView({
-    super.key,
-    required this.value,
-  });
+  const WorkoutCountdownView({super.key, required this.value});
 
   final int value;
 
@@ -241,6 +235,7 @@ class DynamicRepControl extends StatelessWidget {
     required this.target,
     required this.paused,
     required this.onIncrement,
+    required this.onChanged,
     required this.onDecrement,
     required this.onPauseToggle,
     required this.onFinishEarly,
@@ -250,6 +245,7 @@ class DynamicRepControl extends StatelessWidget {
   final int target;
   final bool paused;
   final VoidCallback onIncrement;
+  final ValueChanged<int> onChanged;
   final VoidCallback onDecrement;
   final VoidCallback onPauseToggle;
   final VoidCallback onFinishEarly;
@@ -264,116 +260,97 @@ class DynamicRepControl extends StatelessWidget {
     return Column(
       children: <Widget>[
         Expanded(
-          child: GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTap: paused ? null : onIncrement,
-            onVerticalDragEnd: paused
-                ? null
-                : (DragEndDetails details) {
-                    if ((details.primaryVelocity ?? 0) > 200) {
-                      onDecrement();
-                    } else {
-                      onIncrement();
-                    }
-                  },
-            child: Container(
-              width: double.infinity,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(30),
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: <Color>[
-                    Colors.white.withOpacity(0.14),
-                    Colors.white.withOpacity(0.06),
-                  ],
-                ),
-                border: Border.all(
-                  color: Colors.white.withOpacity(0.12),
-                ),
-                boxShadow: <BoxShadow>[
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.18),
-                    blurRadius: 28,
-                    offset: const Offset(0, 14),
-                  ),
+          child: Container(
+            width: double.infinity,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(30),
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: <Color>[
+                  Colors.white.withOpacity(0.14),
+                  Colors.white.withOpacity(0.06),
                 ],
               ),
-              child: Stack(
-                children: <Widget>[
-                  Positioned.fill(
-                    child: CustomPaint(
-                      painter: _ProgressArcPainter(
-                        progress: progress,
-                        color: rizeCyan,
+              border: Border.all(color: Colors.white.withOpacity(0.12)),
+              boxShadow: <BoxShadow>[
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.18),
+                  blurRadius: 28,
+                  offset: const Offset(0, 14),
+                ),
+              ],
+            ),
+            child: Stack(
+              children: <Widget>[
+                Positioned.fill(
+                  child: CustomPaint(
+                    painter: _ProgressArcPainter(
+                      progress: progress,
+                      color: rizeCyan,
+                    ),
+                  ),
+                ),
+                Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: <Widget>[
+                      IgnorePointer(
+                        ignoring: paused,
+                        child: NumberPicker(
+                          value: current,
+                          minValue: 0,
+                          maxValue: (target * 2).clamp(target + 10, 999),
+                          itemHeight: 88,
+                          itemWidth: 180,
+                          axis: Axis.vertical,
+                          textStyle: TextStyle(
+                            color: Colors.white.withOpacity(0.25),
+                            fontSize: 42,
+                            fontWeight: FontWeight.w700,
+                          ),
+                          selectedTextStyle: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 88,
+                            fontWeight: FontWeight.w900,
+                          ),
+                          onChanged: onChanged,
+                        ),
                       ),
-                    ),
-                  ),
-                  Center(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: <Widget>[
-                        AnimatedSwitcher(
-                          duration: const Duration(milliseconds: 180),
-                          transitionBuilder: (
-                            Widget child,
-                            Animation<double> animation,
-                          ) {
-                            return ScaleTransition(
-                              scale: animation,
-                              child: FadeTransition(
-                                opacity: animation,
-                                child: child,
-                              ),
-                            );
-                          },
-                          child: Text(
-                            '$current',
-                            key: ValueKey<int>(current),
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 112,
-                              height: 0.9,
-                              fontWeight: FontWeight.w900,
-                              letterSpacing: -5,
-                            ),
-                          ),
+                      const SizedBox(height: 12),
+                      Text(
+                        'von $target Wiederholungen',
+                        style: TextStyle(
+                          color: Colors.white.withOpacity(0.62),
+                          fontSize: 16,
+                          fontWeight: FontWeight.w800,
                         ),
-                        const SizedBox(height: 12),
-                        Text(
-                          'von $target Wiederholungen',
+                      ),
+                      const SizedBox(height: 20),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 15,
+                          vertical: 9,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.08),
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                        child: Text(
+                          paused
+                              ? 'Pausiert'
+                              : 'Am Rad drehen · Ziel flexibel über- oder unterschreiten',
                           style: TextStyle(
-                            color: Colors.white.withOpacity(0.62),
-                            fontSize: 16,
-                            fontWeight: FontWeight.w800,
+                            color: Colors.white.withOpacity(0.68),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
                           ),
                         ),
-                        const SizedBox(height: 20),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 15,
-                            vertical: 9,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.08),
-                            borderRadius: BorderRadius.circular(999),
-                          ),
-                          child: Text(
-                            paused
-                                ? 'Pausiert'
-                                : 'Tippen = +1 · nach unten wischen = −1',
-                            style: TextStyle(
-                              color: Colors.white.withOpacity(0.68),
-                              fontSize: 12,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ),
@@ -539,9 +516,7 @@ class WorkoutExecutionControls extends StatelessWidget {
                 borderRadius: BorderRadius.circular(18),
               ),
             ),
-            icon: Icon(
-              paused ? Icons.play_arrow_rounded : Icons.pause_rounded,
-            ),
+            icon: Icon(paused ? Icons.play_arrow_rounded : Icons.pause_rounded),
             label: Text(
               paused ? 'WEITERMACHEN' : 'PAUSE',
               style: const TextStyle(
@@ -586,11 +561,7 @@ class WorkoutCompletionView extends StatelessWidget {
               tween: Tween<double>(begin: 0.3, end: 1),
               duration: const Duration(milliseconds: 850),
               curve: Curves.elasticOut,
-              builder: (
-                BuildContext context,
-                double scale,
-                Widget? child,
-              ) {
+              builder: (BuildContext context, double scale, Widget? child) {
                 return Transform.scale(scale: scale, child: child);
               },
               child: Container(
@@ -622,10 +593,10 @@ class WorkoutCompletionView extends StatelessWidget {
               completionHeadline(workout),
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: -0.5,
-                  ),
+                color: Colors.white,
+                fontWeight: FontWeight.w900,
+                letterSpacing: -0.5,
+              ),
             ),
             const SizedBox(height: 8),
             Text(
@@ -639,10 +610,7 @@ class WorkoutCompletionView extends StatelessWidget {
             ),
             const SizedBox(height: 22),
             Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 12,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: BoxDecoration(
                 color: Colors.white.withOpacity(0.07),
                 borderRadius: BorderRadius.circular(17),
@@ -650,11 +618,7 @@ class WorkoutCompletionView extends StatelessWidget {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: <Widget>[
-                  const Icon(
-                    Icons.bolt_rounded,
-                    color: rizeCyan,
-                    size: 19,
-                  ),
+                  const Icon(Icons.bolt_rounded, color: rizeCyan, size: 19),
                   const SizedBox(width: 7),
                   Text(
                     'Impact ${workout.impactScore.toStringAsFixed(2)}',
@@ -700,10 +664,7 @@ class WorkoutCompletionView extends StatelessWidget {
 }
 
 class WorkoutExecutionErrorView extends StatelessWidget {
-  const WorkoutExecutionErrorView({
-    super.key,
-    required this.onRetry,
-  });
+  const WorkoutExecutionErrorView({super.key, required this.onRetry});
 
   final VoidCallback onRetry;
 
@@ -752,22 +713,14 @@ class WorkoutExecutionErrorView extends StatelessWidget {
 }
 
 class _ProgressArcPainter extends CustomPainter {
-  const _ProgressArcPainter({
-    required this.progress,
-    required this.color,
-  });
+  const _ProgressArcPainter({required this.progress, required this.color});
 
   final double progress;
   final Color color;
 
   @override
   void paint(Canvas canvas, Size size) {
-    final Rect rect = Rect.fromLTWH(
-      22,
-      22,
-      size.width - 44,
-      size.height - 44,
-    );
+    final Rect rect = Rect.fromLTWH(22, 22, size.width - 44, size.height - 44);
 
     final Paint background = Paint()
       ..style = PaintingStyle.stroke
@@ -787,7 +740,6 @@ class _ProgressArcPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _ProgressArcPainter oldDelegate) {
-    return oldDelegate.progress != progress ||
-        oldDelegate.color != color;
+    return oldDelegate.progress != progress || oldDelegate.color != color;
   }
 }

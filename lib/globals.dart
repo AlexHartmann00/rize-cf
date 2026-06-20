@@ -5,7 +5,7 @@ import 'package:rize/types/user.dart';
 import 'package:rize/types/workout.dart';
 
 late List<Workout> workoutLibrary;
-ScheduledWorkout? dailyWorkoutPlan;
+DailyWorkoutPlan? dailyWorkoutPlan;
 int navBarIndex = 0;
 
 double intensityScoreTolerance = 0.15;

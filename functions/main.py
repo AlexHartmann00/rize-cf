@@ -4,8 +4,12 @@ from datetime import datetime, timedelta
 from typing import Any, Tuple
 from zoneinfo import ZoneInfo
 
-from firebase_admin import firestore, initialize_app, messaging
-from firebase_functions import firestore_fn, scheduler_fn
+import os
+import json
+
+import requests
+from firebase_admin import auth, firestore, initialize_app, messaging
+from firebase_functions import firestore_fn, https_fn, scheduler_fn
 
 
 initialize_app()
@@ -21,6 +25,8 @@ def get_db():
 
 
 TZ = ZoneInfo("Europe/Berlin")
+MOLLIE_API_URL = "https://api.mollie.com/v2"
+MOLLIE_API_KEY = 'test_hFcKKUsqM2kK7UQsCyHu4bFuy9JN6Q'#params.SecretParam("MOLLIE_API_KEY")
 
 
 # -------------------------------------------------------------------
@@ -102,6 +108,19 @@ def schedule_sums(schedule: Any) -> Tuple[int, int, bool]:
             finished = False
 
     return sum_completed, sum_planned, finished
+
+
+def workouts_for_day(user_ref, day_id: str):
+    """Returns v2 session docs and falls back to the legacy date-keyed doc."""
+    docs = list(
+        user_ref.collection("workoutHistory")
+        .where("dayKey", "==", day_id)
+        .stream()
+    )
+    if docs:
+        return docs
+    legacy = user_ref.collection("workoutHistory").document(day_id).get()
+    return [legacy] if legacy.exists else []
 
 
 def compute_completion_delta(
@@ -398,28 +417,22 @@ def nightly_intensity_decay(
             current = 0.0
 
         user_ref = users_ref.document(user_id)
-        workout_ref = (
-            user_ref
-            .collection("workoutHistory")
-            .document(yesterday_id)
-        )
-        workout_snap = workout_ref.get()
+        workout_snaps = workouts_for_day(user_ref, yesterday_id)
 
         penalty = 0.0
         completion_ratio = None
 
-        if not workout_snap.exists:
+        if not workout_snaps:
             penalty = 0.01
             completion_ratio = 0.0
         else:
-            workout = workout_snap.to_dict() or {}
-            schedule = workout.get("schedule")
+            schedules = [(snap.to_dict() or {}).get("schedule") for snap in workout_snaps]
 
             (
                 sum_completed,
                 sum_planned,
                 finished,
-            ) = schedule_sums(schedule)
+            ) = schedule_sums([entry for schedule in schedules if isinstance(schedule, list) for entry in schedule])
 
             if finished:
                 penalty = 0.0
@@ -464,7 +477,7 @@ def nightly_intensity_decay(
                 "delta": -penalty,
                 "newScore": new_score,
                 "completionRatio": completion_ratio,
-                "hadWorkoutDoc": bool(workout_snap.exists),
+                "hadWorkoutDoc": bool(workout_snaps),
             },
             merge=False,
         )
@@ -570,14 +583,7 @@ def send_spin_reminders(
 
             # Intentionally preserve the application's existing semantics:
             # any workout document for today suppresses the reminder.
-            workout_ref = (
-                user_ref
-                .collection("workoutHistory")
-                .document(today_id)
-            )
-            workout_snap = workout_ref.get()
-
-            if workout_snap.exists:
+            if workouts_for_day(user_ref, today_id):
                 skipped_existing_workout += 1
                 continue
 
@@ -682,3 +688,195 @@ def send_spin_reminders(
         f"invalidToken={invalid_tokens}, "
         f"sendFailures={send_failures}"
     )
+
+
+@scheduler_fn.on_schedule(schedule="30 16 * * *", timezone="Europe/Berlin")
+def send_streak_reminders(event: scheduler_fn.ScheduledEvent) -> None:
+    """Remind users with an active streak when today is still empty."""
+    now = datetime.now(TZ)
+    today_id = now.strftime("%Y-%m-%d")
+    yesterday_id = (now.date() - timedelta(days=1)).strftime("%Y-%m-%d")
+    for user_snap in get_db().collection("users").stream():
+        data = user_snap.to_dict() or {}
+        token = data.get("fcmToken")
+        user_ref = user_snap.reference
+        if not isinstance(token, str) or not token.strip():
+            continue
+        if data.get("lastStreakReminderDate") == today_id:
+            continue
+        if workouts_for_day(user_ref, today_id):
+            continue
+        yesterday = workouts_for_day(user_ref, yesterday_id)
+        if not any(is_schedule_completed((snap.to_dict() or {}).get("schedule")) for snap in yesterday):
+            continue
+        message = messaging.Message(
+            token=token.strip(),
+            notification=messaging.Notification(
+                title="Deine Serie wartet auf Dich 🔥",
+                body="Ein kurzer Daily Spin hält Deinen Lauf am Leben.",
+            ),
+            data={"type": "streak_reminder", "date": today_id, "route": "/home"},
+        )
+        try:
+            messaging.send(message)
+            user_ref.set({"lastStreakReminderDate": today_id}, merge=True)
+        except messaging.UnregisteredError:
+            remove_invalid_fcm_token(user_ref, user_snap.id)
+        except Exception as error:
+            print(f"Streak reminder failed: userId={user_snap.id}, error={error}")
+
+
+def _mollie_headers():
+    key = MOLLIE_API_KEY
+    if not key:
+        raise RuntimeError("MOLLIE_API_KEY is not configured")
+    return {"Authorization": f"Bearer {key}", "Content-Type": "application/json"}
+
+
+@https_fn.on_request(region="europe-west1")
+def create_pro_checkout(req: https_fn.Request) -> https_fn.Response:
+    """Create Mollie's required first payment for a monthly mandate."""
+    authorization = req.headers.get("Authorization", "")
+    if not authorization.startswith("Bearer "):
+        return https_fn.Response("Unauthorized", status=401)
+    try:
+        decoded = auth.verify_id_token(authorization[7:])
+        user_id = decoded["uid"]
+        user_ref = get_db().collection("users").document(user_id)
+        user = user_ref.get().to_dict() or {}
+        customer_id = user.get("mollieCustomerId")
+        if not customer_id:
+            customer_response = requests.post(
+                f"{MOLLIE_API_URL}/customers",
+                headers=_mollie_headers(),
+                json={"name": decoded.get("name"), "email": decoded.get("email"), "metadata": {"userId": user_id}},
+                timeout=12,
+            )
+            customer_response.raise_for_status()
+            customer_id = customer_response.json()["id"]
+            user_ref.set({"mollieCustomerId": customer_id}, merge=True)
+        public_base = os.environ.get("PUBLIC_FUNCTIONS_BASE_URL", "https://europe-west1-rize-11838.cloudfunctions.net")
+        app_url = os.environ.get("APP_RETURN_URL", "https://rize-11838.web.app/payment-complete")
+        payment_response = requests.post(
+            f"{MOLLIE_API_URL}/payments",
+            headers=_mollie_headers(),
+            json={
+                "amount": {"currency": "EUR", "value": "3.99"},
+                "description": "RIZE Pro Monatsabo",
+                "customerId": customer_id,
+                "sequenceType": "first",
+                "redirectUrl": app_url,
+                "webhookUrl": f"{public_base}/mollie_webhook",
+                "metadata": {"userId": user_id, "plan": "rize_pro_monthly"},
+            },
+            timeout=12,
+        )
+        payment_response.raise_for_status()
+        payment = payment_response.json()
+        user_ref.set({"mollieInitialPaymentId": payment["id"], "subscriptionStatus": "pending"}, merge=True)
+        return https_fn.Response(
+            json.dumps({"checkoutUrl": payment["_links"]["checkout"]["href"]}),
+            status=200,
+            headers={"Content-Type": "application/json"},
+        )
+    except Exception as error:
+        print(f"Mollie checkout failed: {error}")
+        return https_fn.Response("Checkout unavailable", status=502)
+
+
+@https_fn.on_request(region="europe-west1")
+def cancel_pro_subscription(req: https_fn.Request) -> https_fn.Response:
+    """Cancel the authenticated user's active Mollie subscription."""
+    authorization = req.headers.get("Authorization", "")
+    if not authorization.startswith("Bearer "):
+        return https_fn.Response("Unauthorized", status=401)
+    try:
+        decoded = auth.verify_id_token(authorization[7:])
+        user_id = decoded["uid"]
+        user_ref = get_db().collection("users").document(user_id)
+        user = user_ref.get().to_dict() or {}
+        customer_id = user.get("mollieCustomerId")
+        subscription_id = user.get("mollieSubscriptionId")
+        if not customer_id or not subscription_id:
+            return https_fn.Response("No active subscription", status=409)
+
+        subscription_url = (
+            f"{MOLLIE_API_URL}/customers/{customer_id}/subscriptions/{subscription_id}"
+        )
+        current_response = requests.get(
+            subscription_url,
+            headers=_mollie_headers(),
+            timeout=12,
+        )
+        current_response.raise_for_status()
+        access_until = current_response.json().get("nextPaymentDate")
+
+        response = requests.delete(
+            subscription_url,
+            headers=_mollie_headers(),
+            timeout=12,
+        )
+        response.raise_for_status()
+        subscription = response.json()
+        user_ref.set(
+            {
+                "isPro": bool(access_until),
+                "subscriptionStatus": "canceled",
+                "proAccessUntil": access_until,
+                "subscriptionCanceledAt": firestore.SERVER_TIMESTAMP,
+                "mollieSubscriptionStatus": subscription.get("status", "canceled"),
+            },
+            merge=True,
+        )
+        return https_fn.Response(
+            json.dumps({"status": "canceled", "accessUntil": access_until}),
+            status=200,
+            headers={"Content-Type": "application/json"},
+        )
+    except Exception as error:
+        print(f"Mollie cancellation failed: {error}")
+        return https_fn.Response("Cancellation unavailable", status=502)
+
+
+@https_fn.on_request(region="europe-west1")
+def mollie_webhook(req: https_fn.Request) -> https_fn.Response:
+    payment_id = req.form.get("id") or (req.get_json(silent=True) or {}).get("id")
+    if not payment_id:
+        return https_fn.Response("Missing id", status=400)
+    try:
+        response = requests.get(f"{MOLLIE_API_URL}/payments/{payment_id}", headers=_mollie_headers(), timeout=12)
+        response.raise_for_status()
+        payment = response.json()
+        metadata = payment.get("metadata") or {}
+        user_id = metadata.get("userId")
+        if not user_id and payment.get("subscriptionId"):
+            matches = list(get_db().collection("users").where("mollieSubscriptionId", "==", payment["subscriptionId"]).limit(1).stream())
+            user_id = matches[0].id if matches else None
+        if not user_id:
+            return https_fn.Response("OK", status=200)
+        user_ref = get_db().collection("users").document(user_id)
+        user = user_ref.get().to_dict() or {}
+        if payment.get("status") == "paid":
+            updates = {"isPro": True, "subscriptionStatus": "active", "mollieLastPaymentId": payment_id}
+            if not user.get("mollieSubscriptionId"):
+                subscription_response = requests.post(
+                    f"{MOLLIE_API_URL}/customers/{payment['customerId']}/subscriptions",
+                    headers=_mollie_headers(),
+                    json={
+                        "amount": {"currency": "EUR", "value": "3.99"},
+                        "interval": "1 month",
+                        "description": "RIZE Pro Monatsabo",
+                        "webhookUrl": f"{os.environ.get('PUBLIC_FUNCTIONS_BASE_URL', 'https://europe-west1-rize-11838.cloudfunctions.net')}/mollie_webhook",
+                        "metadata": {"userId": user_id, "plan": "rize_pro_monthly"},
+                    },
+                    timeout=12,
+                )
+                subscription_response.raise_for_status()
+                updates["mollieSubscriptionId"] = subscription_response.json()["id"]
+            user_ref.set(updates, merge=True)
+        elif payment.get("status") in ("failed", "canceled", "expired"):
+            user_ref.set({"subscriptionStatus": payment["status"]}, merge=True)
+        return https_fn.Response("OK", status=200)
+    except Exception as error:
+        print(f"Mollie webhook failed: paymentId={payment_id}, error={error}")
+        return https_fn.Response("Retry", status=500)

@@ -4,6 +4,7 @@ import 'package:rize/helpers/workout_library_helpers.dart';
 import 'package:rize/types/workout.dart';
 import 'package:rize/base_widgets.dart';
 import 'package:rize/widgets/workout_library_widgets.dart';
+import 'package:rize/widgets/pro_upgrade_cta.dart';
 
 class WorkoutLibraryPage extends StatefulWidget {
   const WorkoutLibraryPage({super.key});
@@ -20,10 +21,12 @@ class _WorkoutLibraryPageState extends State<WorkoutLibraryPage> {
   bool get _hasSearchQuery => _searchQuery.trim().isNotEmpty;
 
   List<Workout> get _filteredWorkouts {
-    return filterWorkoutLibrary(
-      globals.workoutLibrary,
-      _searchQuery,
+    final List<Workout> accessible = availableWorkoutsForUser(
+      workouts: globals.workoutLibrary,
+      intensityScore: globals.userData?.intensityScore ?? 0,
+      isPro: globals.userData?.isPro == true,
     );
+    return filterWorkoutLibrary(accessible, _searchQuery);
   }
 
   @override
@@ -102,29 +105,91 @@ class _WorkoutLibraryPageState extends State<WorkoutLibraryPage> {
                         onClear: _clearSearch,
                       )
                     : Scrollbar(
-                        key: ValueKey<String>(
-                          'results-${_searchQuery.trim()}',
-                        ),
+                        key: ValueKey<String>('results-${_searchQuery.trim()}'),
                         child: ListView.separated(
                           keyboardDismissBehavior:
                               ScrollViewKeyboardDismissBehavior.onDrag,
-                          padding: const EdgeInsets.fromLTRB(
-                            16,
-                            4,
-                            16,
-                            28,
-                          ),
-                          itemCount: workouts.length,
-                          separatorBuilder: (
-                            final BuildContext context,
-                            final int index,
-                          ) {
-                            return const SizedBox(height: 12);
-                          },
-                          itemBuilder: (
-                            final BuildContext context,
-                            final int index,
-                          ) {
+                          padding: const EdgeInsets.fromLTRB(16, 4, 16, 28),
+                          itemCount:
+                              workouts.length +
+                              (globals.userData?.isPro == true ? 0 : 1),
+                          separatorBuilder:
+                              (final BuildContext context, final int index) {
+                                return const SizedBox(height: 12);
+                              },
+                          itemBuilder: (final BuildContext context, final int index) {
+                            if (index == workouts.length) {
+                              final int remaining =
+                                  globals.workoutLibrary.length -
+                                  workouts.length;
+                              return Material(
+                                color: Colors.transparent,
+                                child: InkWell(
+                                  onTap: () => showProUpgradeSheet(
+                                    context,
+                                    source: 'library_locked_card',
+                                  ),
+                                  borderRadius: BorderRadius.circular(22),
+                                  child: Ink(
+                                    padding: const EdgeInsets.all(22),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white.withOpacity(0.08),
+                                      borderRadius: BorderRadius.circular(22),
+                                      border: Border.all(
+                                        color: Colors.white.withOpacity(0.1),
+                                      ),
+                                    ),
+                                    child: Column(
+                                      children: <Widget>[
+                                        const Icon(
+                                          Icons.workspace_premium_rounded,
+                                          color: Color(0xFFFFB27D),
+                                          size: 30,
+                                        ),
+                                        const SizedBox(height: 8),
+                                        Text(
+                                          '$remaining weitere Übungen mit RIZE Pro',
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.w900,
+                                            fontSize: 18,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 5),
+                                        const Text(
+                                          'Alle Übungen für 3,99 € pro Monat freischalten.',
+                                          style: TextStyle(
+                                            color: Colors.white60,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 13),
+                                        const Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          children: <Widget>[
+                                            Text(
+                                              'RIZE PRO ANSEHEN',
+                                              style: TextStyle(
+                                                color: Color(0xFF7ED8FF),
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.w900,
+                                                letterSpacing: 0.5,
+                                              ),
+                                            ),
+                                            SizedBox(width: 4),
+                                            Icon(
+                                              Icons.arrow_forward_rounded,
+                                              color: Color(0xFF7ED8FF),
+                                              size: 17,
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              );
+                            }
                             return Center(
                               child: ConstrainedBox(
                                 constraints: const BoxConstraints(

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:rize/helpers/muscle_group_labels.dart';
 import 'package:rize/pages/workout_details_page.dart';
 import 'package:rize/types/workout.dart';
-
 
 class WorkoutLibrarySearchField extends StatelessWidget {
   const WorkoutLibrarySearchField({
@@ -27,10 +27,7 @@ class WorkoutLibrarySearchField extends StatelessWidget {
       autocorrect: false,
       enableSuggestions: false,
       textInputAction: TextInputAction.search,
-      style: const TextStyle(
-        color: Colors.white,
-        fontWeight: FontWeight.w600,
-      ),
+      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
       cursorColor: colors.primary,
       decoration: InputDecoration(
         hintText: 'Workouts oder Muskelgruppen suchen',
@@ -51,9 +48,7 @@ class WorkoutLibrarySearchField extends StatelessWidget {
                   onPressed: onClear,
                   icon: const Icon(Icons.close_rounded),
                 )
-              : const SizedBox.shrink(
-                  key: ValueKey<String>('empty'),
-                ),
+              : const SizedBox.shrink(key: ValueKey<String>('empty')),
         ),
         filled: true,
         fillColor: Colors.white.withOpacity(0.08),
@@ -63,22 +58,15 @@ class WorkoutLibrarySearchField extends StatelessWidget {
         ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(20),
-          borderSide: BorderSide(
-            color: Colors.white.withOpacity(0.08),
-          ),
+          borderSide: BorderSide(color: Colors.white.withOpacity(0.08)),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(20),
-          borderSide: BorderSide(
-            color: Colors.white.withOpacity(0.08),
-          ),
+          borderSide: BorderSide(color: Colors.white.withOpacity(0.08)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(20),
-          borderSide: BorderSide(
-            color: colors.primary,
-            width: 1.6,
-          ),
+          borderSide: BorderSide(color: colors.primary, width: 1.6),
         ),
       ),
     );
@@ -133,16 +121,11 @@ class WorkoutLibraryHeader extends StatelessWidget {
         ),
         const SizedBox(width: 12),
         Container(
-          padding: const EdgeInsets.symmetric(
-            horizontal: 11,
-            vertical: 7,
-          ),
+          padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 7),
           decoration: BoxDecoration(
             color: Colors.white.withOpacity(0.08),
             borderRadius: BorderRadius.circular(999),
-            border: Border.all(
-              color: Colors.white.withOpacity(0.07),
-            ),
+            border: Border.all(color: Colors.white.withOpacity(0.07)),
           ),
           child: Text(
             countLabel,
@@ -227,10 +210,7 @@ class WorkoutLibraryEmptyState extends StatelessWidget {
 }
 
 class WorkoutSummaryWidget extends StatelessWidget {
-  const WorkoutSummaryWidget({
-    super.key,
-    required this.workout,
-  });
+  const WorkoutSummaryWidget({super.key, required this.workout});
 
   final Workout workout;
 
@@ -263,9 +243,7 @@ class WorkoutSummaryWidget extends StatelessWidget {
                 Colors.white.withOpacity(0.07),
               ],
             ),
-            border: Border.all(
-              color: Colors.white.withOpacity(0.14),
-            ),
+            border: Border.all(color: Colors.white.withOpacity(0.14)),
             boxShadow: <BoxShadow>[
               BoxShadow(
                 color: Colors.black.withOpacity(0.16),
@@ -281,18 +259,6 @@ class WorkoutSummaryWidget extends StatelessWidget {
           ),
           child: Stack(
             children: <Widget>[
-              Positioned(
-                top: -38,
-                right: -24,
-                child: Container(
-                  width: 130,
-                  height: 130,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: impactColor.withOpacity(0.08),
-                  ),
-                ),
-              ),
               Padding(
                 padding: const EdgeInsets.all(18),
                 child: Column(
@@ -301,9 +267,7 @@ class WorkoutSummaryWidget extends StatelessWidget {
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: <Widget>[
-                        _WorkoutIcon(
-                          isStatic: isStatic,
-                        ),
+                        _WorkoutIcon(isStatic: isStatic),
                         const SizedBox(width: 14),
                         Expanded(
                           child: Column(
@@ -327,14 +291,9 @@ class WorkoutSummaryWidget extends StatelessWidget {
                                 children: <Widget>[
                                   _InfoPill(
                                     icon: isStatic
-                                        ? Icons.pause_rounded
+                                        ? Icons.timer_outlined
                                         : Icons.repeat_rounded,
-                                    label:
-                                        isStatic ? 'Statisch' : 'Dynamisch',
-                                  ),
-                                  _InfoPill(
-                                    icon: Icons.schedule_rounded,
-                                    label: workout.durationString,
+                                    label: isStatic ? 'Statisch' : 'Dynamisch',
                                   ),
                                 ],
                               ),
@@ -367,7 +326,7 @@ class WorkoutSummaryWidget extends StatelessWidget {
                       const SizedBox(height: 16),
                       _MuscleGroupSummary(
                         groups: workout.usedMuscleGroups
-                            .map((group) => group.toString())
+                            .map((group) => muscleGroupLabel(group.toString()))
                             .toList(growable: false),
                       ),
                     ],
@@ -383,9 +342,7 @@ class WorkoutSummaryWidget extends StatelessWidget {
 }
 
 class _WorkoutIcon extends StatelessWidget {
-  const _WorkoutIcon({
-    required this.isStatic,
-  });
+  const _WorkoutIcon({required this.isStatic});
 
   final bool isStatic;
 
@@ -399,10 +356,7 @@ class _WorkoutIcon extends StatelessWidget {
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: <Color>[
-            Color(0xFF79D5FF),
-            Color(0xFF1670D2),
-          ],
+          colors: <Color>[Color(0xFF79D5FF), Color(0xFF1670D2)],
         ),
         boxShadow: <BoxShadow>[
           BoxShadow(
@@ -413,9 +367,7 @@ class _WorkoutIcon extends StatelessWidget {
         ],
       ),
       child: Icon(
-        isStatic
-            ? Icons.self_improvement_rounded
-            : Icons.fitness_center_rounded,
+        isStatic ? Icons.timer_outlined : Icons.repeat_rounded,
         color: Colors.white,
         size: 25,
       ),
@@ -441,9 +393,7 @@ class _CompactImpactBar extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.black.withOpacity(0.13),
         borderRadius: BorderRadius.circular(17),
-        border: Border.all(
-          color: Colors.white.withOpacity(0.06),
-        ),
+        border: Border.all(color: Colors.white.withOpacity(0.06)),
       ),
       child: Column(
         children: <Widget>[
@@ -456,11 +406,7 @@ class _CompactImpactBar extends StatelessWidget {
                   color: impactColor.withOpacity(0.14),
                   shape: BoxShape.circle,
                 ),
-                child: Icon(
-                  Icons.bolt_rounded,
-                  color: impactColor,
-                  size: 19,
-                ),
+                child: Icon(Icons.bolt_rounded, color: impactColor, size: 19),
               ),
               const SizedBox(width: 10),
               Expanded(
@@ -500,9 +446,7 @@ class _CompactImpactBar extends StatelessWidget {
 }
 
 class _MuscleGroupSummary extends StatelessWidget {
-  const _MuscleGroupSummary({
-    required this.groups,
-  });
+  const _MuscleGroupSummary({required this.groups});
 
   final List<String> groups;
 
@@ -546,10 +490,7 @@ class _MuscleGroupSummary extends StatelessWidget {
 }
 
 class _InfoPill extends StatelessWidget {
-  const _InfoPill({
-    required this.icon,
-    required this.label,
-  });
+  const _InfoPill({required this.icon, required this.label});
 
   final IconData icon;
   final String label;
@@ -557,10 +498,7 @@ class _InfoPill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 10,
-        vertical: 6,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.08),
         borderRadius: BorderRadius.circular(999),
@@ -568,11 +506,7 @@ class _InfoPill extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
-          Icon(
-            icon,
-            size: 14,
-            color: Colors.white.withOpacity(0.72),
-          ),
+          Icon(icon, size: 14, color: Colors.white.withOpacity(0.72)),
           const SizedBox(width: 6),
           Text(
             label,
@@ -589,10 +523,7 @@ class _InfoPill extends StatelessWidget {
 }
 
 class _WorkoutTypeIcon extends StatelessWidget {
-  const _WorkoutTypeIcon({
-    required this.isStatic,
-    required this.accentColor,
-  });
+  const _WorkoutTypeIcon({required this.isStatic, required this.accentColor});
 
   final bool isStatic;
   final Color accentColor;
@@ -605,14 +536,10 @@ class _WorkoutTypeIcon extends StatelessWidget {
       decoration: BoxDecoration(
         color: accentColor.withOpacity(0.14),
         borderRadius: BorderRadius.circular(15),
-        border: Border.all(
-          color: accentColor.withOpacity(0.3),
-        ),
+        border: Border.all(color: accentColor.withOpacity(0.3)),
       ),
       child: Icon(
-        isStatic
-            ? Icons.self_improvement_rounded
-            : Icons.fitness_center_rounded,
+        isStatic ? Icons.timer_outlined : Icons.repeat_rounded,
         color: accentColor,
         size: 24,
       ),
@@ -621,10 +548,7 @@ class _WorkoutTypeIcon extends StatelessWidget {
 }
 
 class _WorkoutPropertyChip extends StatelessWidget {
-  const _WorkoutPropertyChip({
-    required this.icon,
-    required this.label,
-  });
+  const _WorkoutPropertyChip({required this.icon, required this.label});
 
   final IconData icon;
   final String label;
@@ -632,10 +556,7 @@ class _WorkoutPropertyChip extends StatelessWidget {
   @override
   Widget build(final BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 10,
-        vertical: 6,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.07),
         borderRadius: BorderRadius.circular(999),
@@ -643,11 +564,7 @@ class _WorkoutPropertyChip extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
-          Icon(
-            icon,
-            size: 14,
-            color: Colors.white.withOpacity(0.7),
-          ),
+          Icon(icon, size: 14, color: Colors.white.withOpacity(0.7)),
           const SizedBox(width: 5),
           Text(
             label,
@@ -698,11 +615,7 @@ class _WorkoutImpactSection extends StatelessWidget {
                   color: color,
                   backgroundColor: Colors.white.withOpacity(0.1),
                 ),
-                Icon(
-                  Icons.bolt_rounded,
-                  size: 18,
-                  color: color,
-                ),
+                Icon(Icons.bolt_rounded, size: 18, color: color),
               ],
             ),
           ),
@@ -760,19 +673,14 @@ class _WorkoutImpactSection extends StatelessWidget {
 }
 
 class _MuscleGroupChip extends StatelessWidget {
-  const _MuscleGroupChip({
-    required this.label,
-  });
+  const _MuscleGroupChip({required this.label});
 
   final String label;
 
   @override
   Widget build(final BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 10,
-        vertical: 6,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.primary.withOpacity(0.12),
         borderRadius: BorderRadius.circular(999),

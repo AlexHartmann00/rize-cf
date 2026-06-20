@@ -1,5 +1,5 @@
-
 import 'package:flutter/material.dart';
+import 'package:rize/helpers/muscle_group_labels.dart';
 import 'package:rize/helpers/rize_style_helpers.dart';
 import 'package:rize/types/workout.dart';
 import 'package:rize/widgets/rize_card.dart';
@@ -87,11 +87,11 @@ class WorkoutDetailsHero extends StatelessWidget {
           Text(
             workout.name,
             style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: -0.8,
-                  height: 1.08,
-                ),
+              color: Colors.white,
+              fontWeight: FontWeight.w900,
+              letterSpacing: -0.8,
+              height: 1.08,
+            ),
           ),
           const SizedBox(height: 14),
           Wrap(
@@ -104,8 +104,7 @@ class WorkoutDetailsHero extends StatelessWidget {
               ),
               _HeroPill(
                 icon: Icons.bolt_rounded,
-                label:
-                    'Impact ${workout.impactScore.toStringAsFixed(2)}',
+                label: 'Impact ${workout.impactScore.toStringAsFixed(2)}',
                 color: impactColor,
               ),
               if (workout.isUnilateral)
@@ -118,7 +117,7 @@ class WorkoutDetailsHero extends StatelessWidget {
           if (workout.usedMuscleGroups.isNotEmpty) ...<Widget>[
             const SizedBox(height: 18),
             Text(
-              workout.usedMuscleGroups.join(' · '),
+              workout.usedMuscleGroups.map(muscleGroupLabel).join(' · '),
               style: TextStyle(
                 color: Colors.white.withOpacity(0.72),
                 fontSize: 13,
@@ -162,11 +161,7 @@ class WorkoutDetailsSection extends StatelessWidget {
                   color: rizeCyan.withOpacity(0.13),
                   borderRadius: BorderRadius.circular(14),
                 ),
-                child: Icon(
-                  icon,
-                  color: rizeCyan,
-                  size: 21,
-                ),
+                child: Icon(icon, color: rizeCyan, size: 21),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -176,9 +171,9 @@ class WorkoutDetailsSection extends StatelessWidget {
                     Text(
                       title,
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w900,
-                          ),
+                        color: Colors.white,
+                        fontWeight: FontWeight.w900,
+                      ),
                     ),
                     if (subtitle != null) ...<Widget>[
                       const SizedBox(height: 3),
@@ -206,10 +201,7 @@ class WorkoutDetailsSection extends StatelessWidget {
 }
 
 class WorkoutDetailsBodyText extends StatelessWidget {
-  const WorkoutDetailsBodyText({
-    super.key,
-    required this.text,
-  });
+  const WorkoutDetailsBodyText({super.key, required this.text});
 
   final String text;
 
@@ -228,10 +220,7 @@ class WorkoutDetailsBodyText extends StatelessWidget {
 }
 
 class UnilateralWorkoutCard extends StatelessWidget {
-  const UnilateralWorkoutCard({
-    super.key,
-    required this.helpText,
-  });
+  const UnilateralWorkoutCard({super.key, required this.helpText});
 
   final String? helpText;
 
@@ -261,9 +250,9 @@ class UnilateralWorkoutCard extends StatelessWidget {
                 child: Text(
                   'Einseitige Übung',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w900,
-                      ),
+                    color: Colors.white,
+                    fontWeight: FontWeight.w900,
+                  ),
                 ),
               ),
             ],
@@ -305,10 +294,7 @@ class UnilateralWorkoutCard extends StatelessWidget {
 }
 
 class CoachingCueList extends StatelessWidget {
-  const CoachingCueList({
-    super.key,
-    required this.coachingCues,
-  });
+  const CoachingCueList({super.key, required this.coachingCues});
 
   final String coachingCues;
 
@@ -317,60 +303,60 @@ class CoachingCueList extends StatelessWidget {
     final List<String> cues = _splitCues(coachingCues);
 
     return Column(
-      children: cues.asMap().entries.map(
-        (MapEntry<int, String> entry) {
-          return Padding(
-            padding: EdgeInsets.only(
-              bottom: entry.key == cues.length - 1 ? 0 : 10,
-            ),
-            child: Container(
-              padding: const EdgeInsets.all(13),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.06),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: Colors.white.withOpacity(0.06),
-                ),
+      children: cues
+          .asMap()
+          .entries
+          .map((MapEntry<int, String> entry) {
+            return Padding(
+              padding: EdgeInsets.only(
+                bottom: entry.key == cues.length - 1 ? 0 : 10,
               ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  Container(
-                    width: 26,
-                    height: 26,
-                    decoration: BoxDecoration(
-                      color: rizeCyan.withOpacity(0.14),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Center(
-                      child: Text(
-                        '${entry.key + 1}',
-                        style: const TextStyle(
-                          color: rizeCyan,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w900,
+              child: Container(
+                padding: const EdgeInsets.all(13),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.06),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: Colors.white.withOpacity(0.06)),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Container(
+                      width: 26,
+                      height: 26,
+                      decoration: BoxDecoration(
+                        color: rizeCyan.withOpacity(0.14),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Center(
+                        child: Text(
+                          '${entry.key + 1}',
+                          style: const TextStyle(
+                            color: rizeCyan,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w900,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      entry.value,
-                      style: TextStyle(
-                        color: Colors.white.withOpacity(0.78),
-                        height: 1.4,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        entry.value,
+                        style: TextStyle(
+                          color: Colors.white.withOpacity(0.78),
+                          height: 1.4,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-          );
-        },
-      ).toList(growable: false),
+            );
+          })
+          .toList(growable: false),
     );
   }
 
@@ -404,9 +390,7 @@ class WorkoutDetailsBottomAction extends StatelessWidget {
       decoration: BoxDecoration(
         color: const Color(0xFF13345C).withOpacity(0.96),
         borderRadius: BorderRadius.circular(22),
-        border: Border.all(
-          color: Colors.white.withOpacity(0.10),
-        ),
+        border: Border.all(color: Colors.white.withOpacity(0.10)),
         boxShadow: <BoxShadow>[
           BoxShadow(
             color: Colors.black.withOpacity(0.24),
@@ -428,9 +412,7 @@ class WorkoutDetailsBottomAction extends StatelessWidget {
           ),
         ),
         icon: Icon(
-          canStart
-              ? Icons.play_arrow_rounded
-              : Icons.info_outline_rounded,
+          canStart ? Icons.play_arrow_rounded : Icons.info_outline_rounded,
         ),
         label: Text(
           canStart ? 'WORKOUT STARTEN' : 'AUS DER TAGESPLANUNG STARTEN',
@@ -445,11 +427,7 @@ class WorkoutDetailsBottomAction extends StatelessWidget {
 }
 
 class _HeroPill extends StatelessWidget {
-  const _HeroPill({
-    required this.icon,
-    required this.label,
-    this.color,
-  });
+  const _HeroPill({required this.icon, required this.label, this.color});
 
   final IconData icon;
   final String label;
@@ -460,25 +438,16 @@ class _HeroPill extends StatelessWidget {
     final Color foreground = color ?? Colors.white;
 
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 11,
-        vertical: 8,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 8),
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.13),
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(
-          color: Colors.white.withOpacity(0.10),
-        ),
+        border: Border.all(color: Colors.white.withOpacity(0.10)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
-          Icon(
-            icon,
-            size: 15,
-            color: foreground,
-          ),
+          Icon(icon, size: 15, color: foreground),
           const SizedBox(width: 6),
           Text(
             label,

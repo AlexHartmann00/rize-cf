@@ -94,6 +94,9 @@ void main() async {
     String? fcmToken = await messaging.getToken();
     await updateUserFCMToken(fcmToken);
 
+    //SharedPreferences prefs = await SharedPreferences.getInstance();
+    //prefs.setBool('anamnesisDone', false);
+
     globals.userData = userData;
   }
 

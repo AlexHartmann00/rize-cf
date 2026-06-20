@@ -124,58 +124,58 @@ Future<void> updateUserFCMToken(String? fcmToken) async {
       .instance
       .collection('users');
 
-  await usersCollection.doc(userId).update({
-    'fcmToken': fcmToken,
-  });
+  await usersCollection.doc(userId).update({'fcmToken': fcmToken});
 }
 
 Future<void> uploadWorkoutToServer(ScheduledWorkout workout) async {
-  print('FB usage: Uploading workout to Firestore');
-  print('FB usage: Workout properties: ${workout.properties}');
-  Map<String, dynamic> jsonData = workout.toJson();
-  String jsonString = jsonEncode(jsonData);
-
-  //upload to Firestore collection users/{userId}/workoutHistory/{datestring}
-  // with datestring = yyyy-MM-dd
-
-  String userId = authServiceNotifier.value.currentUser?.uid ?? '';
-  DateFormat df = DateFormat('yyyy-MM-dd');
-  String dateString = df.format(DateTime.now());
-
-  await FirebaseFirestore.instance
+  final String userId = authServiceNotifier.value.currentUser?.uid ?? '';
+  if (userId.isEmpty) return;
+  final DateTime now = workout.scheduledDay ?? DateTime.now();
+  final Map<String, dynamic> jsonData = workout.toJson()
+    ..addAll(<String, dynamic>{
+      'scheduledAt': Timestamp.fromDate(now),
+      'dayKey': DateFormat('yyyy-MM-dd').format(now),
+      'updatedAt': FieldValue.serverTimestamp(),
+      'schemaVersion': 2,
+    });
+  final CollectionReference<Map<String, dynamic>> history = FirebaseFirestore
+      .instance
       .collection('users')
       .doc(userId)
-      .collection('workoutHistory')
-      .doc(dateString)
-      .set(jsonData);
-
-    //This caused infinite recursion....
-    //await workout.saveAsDailyWorkoutPlan();
-  }
-
+      .collection('workoutHistory');
+  final bool isNewSession = workout.historyId == null;
+  final DocumentReference<Map<String, dynamic>> reference =
+      isNewSession
+      ? history.doc()
+      : history.doc(workout.historyId);
+  workout.historyId = reference.id;
+  jsonData['historyId'] = reference.id;
+  if (isNewSession) jsonData['createdAt'] = FieldValue.serverTimestamp();
+  await reference.set(jsonData, SetOptions(merge: true));
+}
 
 Future<List<ScheduledWorkout>> loadWorkoutHistoryFromServer() async {
-    String userId = authServiceNotifier.value.currentUser?.uid ?? '';
+  String userId = authServiceNotifier.value.currentUser?.uid ?? '';
 
-    QuerySnapshot<Map<String, dynamic>> snapshot = await FirebaseFirestore
+  QuerySnapshot<Map<String, dynamic>> snapshot = await FirebaseFirestore
       .instance
       .collection('users')
       .doc(userId)
       .collection('workoutHistory')
       .get();
 
-    List<ScheduledWorkout> workouts = [];
+  List<ScheduledWorkout> workouts = [];
 
-    for (QueryDocumentSnapshot<Map<String, dynamic>> doc in snapshot.docs) {
-      if (doc.data().isEmpty) continue;
-      ScheduledWorkout workout = ScheduledWorkout.fromJson(doc.data());
-      workout.scheduledDay = DateTime.parse(doc.id);
-      workouts.add(workout);
-    }
-
-    return workouts;
+  for (QueryDocumentSnapshot<Map<String, dynamic>> doc in snapshot.docs) {
+    if (doc.data().isEmpty) continue;
+    ScheduledWorkout workout = ScheduledWorkout.fromJson(doc.data());
+    workout.historyId = doc.id;
+    workout.scheduledDay ??= DateTime.tryParse(doc.id);
+    workouts.add(workout);
   }
 
+  return workouts;
+}
 
 Future<List<IntensityLevel>> loadIntensityLevels() async {
   DocumentReference<Map<String, dynamic>> docRef = FirebaseFirestore.instance
@@ -193,50 +193,73 @@ Future<List<IntensityLevel>> loadIntensityLevels() async {
   return levels;
 }
 
-
-Future<ScheduledWorkout?> loadDailyWorkoutPlan() async {
+Future<DailyWorkoutPlan?> loadDailyWorkoutPlan() async {
   String userId = authServiceNotifier.value.currentUser?.uid ?? '';
-  if(userId.isEmpty) return null;
+  if (userId.isEmpty) return null;
 
-    DocumentSnapshot<Map<String, dynamic>> snapshot = await FirebaseFirestore
+  final String dayKey = DateFormat('yyyy-MM-dd').format(DateTime.now());
+  final QuerySnapshot<Map<String, dynamic>> snapshot = await FirebaseFirestore
       .instance
       .collection('users')
       .doc(userId)
       .collection('workoutHistory')
-      .doc(DateFormat('yyyy-MM-dd').format(DateTime.now()))
+      .where('dayKey', isEqualTo: dayKey)
       .get();
 
-    if (!snapshot.exists || snapshot.data() == null) {
-      return null;
+  final List<ScheduledWorkout> workouts = <ScheduledWorkout>[];
+  for (final doc in snapshot.docs) {
+    final ScheduledWorkout workout = ScheduledWorkout.fromJson(doc.data());
+    workout.historyId = doc.id;
+    workout.scheduledDay ??= DateTime.now();
+    workouts.add(workout);
+  }
+  // Read the old date-keyed document during the migration period.
+  if (workouts.isEmpty) {
+    final legacy = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(userId)
+        .collection('workoutHistory')
+        .doc(dayKey)
+        .get();
+    if (legacy.data() != null) {
+      final workout = ScheduledWorkout.fromJson(legacy.data()!);
+      workout.historyId = legacy.id;
+      workout.scheduledDay = DateTime.now();
+      workouts.add(workout);
     }
-
-    ScheduledWorkout workout = ScheduledWorkout.fromJson(snapshot.data()!);
-    workout.scheduledDay = DateTime.now();
-    return workout;
+  }
+  if (workouts.isEmpty) return null;
+  final String planId = workouts.first.planId ?? 'legacy-$dayKey';
+  return DailyWorkoutPlan(id: planId, workouts: workouts);
 }
 
 Future<void> deleteDailyWorkoutPlan() async {
   print('FB usage: Deleting workout plan');
   String userId = authServiceNotifier.value.currentUser?.uid ?? '';
 
-    await FirebaseFirestore
-      .instance
+  final String dayKey = DateFormat('yyyy-MM-dd').format(DateTime.now());
+  final history = FirebaseFirestore.instance
       .collection('users')
       .doc(userId)
-      .collection('workoutHistory')
-      .doc(DateFormat('yyyy-MM-dd').format(DateTime.now()))
-      .delete();
+      .collection('workoutHistory');
+  final snapshot = await history.where('dayKey', isEqualTo: dayKey).get();
+  final batch = FirebaseFirestore.instance.batch();
+  for (final doc in snapshot.docs) {
+    final workout = ScheduledWorkout.fromJson(doc.data());
+    if (!workout.isCompleted) batch.delete(doc.reference);
+  }
+  final legacy = await history.doc(dayKey).get();
+  if (legacy.exists) batch.delete(legacy.reference);
+  await batch.commit();
 }
 
 Future<void> updateSpinReminderTime(Time? newTime) async {
   print('FB usage: Updating spin reminder time');
   String userId = authServiceNotifier.value.currentUser?.uid ?? '';
 
-    await FirebaseFirestore
-      .instance
-      .collection('users')
-      .doc(userId)
-      .update({
-        'spinReminderTime': newTime != null ? '${newTime.hour}:${newTime.minute}' : null,
-      });
+  await FirebaseFirestore.instance.collection('users').doc(userId).update({
+    'spinReminderTime': newTime != null
+        ? '${newTime.hour}:${newTime.minute}'
+        : null,
+  });
 }

@@ -14,7 +14,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
 AppBar rizeAppBar = AppBar(
-  backgroundColor: Colors.white,
+  backgroundColor: Colors.transparent,
   title: Row(
     spacing: 10,
     children: [
@@ -318,7 +318,7 @@ class _WorkoutScheduleWidgetState extends State<WorkoutScheduleWidget> {
                       ),
                     ),
                   );
-                  if(completed != null && completed){
+                  if (completed != null && completed) {
                     setState(() {
                       completedUnits++;
                       if (completedUnits > plannedUnits) {
@@ -331,7 +331,7 @@ class _WorkoutScheduleWidgetState extends State<WorkoutScheduleWidget> {
                       );
                     });
                   }
-                  
+
                   // setState(() {
                   //   completedUnits++;
                   //   if(completedUnits > plannedUnits) {

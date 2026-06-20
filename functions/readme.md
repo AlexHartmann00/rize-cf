@@ -1,4 +1,18 @@
-# Deploy Firebase Python Scheduled Function
+# Deploy Firebase Python Functions
+
+## One-time project setup
+
+Gen-2 functions require the Compute Engine API and a Mollie secret:
+
+```sh
+gcloud services enable compute.googleapis.com --project rize-11838
+firebase functions:secrets:set MOLLIE_API_KEY
+```
+
+If `gcloud` is not installed, enable `compute.googleapis.com` in the Google
+Cloud API Library for project `rize-11838`, wait a few minutes, and continue.
+
+Never put a Mollie key into `main.py` or a checked-in `.env` file.
 
 # 1. Navigate to functions folder
 cd functions
@@ -16,7 +30,7 @@ firebase login
 firebase use <your-project-id>
 
 # 6. Deploy specific function
-firebase deploy --only functions:send_spin_reminders
+firebase deploy --only functions
 
 ---
 

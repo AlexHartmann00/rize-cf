@@ -22,28 +22,28 @@ WorkoutType workoutTypeFromString(String type) {
 
 enum ImpactLevel { low, medium, high }
 
-class WorkoutProperty{
+class WorkoutProperty {
   String propertyType;
   String helpText;
 
   WorkoutProperty({required this.propertyType, required this.helpText});
 
-  factory WorkoutProperty.nullProperty(){
+  factory WorkoutProperty.nullProperty() {
     return WorkoutProperty(propertyType: '', helpText: '');
   }
 
-  factory WorkoutProperty.fromJSON(Map<String,dynamic> json){
-    if(json['propertyType'] == null){
+  factory WorkoutProperty.fromJSON(Map<String, dynamic> json) {
+    if (json['propertyType'] == null) {
       return WorkoutProperty.nullProperty();
     }
-    return WorkoutProperty(propertyType: json['propertyType'], helpText: json['helpText']);
+    return WorkoutProperty(
+      propertyType: json['propertyType'],
+      helpText: json['helpText'],
+    );
   }
 
-  Map<String, dynamic> toJson(){
-    return {
-      'propertyType' : propertyType,
-      'helpText' : helpText
-    };
+  Map<String, dynamic> toJson() {
+    return {'propertyType': propertyType, 'helpText': helpText};
   }
 }
 
@@ -67,30 +67,30 @@ class Workout {
     return '$name $description $tagString $muscleGroupString'.toLowerCase();
   }
 
-  bool get isUnilateral{
-    for(WorkoutProperty prop in properties ?? []){
-      if(prop.propertyType == 'unilateral'){
+  bool get isUnilateral {
+    for (WorkoutProperty prop in properties ?? []) {
+      if (prop.propertyType == 'unilateral') {
         return true;
       }
     }
     return false;
   }
 
-  String? get unilateralHelpText{
-    for(WorkoutProperty prop in properties ?? []){
-      if(prop.propertyType == 'unilateral'){
+  String? get unilateralHelpText {
+    for (WorkoutProperty prop in properties ?? []) {
+      if (prop.propertyType == 'unilateral') {
         return prop.helpText;
       }
     }
     return null;
   }
 
-  String get youtubeVideoId{
-    if(videoExplanationUrl == null){
+  String get youtubeVideoId {
+    if (videoExplanationUrl == null) {
       return '';
     }
 
-    if(!videoExplanationUrl!.contains('youtu')){
+    if (!videoExplanationUrl!.contains('youtu')) {
       return '';
     }
 
@@ -127,7 +127,7 @@ class Workout {
     this.baseReps,
     this.baseSeconds,
     this.videoExplanationUrl,
-    this.properties
+    this.properties,
   });
 
   factory Workout.fromJson(Map<String, dynamic> json) {
@@ -147,7 +147,7 @@ class Workout {
       videoExplanationUrl: json['videoExplanationUrl'] as String?,
       properties: (json['properties'] ?? [])
           .map<WorkoutProperty>((e) => WorkoutProperty.fromJSON(e))
-          .toList()
+          .toList(),
     );
   }
 
@@ -164,7 +164,9 @@ class Workout {
     'type': workoutType.name,
     'impactScore': impactScore,
     'videoExplanationUrl': videoExplanationUrl,
-    'properties' : properties != null ? properties!.map((e) => e.toJson()).toList() : []
+    'properties': properties != null
+        ? properties!.map((e) => e.toJson()).toList()
+        : [],
   };
 }
 
@@ -175,6 +177,11 @@ class ScheduledWorkout extends Workout {
   List<WorkoutStep> schedule;
   int intensityFactor;
   DateTime? scheduledDay;
+
+  /// Firestore document id of this concrete workout session. Unlike the
+  /// immutable workout id this is unique for every execution.
+  String? historyId;
+  String? planId;
 
   ScheduledWorkout({
     // super fields
@@ -229,7 +236,7 @@ class ScheduledWorkout extends Workout {
       baseReps: base.baseReps,
       baseSeconds: base.baseSeconds,
       videoExplanationUrl: base.videoExplanationUrl,
-      properties : base.properties,
+      properties: base.properties,
       schedule: schedule,
       intensityFactor:
           intensityFactor, // Default intensity factor, can be adjusted as needed
@@ -252,17 +259,25 @@ class ScheduledWorkout extends Workout {
             timeOfDay: timeOfDay,
             plannedUnits: plannedUnits,
             completedUnits: completed,
+            actualValue: entry['actualValue'] as int?,
           ),
         );
       }
     }
     int intensityFactor = json['intensityFactor'] as int? ?? 1;
 
-    return ScheduledWorkout.fromBaseWorkout(
+    final result = ScheduledWorkout.fromBaseWorkout(
       baseWorkout,
       schedule,
-      intensityFactor
+      intensityFactor,
     );
+    result.historyId = json['historyId'] as String?;
+    result.planId = json['planId'] as String?;
+    final scheduledAt = json['scheduledAt'];
+    if (scheduledAt is Timestamp) result.scheduledDay = scheduledAt.toDate();
+    if (scheduledAt is String)
+      result.scheduledDay = DateTime.tryParse(scheduledAt);
+    return result;
   }
 
   Map<String, dynamic> toJson() {
@@ -274,10 +289,12 @@ class ScheduledWorkout extends Workout {
               'timeOfDay': entry.timeOfDay.name,
               'plannedUnits': entry.plannedUnits,
               'completedUnits': entry.completedUnits,
+              'actualValue': entry.actualValue,
             },
           )
           .toList(),
       'intensityFactor': intensityFactor,
+      'planId': planId,
     });
     return baseJson;
   }
@@ -288,10 +305,46 @@ class ScheduledWorkout extends Workout {
     // Map<String, dynamic> jsonData = toJson();
     // DateTime now = DateTime.now();
     // DateFormat df = DateFormat('yyyy-MM-dd');
-    uploadWorkoutToServer(this);
+    await uploadWorkoutToServer(this);
     // jsonData['day_planned'] = df.format(now);
     // String jsonString = jsonEncode(jsonData);
     // await prefs.setString('daily_workout_plan', jsonString);
+  }
+}
+
+/// A Daily Spin is a plan made up of one or more independent exercises.
+/// The exercises remain separate history records, so several plans per day and
+/// variable actual repetitions can be represented without changing `workouts`.
+class DailyWorkoutPlan {
+  DailyWorkoutPlan({required this.id, required this.workouts});
+
+  final String id;
+  final List<ScheduledWorkout> workouts;
+
+  bool get isCompleted =>
+      workouts.isNotEmpty &&
+      workouts.every((ScheduledWorkout workout) => workout.isCompleted);
+
+  double get progress {
+    final int planned = workouts.fold<int>(
+      0,
+      (int total, ScheduledWorkout workout) =>
+          total +
+          workout.schedule.fold<int>(
+            0,
+            (int sum, WorkoutStep step) => sum + step.plannedUnits,
+          ),
+    );
+    final int completed = workouts.fold<int>(
+      0,
+      (int total, ScheduledWorkout workout) =>
+          total +
+          workout.schedule.fold<int>(
+            0,
+            (int sum, WorkoutStep step) => sum + step.completedUnits,
+          ),
+    );
+    return planned == 0 ? 0 : (completed / planned).clamp(0, 1);
   }
 }
 
@@ -311,11 +364,13 @@ class WorkoutStep {
   TimeOfDay timeOfDay;
   int plannedUnits;
   int completedUnits;
+  int? actualValue;
 
   WorkoutStep({
     required this.timeOfDay,
     required this.plannedUnits,
     required this.completedUnits,
+    this.actualValue,
   });
 
   factory WorkoutStep.fromTuple((TimeOfDay, int, int) input) {

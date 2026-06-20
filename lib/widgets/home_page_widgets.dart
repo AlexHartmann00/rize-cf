@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:rize/helpers/rize_style_helpers.dart';
 import 'package:rize/types/workout.dart';
@@ -28,19 +27,19 @@ class CoachFloHomeHeader extends StatelessWidget {
               Text(
                 greeting,
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: -0.6,
-                    ),
+                  color: Colors.white,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: -0.6,
+                ),
               ),
               const SizedBox(height: 6),
               Text(
                 message,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Colors.white.withOpacity(0.64),
-                      height: 1.45,
-                      fontWeight: FontWeight.w500,
-                    ),
+                  color: Colors.white.withOpacity(0.64),
+                  height: 1.45,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
             ],
           ),
@@ -125,20 +124,20 @@ class CoachFloManifestoCard extends StatelessWidget {
               Text(
                 'Das Geheimnis des Erfolgs ist anzufangen.',
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w900,
-                      height: 1.08,
-                      letterSpacing: -0.6,
-                    ),
+                  color: Colors.white,
+                  fontWeight: FontWeight.w900,
+                  height: 1.08,
+                  letterSpacing: -0.6,
+                ),
               ),
               const SizedBox(height: 10),
               Text(
                 'Dein Training passt sich Deinem Niveau und Deinem Alltag an. '
                 'Heute zählt nicht perfekt – heute zählt gemacht.',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Colors.white.withOpacity(0.68),
-                      height: 1.5,
-                    ),
+                  color: Colors.white.withOpacity(0.68),
+                  height: 1.5,
+                ),
               ),
             ],
           ),
@@ -149,10 +148,7 @@ class CoachFloManifestoCard extends StatelessWidget {
 }
 
 class DailySpinHero extends StatelessWidget {
-  const DailySpinHero({
-    super.key,
-    required this.onStart,
-  });
+  const DailySpinHero({super.key, required this.onStart});
 
   final VoidCallback onStart;
 
@@ -210,19 +206,19 @@ class DailySpinHero extends StatelessWidget {
               Text(
                 'Dein Daily Spin',
                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: -0.8,
-                    ),
+                  color: Colors.white,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: -0.8,
+                ),
               ),
               const SizedBox(height: 7),
               Text(
                 'Eine Übung. Deine Intensität. Ein klarer Impuls für heute.',
                 style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      color: Colors.white.withOpacity(0.78),
-                      height: 1.4,
-                      fontWeight: FontWeight.w600,
-                    ),
+                  color: Colors.white.withOpacity(0.78),
+                  height: 1.4,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
               const SizedBox(height: 24),
               FilledButton.icon(
@@ -283,51 +279,51 @@ class HomePrinciplesRow extends StatelessWidget {
         return Wrap(
           spacing: gap,
           runSpacing: gap,
-          children: principles.map((_Principle principle) {
-            return SizedBox(
-              width: width,
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 8,
-                  vertical: 14,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.07),
-                  borderRadius: BorderRadius.circular(18),
-                  border: Border.all(
-                    color: Colors.white.withOpacity(0.08),
+          children: principles
+              .map((_Principle principle) {
+                return SizedBox(
+                  width: width,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 14,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.07),
+                      borderRadius: BorderRadius.circular(18),
+                      border: Border.all(color: Colors.white.withOpacity(0.08)),
+                    ),
+                    child: Column(
+                      children: <Widget>[
+                        Icon(principle.icon, color: rizeCyan, size: 21),
+                        const SizedBox(height: 8),
+                        Text(
+                          principle.title,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          principle.subtitle,
+                          textAlign: TextAlign.center,
+                          maxLines: 2,
+                          style: TextStyle(
+                            color: Colors.white.withOpacity(0.50),
+                            fontSize: 10,
+                            height: 1.25,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                child: Column(
-                  children: <Widget>[
-                    Icon(principle.icon, color: rizeCyan, size: 21),
-                    const SizedBox(height: 8),
-                    Text(
-                      principle.title,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w900,
-                      ),
-                    ),
-                    const SizedBox(height: 3),
-                    Text(
-                      principle.subtitle,
-                      textAlign: TextAlign.center,
-                      maxLines: 2,
-                      style: TextStyle(
-                        color: Colors.white.withOpacity(0.50),
-                        fontSize: 10,
-                        height: 1.25,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          }).toList(growable: false),
+                );
+              })
+              .toList(growable: false),
         );
       },
     );
@@ -342,6 +338,7 @@ class DailyWorkoutCard extends StatelessWidget {
     required this.onOpenTechnique,
     required this.schedule,
     required this.muscleVisualization,
+    this.eyebrow = 'DEIN WORKOUT HEUTE',
     this.onReset,
   });
 
@@ -350,6 +347,7 @@ class DailyWorkoutCard extends StatelessWidget {
   final VoidCallback onOpenTechnique;
   final Widget schedule;
   final Widget muscleVisualization;
+  final String eyebrow;
   final VoidCallback? onReset;
 
   @override
@@ -381,7 +379,7 @@ class DailyWorkoutCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
                     Text(
-                      'DEIN WORKOUT HEUTE',
+                      eyebrow,
                       style: TextStyle(
                         color: Colors.white.withOpacity(0.48),
                         fontSize: 11,
@@ -393,17 +391,17 @@ class DailyWorkoutCard extends StatelessWidget {
                     Text(
                       workout.name,
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: -0.4,
-                          ),
+                        color: Colors.white,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: -0.4,
+                      ),
                     ),
                   ],
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 18),
+          const SizedBox(height: 14),
           ClipRRect(
             borderRadius: BorderRadius.circular(999),
             child: LinearProgressIndicator(
@@ -424,11 +422,11 @@ class DailyWorkoutCard extends StatelessWidget {
               fontWeight: FontWeight.w700,
             ),
           ),
-          const SizedBox(height: 18),
+          const SizedBox(height: 14),
           schedule,
-          const SizedBox(height: 18),
+          const SizedBox(height: 12),
           muscleVisualization,
-          const SizedBox(height: 18),
+          const SizedBox(height: 12),
           Row(
             children: <Widget>[
               Expanded(
@@ -486,25 +484,18 @@ class CompletedWorkoutHero extends StatelessWidget {
             decoration: BoxDecoration(
               color: rizeGreen.withOpacity(0.14),
               shape: BoxShape.circle,
-              border: Border.all(
-                color: rizeGreen.withOpacity(0.34),
-                width: 2,
-              ),
+              border: Border.all(color: rizeGreen.withOpacity(0.34), width: 2),
             ),
-            child: const Icon(
-              Icons.check_rounded,
-              color: rizeGreen,
-              size: 42,
-            ),
+            child: const Icon(Icons.check_rounded, color: rizeGreen, size: 42),
           ),
           const SizedBox(height: 18),
           Text(
             'Für heute geschafft!',
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w900,
-                ),
+              color: Colors.white,
+              fontWeight: FontWeight.w900,
+            ),
           ),
           const SizedBox(height: 7),
           Text(
@@ -608,9 +599,7 @@ class HomeLoadingView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Center(
-      child: CircularProgressIndicator(color: rizeCyan),
-    );
+    return const Center(child: CircularProgressIndicator(color: rizeCyan));
   }
 }
 
@@ -651,9 +640,7 @@ class HomeErrorView extends StatelessWidget {
               Text(
                 message,
                 textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: Colors.white.withOpacity(0.58),
-                ),
+                style: TextStyle(color: Colors.white.withOpacity(0.58)),
               ),
               const SizedBox(height: 16),
               FilledButton.icon(

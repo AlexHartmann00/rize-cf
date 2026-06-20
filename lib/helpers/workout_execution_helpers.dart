@@ -39,19 +39,14 @@ IconData workoutTypeIcon(WorkoutType type) {
 }
 
 String workoutSideLabel(WorkoutExecutionSide side) {
-  return side == WorkoutExecutionSide.left
-      ? 'Linke Seite'
-      : 'Rechte Seite';
+  return side == WorkoutExecutionSide.left ? 'Linke Seite' : 'Rechte Seite';
 }
 
 String workoutSideShortLabel(WorkoutExecutionSide side) {
   return side == WorkoutExecutionSide.left ? 'Links' : 'Rechts';
 }
 
-double workoutExecutionProgress({
-  required int current,
-  required int target,
-}) {
+double workoutExecutionProgress({required int current, required int target}) {
   if (target <= 0) return 0;
   return (current / target).clamp(0.0, 1.0);
 }
@@ -83,10 +78,11 @@ String completionMessage(ScheduledWorkout workout) {
       : 'Du bist bis zum Ende drangeblieben.';
 }
 
-WorkoutStep completedWorkoutStep(WorkoutStep currentStep) {
+WorkoutStep completedWorkoutStep(WorkoutStep currentStep, {int? actualValue}) {
   return WorkoutStep(
     timeOfDay: currentStep.timeOfDay,
     plannedUnits: currentStep.plannedUnits,
     completedUnits: currentStep.plannedUnits,
+    actualValue: actualValue,
   );
 }

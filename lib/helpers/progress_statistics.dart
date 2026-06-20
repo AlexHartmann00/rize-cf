@@ -57,9 +57,9 @@ class ProgressStatistics {
     final Map<DateTime, DayImpact> impactByDay = <DateTime, DayImpact>{};
     DayImpact? lastImpact;
 
-    final List<WorkoutDayEntry> sorted = List<WorkoutDayEntry>.of(entries)
-      ..sort((WorkoutDayEntry a, WorkoutDayEntry b) =>
-          a.date.compareTo(b.date));
+    final List<WorkoutDayEntry> sorted = List<WorkoutDayEntry>.of(
+      entries,
+    )..sort((WorkoutDayEntry a, WorkoutDayEntry b) => a.date.compareTo(b.date));
 
     for (final WorkoutDayEntry entry in sorted) {
       final ScheduledWorkout workout = entry.workout;
@@ -71,15 +71,34 @@ class ProgressStatistics {
       completedUnits += completed;
 
       if (workout.workoutType == WorkoutType.dynamic) {
-        dynamicRepetitions +=
-            (workout.baseReps ?? 0) * workout.intensityFactor * completed;
+        dynamicRepetitions += workout.schedule.fold<int>(
+          0,
+          (int sum, WorkoutStep step) =>
+              sum +
+              (step.actualValue ??
+                  ((workout.baseReps ?? 0) *
+                      workout.intensityFactor *
+                      step.completedUnits)),
+        );
       } else {
-        staticSeconds +=
-            (workout.baseSeconds ?? 0) * workout.intensityFactor * completed;
+        staticSeconds += workout.schedule.fold<int>(
+          0,
+          (int sum, WorkoutStep step) =>
+              sum +
+              (step.actualValue ??
+                  ((workout.baseSeconds ?? 0) *
+                      workout.intensityFactor *
+                      step.completedUnits)),
+        );
       }
 
+      final DayImpact previousImpact =
+          impactByDay[day] ??
+          const DayImpact(score: 0, impactLevel: ImpactLevel.low);
+      final double combinedScore = (previousImpact.score + workout.impactScore)
+          .clamp(0, 1);
       final DayImpact impact = DayImpact(
-        score: workout.impactScore,
+        score: combinedScore,
         impactLevel: workout.impactLevel,
       );
       impactByDay[day] = impact;
@@ -98,15 +117,16 @@ class ProgressStatistics {
 }
 
 int completedWorkoutUnits(List<WorkoutStep> schedule) => schedule.fold<int>(
-      0,
-      (int total, WorkoutStep step) => total + step.completedUnits,
-    );
+  0,
+  (int total, WorkoutStep step) => total + step.completedUnits,
+);
 
 int currentStreak(Set<DateTime> activeDays, DateTime today) {
   if (activeDays.isEmpty) return 0;
 
-  final Set<DateTime> normalized =
-      activeDays.map<DateTime>(normalizeDate).toSet();
+  final Set<DateTime> normalized = activeDays
+      .map<DateTime>(normalizeDate)
+      .toSet();
   DateTime cursor = normalizeDate(today);
 
   if (!normalized.contains(cursor)) {
@@ -126,11 +146,8 @@ int currentStreak(Set<DateTime> activeDays, DateTime today) {
 int bestStreak(Set<DateTime> activeDays) {
   if (activeDays.isEmpty) return 0;
 
-  final List<DateTime> dates = activeDays
-      .map<DateTime>(normalizeDate)
-      .toSet()
-      .toList()
-    ..sort();
+  final List<DateTime> dates =
+      activeDays.map<DateTime>(normalizeDate).toSet().toList()..sort();
 
   int best = 1;
   int running = 1;
@@ -170,10 +187,6 @@ List<ProgressPoint> scorePointsForPeriod(
   final List<DateTime> days = daysEndingAt(end, count: dayCount).toList();
   return List<ProgressPoint>.generate(days.length, (int index) {
     final DateTime date = days[index];
-    return ProgressPoint(
-      index: index,
-      date: date,
-      value: scoreByDay[date],
-    );
+    return ProgressPoint(index: index, date: date, value: scoreByDay[date]);
   });
 }

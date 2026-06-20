@@ -11,14 +11,20 @@ List<WorkoutDayEntry> parseWorkoutHistory(
 
   for (final QueryDocumentSnapshot<Map<String, Object?>> document
       in documents) {
-    final DateTime? date = tryParseDateKey(document.id);
+    final Map<String, Object?> data = document.data();
+    final Object? scheduledAt = data['scheduledAt'];
+    final DateTime? date = scheduledAt is Timestamp
+        ? normalizeDate(scheduledAt.toDate())
+        : (data['dayKey'] is String
+              ? tryParseDateKey(data['dayKey']! as String)
+              : tryParseDateKey(document.id));
     if (date == null) continue;
 
     try {
       entries.add(
         WorkoutDayEntry(
           date: date,
-          workout: ScheduledWorkout.fromJson(toDynamicMap(document.data())),
+          workout: ScheduledWorkout.fromJson(toDynamicMap(data)),
         ),
       );
     } on Object {
