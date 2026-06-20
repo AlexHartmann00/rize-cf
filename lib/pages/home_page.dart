@@ -417,6 +417,7 @@ class _HomePageSlotMachineWidgetState extends State<HomePageSlotMachineWidget> {
         globals.userData?.intensityLevel ?? IntensityLevel.unknown();
 
     final bool isPro = globals.userData?.isPro == true;
+    final int requestedCount = isPro ? _exerciseCount.clamp(1, 5) : 1;
     final List<Workout> entitledWorkouts = availableWorkoutsForUser(
       workouts: globals.workoutLibrary,
       intensityScore: globals.userData?.intensityScore ?? 0,
@@ -436,11 +437,11 @@ class _HomePageSlotMachineWidgetState extends State<HomePageSlotMachineWidget> {
     final List<Workout> pool = List<Workout>.of(workouts)..shuffle(Random());
     final List<Workout> diverseSelection = selectDiverseWorkouts(
       workouts: pool,
-      count: _exerciseCount.clamp(1, 5),
+      count: requestedCount,
       muscleFilter: isPro ? _selectedMuscleGroups : const <String>{},
     );
 
-    if (diverseSelection.length < _exerciseCount) {
+    if (diverseSelection.length < requestedCount) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -465,9 +466,7 @@ class _HomePageSlotMachineWidgetState extends State<HomePageSlotMachineWidget> {
       final int intensityIndex = random.nextInt(intensities.length);
       final String planId = DateTime.now().microsecondsSinceEpoch.toString();
       final List<ScheduledWorkout> spunWorkouts =
-          List<ScheduledWorkout>.generate(_exerciseCount.clamp(1, 5), (
-            int index,
-          ) {
+          List<ScheduledWorkout>.generate(requestedCount, (int index) {
             final ScheduledWorkout item = ScheduledWorkout.fromBaseWorkout(
               diverseSelection[index],
               schedules[index == 0
@@ -623,80 +622,88 @@ class _DailySpinPanel extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 16),
-          const Align(
-            alignment: Alignment.centerLeft,
-            child: Text(
-              'Wie viel traust Du Dir heute zu?',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 15,
-                fontWeight: FontWeight.w900,
+          if (isPro) ...<Widget>[
+            const Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                'Wie viel traust Du Dir heute zu?',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w900,
+                ),
               ),
             ),
-          ),
-          const SizedBox(height: 10),
-          Row(
-            children: List<Widget>.generate(5, (int index) {
-              final int value = index + 1;
-              final bool selected = exerciseCount == value;
-              return Expanded(
-                child: Padding(
-                  padding: EdgeInsets.only(right: index == 4 ? 0 : 7),
-                  child: Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      onTap: isSpinning
-                          ? null
-                          : () => onExerciseCountChanged(value),
-                      borderRadius: BorderRadius.circular(14),
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 180),
-                        height: 48,
-                        alignment: Alignment.center,
-                        decoration: BoxDecoration(
-                          color: selected
-                              ? const Color(0xFF79D5FF)
-                              : Colors.white.withOpacity(0.07),
-                          borderRadius: BorderRadius.circular(14),
-                          border: Border.all(
+            const SizedBox(height: 10),
+            Row(
+              children: List<Widget>.generate(5, (int index) {
+                final int value = index + 1;
+                final bool selected = exerciseCount == value;
+                return Expanded(
+                  child: Padding(
+                    padding: EdgeInsets.only(right: index == 4 ? 0 : 7),
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: isSpinning
+                            ? null
+                            : () => onExerciseCountChanged(value),
+                        borderRadius: BorderRadius.circular(14),
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 180),
+                          height: 48,
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
                             color: selected
                                 ? const Color(0xFF79D5FF)
-                                : Colors.white.withOpacity(0.09),
+                                : Colors.white.withOpacity(0.07),
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(
+                              color: selected
+                                  ? const Color(0xFF79D5FF)
+                                  : Colors.white.withOpacity(0.09),
+                            ),
                           ),
-                        ),
-                        child: Text(
-                          '$value',
-                          style: TextStyle(
-                            color: selected
-                                ? const Color(0xFF0B417B)
-                                : Colors.white70,
-                            fontSize: 17,
-                            fontWeight: FontWeight.w900,
+                          child: Text(
+                            '$value',
+                            style: TextStyle(
+                              color: selected
+                                  ? const Color(0xFF0B417B)
+                                  : Colors.white70,
+                              fontSize: 17,
+                              fontWeight: FontWeight.w900,
+                            ),
                           ),
                         ),
                       ),
                     ),
                   ),
-                ),
-              );
-            }),
-          ),
-          const SizedBox(height: 9),
-          Text(
-            _challengeLabel(exerciseCount),
-            style: const TextStyle(
-              color: Color(0xFF9DDEF9),
-              fontSize: 12,
-              fontWeight: FontWeight.w800,
+                );
+              }),
             ),
-          ),
-          if (isPro) ...<Widget>[
+            const SizedBox(height: 9),
+            Text(
+              _challengeLabel(exerciseCount),
+              style: const TextStyle(
+                color: Color(0xFF9DDEF9),
+                fontSize: 12,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
             const SizedBox(height: 14),
             _MuscleFocusButton(
               selectedGroups: selectedMuscleGroups,
               onTap: isSpinning
                   ? null
                   : () => _selectMuscleGroups(context, workouts),
+            ),
+          ] else ...<Widget>[
+            ProFeatureLock(
+              title: 'Mehrere Übungen & Muskelfokus',
+              description:
+                  'Mit Pro bestimmst Du Tagesumfang und Muskelgruppen. Dein kostenloser Spin enthält eine passende Übung.',
+              onTap: () =>
+                  showProUpgradeSheet(context, source: 'spin_pro_features'),
             ),
           ],
           const SizedBox(height: 12),

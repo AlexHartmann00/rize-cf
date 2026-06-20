@@ -9,6 +9,8 @@ import 'package:rize/helpers/workout_execution_helpers.dart';
 import 'package:rize/types/workout.dart';
 import 'package:rize/widgets/rize_card.dart';
 import 'package:rize/widgets/workout_execution_widgets.dart';
+import 'package:rize/helpers/milestone_service.dart';
+import 'package:rize/widgets/milestone_widgets.dart';
 import 'package:rize/youtube.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
@@ -287,8 +289,16 @@ class _WorkoutExecutionPageState extends State<WorkoutExecutionPage> {
       );
 
       await uploadWorkoutToServer(widget.workout);
+      List<MilestoneState> milestones = const <MilestoneState>[];
+      try {
+        milestones = await evaluateAndClaimMilestones();
+      } catch (error) {
+        debugPrint('Milestone evaluation failed: $error');
+      }
       await WakelockPlus.disable();
 
+      if (!mounted) return;
+      await showMilestoneCelebration(context, milestones);
       if (!mounted) return;
       Navigator.of(context).pop(true);
     } catch (_) {

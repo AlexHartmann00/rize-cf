@@ -6,6 +6,8 @@ import 'package:rize/helpers/progress_firestore_parser.dart';
 import 'package:rize/helpers/progress_formatters.dart';
 import 'package:rize/helpers/progress_statistics.dart';
 import 'package:rize/widgets/progress_overview_widgets.dart';
+import 'package:rize/widgets/milestone_widgets.dart';
+import 'package:rize/types/workout.dart';
 
 class ProgressOverviewContent extends StatelessWidget {
   const ProgressOverviewContent({super.key, required this.userId});
@@ -81,6 +83,9 @@ class ProgressOverviewContent extends StatelessWidget {
                           today,
                         ),
                         scorePoints: scorePointsForPeriod(scores, today),
+                        history: entries
+                            .map((WorkoutDayEntry entry) => entry.workout)
+                            .toList(growable: false),
                       );
                     },
               );
@@ -96,12 +101,14 @@ class _ProgressDashboard extends StatelessWidget {
     required this.statistics,
     required this.impactPoints,
     required this.scorePoints,
+    required this.history,
   });
 
   final DateTime today;
   final ProgressStatistics statistics;
   final List<ProgressPoint> impactPoints;
   final List<ProgressPoint> scorePoints;
+  final List<ScheduledWorkout> history;
 
   @override
   Widget build(BuildContext context) {
@@ -180,6 +187,8 @@ class _ProgressDashboard extends StatelessWidget {
                   ),
                 ],
               ),
+              const SizedBox(height: 16),
+              MilestoneOverviewCard(history: history),
               const SizedBox(height: 16),
               ProgressChartCard(
                 impactPoints: impactPoints,

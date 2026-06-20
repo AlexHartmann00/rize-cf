@@ -7,6 +7,8 @@ import 'package:rize/pages/settings_page.dart';
 import 'package:rize/types/anamnesis.dart';
 import 'package:rize/widgets/anamnesis_questionnaire_flow.dart';
 import 'package:rize/widgets/pro_upgrade_cta.dart';
+import 'package:rize/helpers/milestone_service.dart';
+import 'package:rize/widgets/milestone_widgets.dart';
 
 Workout workout(String id, List<String> muscles) => Workout(
   id: id,
@@ -123,6 +125,40 @@ void main() {
     ]);
   });
 
+  test('career, weekly and monthly milestones use workout history', () {
+    final ScheduledWorkout completed = ScheduledWorkout.fromBaseWorkout(
+      workout('milestone', const <String>['chest', 'quadriceps']),
+      <WorkoutStep>[
+        WorkoutStep(
+          timeOfDay: TimeOfDay.any,
+          plannedUnits: 1,
+          completedUnits: 1,
+          actualValue: 100,
+        ),
+      ],
+      1,
+    )..scheduledDay = DateTime.now();
+
+    final states = buildMilestoneStates(<ScheduledWorkout>[completed]);
+
+    expect(
+      states
+          .firstWhere((state) => state.definition.id == 'first_workout')
+          .reached,
+      isTrue,
+    );
+    expect(
+      states.firstWhere((state) => state.definition.id == 'reps_100').reached,
+      isTrue,
+    );
+    expect(
+      states
+          .firstWhere((state) => state.definition.id == 'week_days_3')
+          .current,
+      1,
+    );
+  });
+
   testWidgets('round list stays within a narrow phone layout', (
     WidgetTester tester,
   ) async {
@@ -236,5 +272,26 @@ void main() {
     );
     await tester.tap(find.text('Mehr Abwechslung mit RIZE Pro'));
     expect(tapped, isTrue);
+  });
+
+  testWidgets('milestone overview fits a mobile viewport', (
+    WidgetTester tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(390, 844));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(
+          backgroundColor: Color(0xFF0D376D),
+          body: SingleChildScrollView(
+            child: MilestoneOverviewCard(history: <ScheduledWorkout>[]),
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text('Deine Meilensteine'), findsOneWidget);
+    expect(find.text('Gesamt'), findsOneWidget);
+    expect(tester.takeException(), isNull);
   });
 }

@@ -94,6 +94,95 @@ class ProUpgradeBanner extends StatelessWidget {
   }
 }
 
+class ProFeatureLock extends StatelessWidget {
+  const ProFeatureLock({
+    super.key,
+    required this.title,
+    required this.description,
+    required this.onTap,
+  });
+
+  final String title;
+  final String description;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(18),
+        child: Ink(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.065),
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: rizeOrange.withOpacity(0.24)),
+          ),
+          child: Row(
+            children: <Widget>[
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: rizeOrange.withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(
+                  Icons.lock_rounded,
+                  color: Color(0xFFFFB27D),
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 11),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Row(
+                      children: <Widget>[
+                        Expanded(
+                          child: Text(
+                            title,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                        ),
+                        const Text(
+                          'PRO',
+                          style: TextStyle(
+                            color: Color(0xFFFFB27D),
+                            fontSize: 10,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      description,
+                      style: const TextStyle(
+                        color: Colors.white54,
+                        fontSize: 11,
+                        height: 1.3,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(Icons.chevron_right_rounded, color: Colors.white38),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _ProUpgradeSheet extends StatefulWidget {
   const _ProUpgradeSheet();
 
