@@ -1,4 +1,5 @@
-DateTime normalizeDate(DateTime date) => DateTime(date.year, date.month, date.day);
+DateTime normalizeDate(DateTime date) =>
+    DateTime(date.year, date.month, date.day);
 
 DateTime? tryParseDateKey(String value) {
   final String input = value.trim();
@@ -44,19 +45,16 @@ Iterable<DateTime> daysEndingAt(DateTime end, {int count = 30}) sync* {
   }
 }
 
-Set<int> activeDayNumbersForMonth(
-  Set<DateTime> activeDays,
-  DateTime month,
-) {
+Set<int> activeDayNumbersForMonth(Set<DateTime> activeDays, DateTime month) {
   return activeDays
-      .where((DateTime date) =>
-          date.year == month.year && date.month == month.month)
+      .where(
+        (DateTime date) => date.year == month.year && date.month == month.month,
+      )
       .map((DateTime date) => date.day)
       .toSet();
 }
 
-int daysInMonth(DateTime month) =>
-    DateTime(month.year, month.month + 1, 0).day;
+int daysInMonth(DateTime month) => DateTime(month.year, month.month + 1, 0).day;
 
 int leadingCalendarCells(DateTime month) {
   final DateTime first = DateTime(month.year, month.month, 1);

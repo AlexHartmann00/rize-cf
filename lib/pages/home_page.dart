@@ -434,12 +434,19 @@ class _HomePageSlotMachineWidgetState extends State<HomePageSlotMachineWidget> {
     final List<int> intensities = buildIntensityFactors(level);
     final List<List<WorkoutStep>> schedules = buildScheduleOptions(level);
 
-    final List<Workout> pool = List<Workout>.of(workouts)..shuffle(Random());
-    final List<Workout> diverseSelection = selectDiverseWorkouts(
-      workouts: pool,
-      count: requestedCount,
-      muscleFilter: isPro ? _selectedMuscleGroups : const <String>{},
-    );
+    if (workouts.isEmpty || intensities.isEmpty || schedules.isEmpty) {
+      return;
+    }
+
+    final Random random = Random();
+    final List<Workout> pool = List<Workout>.of(workouts)..shuffle(random);
+    final List<Workout> diverseSelection = isPro
+        ? selectDiverseWorkouts(
+            workouts: pool,
+            count: requestedCount,
+            muscleFilter: _selectedMuscleGroups,
+          )
+        : <Workout>[pool[random.nextInt(pool.length)]];
 
     if (diverseSelection.length < requestedCount) {
       if (mounted) {
@@ -454,14 +461,9 @@ class _HomePageSlotMachineWidgetState extends State<HomePageSlotMachineWidget> {
       return;
     }
 
-    if (workouts.isEmpty || intensities.isEmpty || schedules.isEmpty) {
-      return;
-    }
-
     setState(() => _isSpinning = true);
 
     try {
-      final Random random = Random();
       final int scheduleIndex = random.nextInt(schedules.length);
       final int intensityIndex = random.nextInt(intensities.length);
       final String planId = DateTime.now().microsecondsSinceEpoch.toString();
@@ -599,7 +601,7 @@ class _DailySpinPanel extends StatelessWidget {
             children: <Widget>[
               const Expanded(
                 child: Text(
-                  'Dein Daily Spin',
+                  'Deine Tagesaufgabe',
                   style: TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.w900,
@@ -615,7 +617,7 @@ class _DailySpinPanel extends StatelessWidget {
             ],
           ),
           Text(
-            'Wir kombinieren Übung, Intensität und Umfang passend zu Deinem Level.',
+            'Bereit für Deine Tagesaufgabe? Wir kombinieren Übung, Intensität und Umfang passend zu Deinem Level.',
             style: TextStyle(
               color: Colors.white.withOpacity(0.58),
               height: 1.4,
@@ -701,7 +703,7 @@ class _DailySpinPanel extends StatelessWidget {
             ProFeatureLock(
               title: 'Mehrere Übungen & Muskelfokus',
               description:
-                  'Mit Pro bestimmst Du Tagesumfang und Muskelgruppen. Dein kostenloser Spin enthält eine passende Übung.',
+                  'Mit Pro bestimmst Du Tagesumfang und Muskelgruppen. Deine kostenlose Tagesaufgabe enthält eine passende Übung.',
               onTap: () =>
                   showProUpgradeSheet(context, source: 'spin_pro_features'),
             ),

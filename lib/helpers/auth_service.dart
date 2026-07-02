@@ -1,4 +1,3 @@
-
 import 'dart:async';
 
 import 'package:firebase_auth/firebase_auth.dart';
@@ -18,16 +17,10 @@ class AuthResult {
   });
 
   const AuthResult.success(UserCredential credential)
-      : this._(
-          success: true,
-          userCredential: credential,
-        );
+    : this._(success: true, userCredential: credential);
 
   const AuthResult.failure(String message)
-      : this._(
-          success: false,
-          errorMessage: message,
-        );
+    : this._(success: false, errorMessage: message);
 
   final bool success;
   final UserCredential? userCredential;
@@ -35,19 +28,12 @@ class AuthResult {
 }
 
 class PasswordResetResult {
-  const PasswordResetResult._({
-    required this.success,
-    this.errorMessage,
-  });
+  const PasswordResetResult._({required this.success, this.errorMessage});
 
-  const PasswordResetResult.success()
-      : this._(success: true);
+  const PasswordResetResult.success() : this._(success: true);
 
   const PasswordResetResult.failure(String message)
-      : this._(
-          success: false,
-          errorMessage: message,
-        );
+    : this._(success: false, errorMessage: message);
 
   final bool success;
   final String? errorMessage;
@@ -57,9 +43,8 @@ class AuthService {
   AuthService({
     FirebaseAuth? firebaseAuth,
     FirebaseMessaging? firebaseMessaging,
-  })  : _firebaseAuth = firebaseAuth ?? FirebaseAuth.instance,
-        _firebaseMessaging =
-            firebaseMessaging ?? FirebaseMessaging.instance;
+  }) : _firebaseAuth = firebaseAuth ?? FirebaseAuth.instance,
+       _firebaseMessaging = firebaseMessaging ?? FirebaseMessaging.instance;
 
   final FirebaseAuth _firebaseAuth;
   final FirebaseMessaging _firebaseMessaging;
@@ -68,8 +53,7 @@ class AuthService {
 
   User? get currentUser => _firebaseAuth.currentUser;
 
-  Stream<User?> get authStateChanges =>
-      _firebaseAuth.authStateChanges();
+  Stream<User?> get authStateChanges => _firebaseAuth.authStateChanges();
 
   Future<AuthResult> signInWithEmailAndPassword(
     String email,
@@ -84,19 +68,17 @@ class AuthService {
     }
 
     try {
-      final UserCredential credential =
-          await _firebaseAuth.signInWithEmailAndPassword(
-        email: normalizedEmail,
-        password: password,
-      );
+      final UserCredential credential = await _firebaseAuth
+          .signInWithEmailAndPassword(
+            email: normalizedEmail,
+            password: password,
+          );
 
       await _configurePushNotifications();
 
       return AuthResult.success(credential);
     } on FirebaseAuthException catch (error) {
-      return AuthResult.failure(
-        _messageForFirebaseAuthException(error),
-      );
+      return AuthResult.failure(_messageForFirebaseAuthException(error));
     } catch (error, stackTrace) {
       debugPrint('Unexpected sign-in error: $error');
       debugPrintStack(stackTrace: stackTrace);
@@ -116,15 +98,11 @@ class AuthService {
     final String normalizedDisplayName = displayName.trim();
 
     if (normalizedDisplayName.isEmpty) {
-      return const AuthResult.failure(
-        'Bitte gib Deinen Namen ein.',
-      );
+      return const AuthResult.failure('Bitte gib Deinen Namen ein.');
     }
 
     if (normalizedEmail.isEmpty) {
-      return const AuthResult.failure(
-        'Bitte gib Deine E-Mail-Adresse ein.',
-      );
+      return const AuthResult.failure('Bitte gib Deine E-Mail-Adresse ein.');
     }
 
     if (password.length < 6) {
@@ -134,11 +112,11 @@ class AuthService {
     }
 
     try {
-      final UserCredential credential =
-          await _firebaseAuth.createUserWithEmailAndPassword(
-        email: normalizedEmail,
-        password: password,
-      );
+      final UserCredential credential = await _firebaseAuth
+          .createUserWithEmailAndPassword(
+            email: normalizedEmail,
+            password: password,
+          );
 
       final User? user = credential.user;
 
@@ -152,9 +130,7 @@ class AuthService {
 
       return AuthResult.success(credential);
     } on FirebaseAuthException catch (error) {
-      return AuthResult.failure(
-        _messageForFirebaseAuthException(error),
-      );
+      return AuthResult.failure(_messageForFirebaseAuthException(error));
     } catch (error, stackTrace) {
       debugPrint('Unexpected registration error: $error');
       debugPrintStack(stackTrace: stackTrace);
@@ -165,9 +141,7 @@ class AuthService {
     }
   }
 
-  Future<PasswordResetResult> sendPasswordResetEmail(
-    String email,
-  ) async {
+  Future<PasswordResetResult> sendPasswordResetEmail(String email) async {
     final String normalizedEmail = email.trim();
 
     if (normalizedEmail.isEmpty) {
@@ -177,9 +151,7 @@ class AuthService {
     }
 
     try {
-      await _firebaseAuth.sendPasswordResetEmail(
-        email: normalizedEmail,
-      );
+      await _firebaseAuth.sendPasswordResetEmail(email: normalizedEmail);
 
       return const PasswordResetResult.success();
     } on FirebaseAuthException catch (error) {
@@ -267,28 +239,23 @@ class AuthService {
 
       await _tokenRefreshSubscription?.cancel();
 
-      _tokenRefreshSubscription =
-          _firebaseMessaging.onTokenRefresh.listen(
-        (String refreshedToken) async {
-          try {
-            await updateUserFCMToken(refreshedToken);
-          } catch (error, stackTrace) {
-            debugPrint(
-              'Could not persist refreshed FCM token: $error',
-            );
-            debugPrintStack(stackTrace: stackTrace);
-          }
-        },
-      );
+      _tokenRefreshSubscription = _firebaseMessaging.onTokenRefresh.listen((
+        String refreshedToken,
+      ) async {
+        try {
+          await updateUserFCMToken(refreshedToken);
+        } catch (error, stackTrace) {
+          debugPrint('Could not persist refreshed FCM token: $error');
+          debugPrintStack(stackTrace: stackTrace);
+        }
+      });
     } catch (error, stackTrace) {
       debugPrint('Push notification setup failed: $error');
       debugPrintStack(stackTrace: stackTrace);
     }
   }
 
-  String _messageForFirebaseAuthException(
-    FirebaseAuthException error,
-  ) {
+  String _messageForFirebaseAuthException(FirebaseAuthException error) {
     switch (error.code) {
       case 'invalid-email':
         return 'Diese E-Mail-Adresse ist nicht gültig.';
@@ -311,8 +278,7 @@ class AuthService {
       case 'requires-recent-login':
         return 'Bitte melde Dich erneut an und wiederhole den Vorgang.';
       default:
-        return error.message ??
-            'Es ist ein unbekannter Fehler aufgetreten.';
+        return error.message ?? 'Es ist ein unbekannter Fehler aufgetreten.';
     }
   }
 }

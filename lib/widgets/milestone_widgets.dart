@@ -254,52 +254,159 @@ class _MilestoneProgressRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: state.reached
-              ? rizeGreen.withOpacity(0.12)
-              : Colors.white.withOpacity(0.055),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () => _showMilestoneDetails(context, state),
           borderRadius: BorderRadius.circular(16),
+          child: Ink(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: state.reached
+                  ? rizeGreen.withOpacity(0.12)
+                  : Colors.white.withOpacity(0.055),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Row(
+              children: <Widget>[
+                Text(
+                  state.definition.emoji,
+                  style: const TextStyle(fontSize: 25),
+                ),
+                const SizedBox(width: 11),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Text(
+                        state.definition.title,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      const SizedBox(height: 5),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(99),
+                        child: LinearProgressIndicator(
+                          value: state.progress,
+                          minHeight: 5,
+                          backgroundColor: Colors.white10,
+                          color: state.reached ? rizeGreen : rizeCyan,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Text(
+                  state.reached ? '✓' : state.progressLabel,
+                  style: TextStyle(
+                    color: state.reached ? rizeGreen : Colors.white54,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                const SizedBox(width: 6),
+                const Icon(
+                  Icons.info_outline_rounded,
+                  color: Colors.white38,
+                  size: 16,
+                ),
+              ],
+            ),
+          ),
         ),
-        child: Row(
-          children: <Widget>[
-            Text(state.definition.emoji, style: const TextStyle(fontSize: 25)),
-            const SizedBox(width: 11),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  Text(
-                    state.definition.title,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                  const SizedBox(height: 5),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(99),
-                    child: LinearProgressIndicator(
-                      value: state.progress,
-                      minHeight: 5,
-                      backgroundColor: Colors.white10,
-                      color: state.reached ? rizeGreen : rizeCyan,
-                    ),
-                  ),
-                ],
+      ),
+    );
+  }
+
+  Future<void> _showMilestoneDetails(
+    BuildContext context,
+    MilestoneState state,
+  ) {
+    return showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: const Color(0xFF102F55),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      builder: (context) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(22, 20, 22, 22),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: <Widget>[
+              Text(
+                state.definition.emoji,
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 44),
               ),
-            ),
-            const SizedBox(width: 10),
-            Text(
-              state.reached ? '✓' : state.progressLabel,
-              style: TextStyle(
-                color: state.reached ? rizeGreen : Colors.white54,
-                fontSize: 11,
-                fontWeight: FontWeight.w900,
+              const SizedBox(height: 12),
+              Text(
+                state.definition.title,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 24,
+                  fontWeight: FontWeight.w900,
+                ),
               ),
-            ),
-          ],
+              const SizedBox(height: 8),
+              Text(
+                state.description,
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: Colors.white60, height: 1.45),
+              ),
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.07),
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(color: Colors.white.withOpacity(0.08)),
+                ),
+                child: Column(
+                  children: <Widget>[
+                    Text(
+                      state.progressLabel,
+                      style: TextStyle(
+                        color: state.reached ? rizeGreen : rizeCyan,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    const SizedBox(height: 7),
+                    Text(
+                      state.comparison,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        height: 1.4,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 18),
+              FilledButton(
+                onPressed: () => Navigator.pop(context),
+                style: FilledButton.styleFrom(
+                  minimumSize: const Size.fromHeight(52),
+                  backgroundColor: Colors.white,
+                  foregroundColor: const Color(0xFF10539E),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                ),
+                child: const Text(
+                  'VERSTANDEN',
+                  style: TextStyle(fontWeight: FontWeight.w900),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

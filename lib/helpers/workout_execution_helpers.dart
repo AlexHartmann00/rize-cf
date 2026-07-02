@@ -29,7 +29,7 @@ String workoutTargetLabel(ScheduledWorkout workout) {
 }
 
 String workoutTypeLabel(WorkoutType type) {
-  return type == WorkoutType.dynamic ? 'Dynamisch' : 'Statisch';
+  return type == WorkoutType.dynamic ? 'Wiederholungen' : 'Zeit';
 }
 
 IconData workoutTypeIcon(WorkoutType type) {

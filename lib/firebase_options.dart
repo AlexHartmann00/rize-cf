@@ -65,5 +65,4 @@ class DefaultFirebaseOptions {
     storageBucket: 'rize-11838.firebasestorage.app',
     iosBundleId: 'de.coach-flo.rize',
   );
-
 }

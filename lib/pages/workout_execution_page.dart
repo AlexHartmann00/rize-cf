@@ -117,28 +117,6 @@ class _WorkoutExecutionPageState extends State<WorkoutExecutionPage> {
     });
   }
 
-  Future<void> _incrementRep() async {
-    if (_phase != WorkoutExecutionPhase.active || !_isDynamic) return;
-
-    final int next = (_currentValue + 1).clamp(0, _target);
-    setState(() => _currentValue = next);
-
-    if (next >= _target) {
-      await HapticFeedback.heavyImpact();
-      await Future<void>.delayed(const Duration(milliseconds: 220));
-      await _completeCurrentSubStep();
-    } else {
-      await HapticFeedback.selectionClick();
-    }
-  }
-
-  Future<void> _decrementRep() async {
-    if (!_isDynamic || _currentValue <= 0) return;
-
-    setState(() => _currentValue -= 1);
-    await HapticFeedback.lightImpact();
-  }
-
   void _setRepValue(int value) {
     if (_phase != WorkoutExecutionPhase.active || !_isDynamic) return;
     setState(() => _currentValue = value);
@@ -408,9 +386,7 @@ class _WorkoutExecutionPageState extends State<WorkoutExecutionPage> {
                       current: _currentValue,
                       target: _target,
                       paused: _phase == WorkoutExecutionPhase.paused,
-                      onIncrement: _incrementRep,
                       onChanged: _setRepValue,
-                      onDecrement: _decrementRep,
                       onPauseToggle: _togglePause,
                       onFinishEarly: _completeCurrentSubStep,
                     )

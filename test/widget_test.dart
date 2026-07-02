@@ -201,7 +201,7 @@ void main() {
     await tester.pump();
 
     expect(find.text('Einstellungen'), findsOneWidget);
-    expect(find.text('Daily-Spin-Erinnerung'), findsOneWidget);
+    expect(find.text('Tagesaufgaben-Erinnerung'), findsOneWidget);
     expect(find.byType(AppBar), findsNothing);
     expect(tester.takeException(), isNull);
   });

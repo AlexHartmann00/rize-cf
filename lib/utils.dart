@@ -29,7 +29,6 @@ Duration parseDuration(String input) {
   }
 }
 
-
 bool timeOfDayIsCurrent(TimeOfDay timeOfDay) {
   DateTime now = DateTime.now();
   bool inCorrectTime =
@@ -99,34 +98,34 @@ int computeCurrentStreakFromHistory(List<ScheduledWorkout> history) {
   return streak;
 }
 
-class Time{
-    final int hour;
-    final int minute;
-    Time(this.hour, this.minute);
+class Time {
+  final int hour;
+  final int minute;
+  Time(this.hour, this.minute);
 
-    factory Time.parse(String input) {
-      if(input.isEmpty) {
-        return Time(-1, -1);
-      }
-      List<String> parts = input.split(':');
-      if (parts.length != 2) {
-        throw FormatException('Invalid time format');
-      }
-      int hour = int.parse(parts[0]);
-      int minute = int.parse(parts[1]);
-      return Time(hour, minute);
+  factory Time.parse(String input) {
+    if (input.isEmpty) {
+      return Time(-1, -1);
     }
+    List<String> parts = input.split(':');
+    if (parts.length != 2) {
+      throw FormatException('Invalid time format');
+    }
+    int hour = int.parse(parts[0]);
+    int minute = int.parse(parts[1]);
+    return Time(hour, minute);
+  }
 
-    TimeOfDay toTimeOfDay() {
-      if(hour == -1 && minute == -1) {
-        return TimeOfDay.any;
-      }
-      if(hour < 12) {
-        return TimeOfDay.morning;
-      }
-      if(hour < 17) {
-        return TimeOfDay.afternoon;
-      }
-      return TimeOfDay.evening;
+  TimeOfDay toTimeOfDay() {
+    if (hour == -1 && minute == -1) {
+      return TimeOfDay.any;
     }
+    if (hour < 12) {
+      return TimeOfDay.morning;
+    }
+    if (hour < 17) {
+      return TimeOfDay.afternoon;
+    }
+    return TimeOfDay.evening;
+  }
 }

@@ -12,9 +12,9 @@ class MuscleGroup {
   }
 
   Map<String, dynamic> toJson() => {
-        "name": name,
-        "muscleArea": muscleArea.name,
-      };
+    "name": name,
+    "muscleArea": muscleArea.name,
+  };
 }
 
 class MuscleArea {

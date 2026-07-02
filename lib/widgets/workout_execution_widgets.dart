@@ -234,9 +234,7 @@ class DynamicRepControl extends StatelessWidget {
     required this.current,
     required this.target,
     required this.paused,
-    required this.onIncrement,
     required this.onChanged,
-    required this.onDecrement,
     required this.onPauseToggle,
     required this.onFinishEarly,
   });
@@ -244,9 +242,7 @@ class DynamicRepControl extends StatelessWidget {
   final int current;
   final int target;
   final bool paused;
-  final VoidCallback onIncrement;
   final ValueChanged<int> onChanged;
-  final VoidCallback onDecrement;
   final VoidCallback onPauseToggle;
   final VoidCallback onFinishEarly;
 
@@ -358,7 +354,6 @@ class DynamicRepControl extends StatelessWidget {
         WorkoutExecutionControls(
           paused: paused,
           onPauseToggle: onPauseToggle,
-          onUndo: current > 0 ? onDecrement : null,
           onFinishEarly: onFinishEarly,
         ),
       ],

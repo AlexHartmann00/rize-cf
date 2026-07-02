@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:rize/base_widgets.dart';
@@ -23,17 +22,12 @@ class WelcomePage extends StatefulWidget {
 }
 
 class _WelcomePageState extends State<WelcomePage> {
-  final GlobalKey<FormState> _authFormKey =
-      GlobalKey<FormState>();
-  final GlobalKey<FormState> _passwordResetFormKey =
-      GlobalKey<FormState>();
+  final GlobalKey<FormState> _authFormKey = GlobalKey<FormState>();
+  final GlobalKey<FormState> _passwordResetFormKey = GlobalKey<FormState>();
 
-  final TextEditingController _emailController =
-      TextEditingController();
-  final TextEditingController _passwordController =
-      TextEditingController();
-  final TextEditingController _displayNameController =
-      TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _displayNameController = TextEditingController();
 
   WelcomeView _view = WelcomeView.intro;
   bool _isLoading = false;
@@ -58,8 +52,7 @@ class _WelcomePageState extends State<WelcomePage> {
         child: SafeArea(
           child: AutofillGroup(
             child: SingleChildScrollView(
-              keyboardDismissBehavior:
-                  ScrollViewKeyboardDismissBehavior.onDrag,
+              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
               padding: const EdgeInsets.fromLTRB(18, 26, 18, 28),
               child: Center(
                 child: ConstrainedBox(
@@ -72,21 +65,19 @@ class _WelcomePageState extends State<WelcomePage> {
                         duration: const Duration(milliseconds: 260),
                         switchInCurve: Curves.easeOut,
                         switchOutCurve: Curves.easeIn,
-                        transitionBuilder: (
-                          Widget child,
-                          Animation<double> animation,
-                        ) {
-                          return FadeTransition(
-                            opacity: animation,
-                            child: SlideTransition(
-                              position: Tween<Offset>(
-                                begin: const Offset(0, 0.035),
-                                end: Offset.zero,
-                              ).animate(animation),
-                              child: child,
-                            ),
-                          );
-                        },
+                        transitionBuilder:
+                            (Widget child, Animation<double> animation) {
+                              return FadeTransition(
+                                opacity: animation,
+                                child: SlideTransition(
+                                  position: Tween<Offset>(
+                                    begin: const Offset(0, 0.035),
+                                    end: Offset.zero,
+                                  ).animate(animation),
+                                  child: child,
+                                ),
+                              );
+                            },
                         child: _buildCurrentView(),
                       ),
                     ],
@@ -136,12 +127,9 @@ class _WelcomePageState extends State<WelcomePage> {
           isLoading: _isLoading,
           onSubmit: _submitAuthentication,
           onBack: _returnToAuthChoice,
-          onTogglePasswordVisibility:
-              _togglePasswordVisibility,
+          onTogglePasswordVisibility: _togglePasswordVisibility,
           onForgotPassword: () {
-            setState(
-              () => _view = WelcomeView.passwordReset,
-            );
+            setState(() => _view = WelcomeView.passwordReset);
           },
         );
 
@@ -157,8 +145,7 @@ class _WelcomePageState extends State<WelcomePage> {
           isLoading: _isLoading,
           onSubmit: _submitAuthentication,
           onBack: _returnToAuthChoice,
-          onTogglePasswordVisibility:
-              _togglePasswordVisibility,
+          onTogglePasswordVisibility: _togglePasswordVisibility,
         );
 
       case WelcomeView.passwordReset:
@@ -197,14 +184,12 @@ class _WelcomePageState extends State<WelcomePage> {
     final AuthResult result;
 
     if (isLogin) {
-      result = await authServiceNotifier.value
-          .signInWithEmailAndPassword(
+      result = await authServiceNotifier.value.signInWithEmailAndPassword(
         _emailController.text,
         _passwordController.text,
       );
     } else {
-      result = await authServiceNotifier.value
-          .registerWithEmailAndPassword(
+      result = await authServiceNotifier.value.registerWithEmailAndPassword(
         _emailController.text,
         _passwordController.text,
         _displayNameController.text,
@@ -217,8 +202,7 @@ class _WelcomePageState extends State<WelcomePage> {
 
     if (!result.success) {
       _showError(
-        result.errorMessage ??
-            'Der Vorgang konnte nicht abgeschlossen werden.',
+        result.errorMessage ?? 'Der Vorgang konnte nicht abgeschlossen werden.',
       );
       return;
     }
@@ -226,26 +210,21 @@ class _WelcomePageState extends State<WelcomePage> {
     TextInput.finishAutofillContext();
 
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute<void>(
-        builder: (_) => const MyHomePage(title: 'RIZE'),
-      ),
+      MaterialPageRoute<void>(builder: (_) => const MyHomePage(title: 'RIZE')),
     );
   }
 
   Future<void> _submitPasswordReset() async {
     FocusManager.instance.primaryFocus?.unfocus();
 
-    if (!(_passwordResetFormKey.currentState?.validate() ??
-        false)) {
+    if (!(_passwordResetFormKey.currentState?.validate() ?? false)) {
       return;
     }
 
     setState(() => _isLoading = true);
 
-    final PasswordResetResult result =
-        await authServiceNotifier.value.sendPasswordResetEmail(
-      _emailController.text,
-    );
+    final PasswordResetResult result = await authServiceNotifier.value
+        .sendPasswordResetEmail(_emailController.text);
 
     if (!mounted) return;
 
@@ -253,8 +232,7 @@ class _WelcomePageState extends State<WelcomePage> {
 
     if (!result.success) {
       _showError(
-        result.errorMessage ??
-            'Der Reset-Link konnte nicht versendet werden.',
+        result.errorMessage ?? 'Der Reset-Link konnte nicht versendet werden.',
       );
       return;
     }
@@ -275,19 +253,14 @@ class _WelcomePageState extends State<WelcomePage> {
   }
 
   void _togglePasswordVisibility() {
-    setState(
-      () => _obscurePassword = !_obscurePassword,
-    );
+    setState(() => _obscurePassword = !_obscurePassword);
   }
 
   void _showError(String message) {
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(
-        SnackBar(
-          behavior: SnackBarBehavior.floating,
-          content: Text(message),
-        ),
+        SnackBar(behavior: SnackBarBehavior.floating, content: Text(message)),
       );
   }
 }

@@ -14,20 +14,19 @@ class MuscleVisualizer {
 }
 
 class MuscleVisualization extends StatelessWidget {
-  MuscleVisualization({super.key, required this.workout});
+  const MuscleVisualization({
+    super.key,
+    required this.workout,
+    this.compact = false,
+  });
 
-  Workout workout;
+  final Workout workout;
+  final bool compact;
 
   @override
   Widget build(BuildContext context) {
-    //print('Muscle groups to visualize: ${workout.muscleGroups}, ${'assets/muscle_graphics/front/${workout.muscleGroups[0].toLowerCase()}.png'}');
-    Color intensityColor = Color.lerp(
-      Colors.green,
-      Colors.red,
-      workout.impactScore,
-    )!;
-
-    //TODO: Muscle group color gradient (ordered, first is most used)
+    const Color primaryMuscleColor = Color(0xFFE93B3B);
+    const Color secondaryMuscleColor = Color(0xFFFF8A3D);
 
     return Container(
       padding: const EdgeInsets.all(12),
@@ -38,51 +37,11 @@ class MuscleVisualization extends StatelessWidget {
       ),
       child: Row(
         children: <Widget>[
-          SizedBox(
-            width: 100,
-            height: 74,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                Stack(
-                  children: <Widget>[
-                    Image.asset(
-                      'assets/muscle_graphics/front/base_front.png',
-                      height: 72,
-                      color: Colors.white.withOpacity(0.55),
-                    ),
-                    ...workout.usedMuscleGroups.map(
-                      (group) => Image.asset(
-                        'assets/muscle_graphics/front/${group.toLowerCase()}.png',
-                        color: intensityColor,
-                        height: 72,
-                        errorBuilder: (context, error, stackTrace) =>
-                            SizedBox.shrink(),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(width: 10),
-                Stack(
-                  children: <Widget>[
-                    Image.asset(
-                      'assets/muscle_graphics/back/base_back.png',
-                      height: 72,
-                      color: Colors.white.withOpacity(0.55),
-                    ),
-                    ...workout.usedMuscleGroups.map(
-                      (group) => Image.asset(
-                        'assets/muscle_graphics/back/${group.toLowerCase()}.png',
-                        color: intensityColor,
-                        height: 72,
-                        errorBuilder: (context, error, stackTrace) =>
-                            SizedBox.shrink(),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
+          _MuscleBodies(
+            groups: workout.usedMuscleGroups,
+            height: compact ? 62 : 72,
+            primaryColor: primaryMuscleColor,
+            secondaryColor: secondaryMuscleColor,
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -115,6 +74,89 @@ class MuscleVisualization extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _MuscleBodies extends StatelessWidget {
+  const _MuscleBodies({
+    required this.groups,
+    required this.height,
+    required this.primaryColor,
+    required this.secondaryColor,
+  });
+
+  final List<String> groups;
+  final double height;
+  final Color primaryColor;
+  final Color secondaryColor;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: height * 1.4,
+      height: height + 2,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: <Widget>[
+          _BodyStack(
+            isFront: true,
+            groups: groups,
+            height: height,
+            primaryColor: primaryColor,
+            secondaryColor: secondaryColor,
+          ),
+          SizedBox(width: height * 0.13),
+          _BodyStack(
+            isFront: false,
+            groups: groups,
+            height: height,
+            primaryColor: primaryColor,
+            secondaryColor: secondaryColor,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _BodyStack extends StatelessWidget {
+  const _BodyStack({
+    required this.isFront,
+    required this.groups,
+    required this.height,
+    required this.primaryColor,
+    required this.secondaryColor,
+  });
+
+  final bool isFront;
+  final List<String> groups;
+  final double height;
+  final Color primaryColor;
+  final Color secondaryColor;
+
+  @override
+  Widget build(BuildContext context) {
+    final String side = isFront ? 'front' : 'back';
+    return Stack(
+      children: <Widget>[
+        Image.asset(
+          'assets/muscle_graphics/$side/base_$side.png',
+          height: height,
+          color: Colors.white,
+          colorBlendMode: BlendMode.srcIn,
+        ),
+        ...groups.indexed.map(
+          (entry) => Image.asset(
+            'assets/muscle_graphics/$side/${entry.$2.toLowerCase()}.png',
+            color: entry.$1 == 0 ? primaryColor : secondaryColor,
+            colorBlendMode: BlendMode.srcIn,
+            height: height,
+            errorBuilder: (context, error, stackTrace) =>
+                const SizedBox.shrink(),
+          ),
+        ),
+      ],
     );
   }
 }

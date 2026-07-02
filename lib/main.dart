@@ -14,15 +14,22 @@ import 'package:rize/widgets/muscle_visualizer.dart';
 import 'package:rize/pages/progress_overview_content.dart';
 import 'package:rize/pages/workout_library_page.dart';
 
-import 'package:rize/widgets/slot_machine.dart' show SlotMachine, SlotMachineController;
+import 'package:rize/widgets/slot_machine.dart'
+    show SlotMachine, SlotMachineController;
 import 'package:rize/types/anamnesis.dart';
 import 'package:rize/types/config.dart' show IntensityLevel;
 import 'package:rize/types/user.dart' show UserData;
 import 'package:rize/types/workout.dart';
 import 'package:rize/utils.dart'
-    show timeOfDayIsCurrent, timeOfDayIsPast, workoutScheduleToString, computeCurrentStreakFromHistory, Time;
+    show
+        timeOfDayIsCurrent,
+        timeOfDayIsPast,
+        workoutScheduleToString,
+        computeCurrentStreakFromHistory,
+        Time;
 import 'package:rize/widgets.dart';
-import 'package:rize/widgets/workout_library_widgets.dart' show WorkoutSummaryWidget;
+import 'package:rize/widgets/workout_library_widgets.dart'
+    show WorkoutSummaryWidget;
 import 'package:rize/workout_library.dart';
 import 'package:flutter/material.dart' hide TimeOfDay;
 import 'dart:convert';
@@ -85,7 +92,7 @@ void main() async {
       criticalAlert: false,
       provisional: true,
       sound: true,
-      providesAppNotificationSettings: true
+      providesAppNotificationSettings: true,
     );
     await Future.delayed(Duration(seconds: 1));
     String? apnsToken = await messaging.getAPNSToken();
@@ -252,7 +259,6 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 }
 
-
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
 
@@ -278,7 +284,7 @@ class _SettingsPageState extends State<SettingsPage> {
       bottomNavigationBar: null,
       body: Column(
         children: [
-          SizedBox(height: 18, width: MediaQuery.sizeOf(context).width,),
+          SizedBox(height: 18, width: MediaQuery.sizeOf(context).width),
           Text(
             'Einstellungen',
             style: Theme.of(context).textTheme.headlineMedium?.copyWith(
@@ -289,9 +295,9 @@ class _SettingsPageState extends State<SettingsPage> {
           const SizedBox(height: 12),
           Text(
             'Hier kannst du deine App-Einstellungen anpassen.',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Colors.white,
-            )
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: Colors.white),
           ),
           _sectionHeader('Benachrichtigungen'),
           _menuItemContainer(
@@ -300,70 +306,110 @@ class _SettingsPageState extends State<SettingsPage> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    Text('Tägliche Erinnerung, den Spin auszuführen', style: TextStyle(color: Colors.white),),
-                    Switch(value: reminderTime != null, onChanged: (x){
-                      if(reminderTime == null){
-                        setState(() {
-                          reminderChangesMade = true;
-                          reminderTime = Time(7,0);
-                        });
-                      }else{
-                        setState(() {
-                          reminderChangesMade = true;
-                          reminderTime = null;
-                        });
-                      }
-                      
-                      
-                    })
+                    Text(
+                      'Tägliche Erinnerung an die Tagesaufgabe',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                    Switch(
+                      value: reminderTime != null,
+                      onChanged: (x) {
+                        if (reminderTime == null) {
+                          setState(() {
+                            reminderChangesMade = true;
+                            reminderTime = Time(7, 0);
+                          });
+                        } else {
+                          setState(() {
+                            reminderChangesMade = true;
+                            reminderTime = null;
+                          });
+                        }
+                      },
+                    ),
                   ],
                 ),
-                if(reminderTime != null)
-                  _reminderTimePicker(),
-                if(reminderChangesMade)
-                  ElevatedButton(onPressed: ()async {
-                    setState(() {
-                      reminderChangesMade = false;
-                      reminderChangesSaving = true;
-                      
-                    });
-                    await updateSpinReminderTime(reminderTime);
-                    setState(() {
-                      reminderChangesSaving = false;
-                    });
-                  }, child: reminderChangesSaving ? CircularProgressIndicator() : Text('Speichern'))
+                if (reminderTime != null) _reminderTimePicker(),
+                if (reminderChangesMade)
+                  ElevatedButton(
+                    onPressed: () async {
+                      setState(() {
+                        reminderChangesMade = false;
+                        reminderChangesSaving = true;
+                      });
+                      await updateSpinReminderTime(reminderTime);
+                      setState(() {
+                        reminderChangesSaving = false;
+                      });
+                    },
+                    child: reminderChangesSaving
+                        ? CircularProgressIndicator()
+                        : Text('Speichern'),
+                  ),
               ],
-            )
-          )
-        ]
-      ),  
+            ),
+          ),
+        ],
+      ),
     );
   }
 
-  Widget _reminderTimePicker(){
+  Widget _reminderTimePicker() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-      NumberPicker(minValue: 0, maxValue: 23, value: reminderTime!.hour, onChanged: (value) {
-        setState(() {
-          reminderChangesMade = true;
-          reminderTime = Time(value, reminderTime!.minute);
-        });
-      },
-        textStyle: TextStyle(color: Colors.white),
-        selectedTextStyle: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 22),
-      ),
-      Text(':', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 22)),
-      NumberPicker(minValue: 0, step:30, maxValue: 59, value: reminderTime!.minute, onChanged: (value) {
-        setState(() {
-          reminderChangesMade = true;
-          reminderTime = Time(reminderTime!.hour, value);
-        });
-      },
-        textStyle: TextStyle(color: Colors.white),
-        selectedTextStyle: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 22),),
-      Text('Uhr', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 22),)
-    ],);
+        NumberPicker(
+          minValue: 0,
+          maxValue: 23,
+          value: reminderTime!.hour,
+          onChanged: (value) {
+            setState(() {
+              reminderChangesMade = true;
+              reminderTime = Time(value, reminderTime!.minute);
+            });
+          },
+          textStyle: TextStyle(color: Colors.white),
+          selectedTextStyle: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+            fontSize: 22,
+          ),
+        ),
+        Text(
+          ':',
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+            fontSize: 22,
+          ),
+        ),
+        NumberPicker(
+          minValue: 0,
+          step: 30,
+          maxValue: 59,
+          value: reminderTime!.minute,
+          onChanged: (value) {
+            setState(() {
+              reminderChangesMade = true;
+              reminderTime = Time(reminderTime!.hour, value);
+            });
+          },
+          textStyle: TextStyle(color: Colors.white),
+          selectedTextStyle: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+            fontSize: 22,
+          ),
+        ),
+        Text(
+          'Uhr',
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+            fontSize: 22,
+          ),
+        ),
+      ],
+    );
   }
 
   Widget _sectionHeader(String title) {
@@ -394,5 +440,4 @@ class _SettingsPageState extends State<SettingsPage> {
       child: child,
     );
   }
-
 }

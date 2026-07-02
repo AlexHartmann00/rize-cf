@@ -24,6 +24,7 @@ class MilestoneDefinition {
     required this.emoji,
     required this.title,
     required this.message,
+    this.description,
   });
 
   final String id;
@@ -33,6 +34,7 @@ class MilestoneDefinition {
   final String emoji;
   final String title;
   final String message;
+  final String? description;
 }
 
 class MilestoneState {
@@ -64,6 +66,39 @@ class MilestoneState {
         return '$current / ${definition.target} Gruppen';
       default:
         return '$current / ${definition.target}';
+    }
+  }
+
+  String get description =>
+      definition.description ??
+      switch (definition.category) {
+        MilestoneCategory.career =>
+          'Dieser Meilenstein zählt Deine gesamte RIZE-Reise.',
+        MilestoneCategory.weekly =>
+          'Dieser Meilenstein startet jede Woche neu und belohnt Deinen aktuellen Rhythmus.',
+        MilestoneCategory.monthly =>
+          'Dieser Meilenstein schaut auf Deinen aktuellen Monat und Deine langfristige Konstanz.',
+      };
+
+  String get comparison {
+    final int visibleValue = current.clamp(0, definition.target).toInt();
+    switch (definition.metric) {
+      case MilestoneMetric.repetitions:
+        final int floors = (visibleValue / 18).round().clamp(1, 9999);
+        return 'Das ist ungefähr so, als wärst Du $floors Stockwerke bewusst nach oben gestiegen.';
+      case MilestoneMetric.holdSeconds:
+        final int songs = (visibleValue / 180).round().clamp(1, 9999);
+        return 'Das entspricht etwa $songs Songs lang konzentriert stabil bleiben.';
+      case MilestoneMetric.streak:
+        return 'Eine Serie ist wie ein kleiner Vertrag mit Dir selbst – Tag für Tag verlängert.';
+      case MilestoneMetric.activeDays:
+        return 'Jeder aktive Tag ist ein sichtbares Kreuz im Kalender: Du warst da.';
+      case MilestoneMetric.muscleGroups:
+        return 'Je mehr Gruppen Du erreichst, desto runder fühlt sich Dein Training im Alltag an.';
+      case MilestoneMetric.rounds:
+        return 'Runden sind kleine abgeschlossene Siege – kurz, konkret und ehrlich.';
+      case MilestoneMetric.workouts:
+        return 'Jede Tagesaufgabe ist ein gesetzter Impuls. Aus Impulsen wird Routine.';
     }
   }
 }

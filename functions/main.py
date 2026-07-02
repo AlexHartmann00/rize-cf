@@ -207,14 +207,14 @@ def build_spin_reminder_message(
     return messaging.Message(
         token=fcm_token,
         notification=messaging.Notification(
-            title="Zeit für Deinen Daily Spin",
+            title="Zeit für Deine Tagesaufgabe",
             body=(
                 "Dein heutiges Training wartet auf Dich. "
                 "Ein kurzer Impuls reicht."
             ),
         ),
         data={
-            "type": "spin_reminder",
+            "type": "daily_task_reminder",
             "date": today_id,
             "route": "/home",
         },
@@ -500,7 +500,7 @@ def nightly_intensity_decay(
 
 
 # -------------------------------------------------------------------
-# Function 3: Daily Spin reminder notifications
+# Function 3: Tagesaufgabe reminder notifications
 # -------------------------------------------------------------------
 
 @scheduler_fn.on_schedule(
@@ -581,9 +581,12 @@ def send_spin_reminders(
                 skipped_already_sent += 1
                 continue
 
-            # Intentionally preserve the application's existing semantics:
-            # any workout document for today suppresses the reminder.
-            if workouts_for_day(user_ref, today_id):
+            # Suppress the reminder only when today's task is fully done.
+            today_workouts = workouts_for_day(user_ref, today_id)
+            if today_workouts and all(
+                is_schedule_completed((snap.to_dict() or {}).get("schedule"))
+                for snap in today_workouts
+            ):
                 skipped_existing_workout += 1
                 continue
 
@@ -660,7 +663,7 @@ def send_spin_reminders(
 
             sent += 1
             print(
-                "Spin reminder accepted by FCM: "
+                "Tagesaufgabe reminder accepted by FCM: "
                 f"userId={user_id}, messageId={message_id}"
             )
 
@@ -674,7 +677,7 @@ def send_spin_reminders(
             )
 
     print(
-        "Spin reminder run complete: "
+        "Tagesaufgabe reminder run complete: "
         f"date={today_id}, "
         f"time={now.strftime('%H:%M:%S')}, "
         f"processed={processed}, "
@@ -704,7 +707,11 @@ def send_streak_reminders(event: scheduler_fn.ScheduledEvent) -> None:
             continue
         if data.get("lastStreakReminderDate") == today_id:
             continue
-        if workouts_for_day(user_ref, today_id):
+        today_workouts = workouts_for_day(user_ref, today_id)
+        if today_workouts and all(
+            is_schedule_completed((snap.to_dict() or {}).get("schedule"))
+            for snap in today_workouts
+        ):
             continue
         yesterday = workouts_for_day(user_ref, yesterday_id)
         if not any(is_schedule_completed((snap.to_dict() or {}).get("schedule")) for snap in yesterday):
@@ -713,7 +720,7 @@ def send_streak_reminders(event: scheduler_fn.ScheduledEvent) -> None:
             token=token.strip(),
             notification=messaging.Notification(
                 title="Deine Serie wartet auf Dich 🔥",
-                body="Ein kurzer Daily Spin hält Deinen Lauf am Leben.",
+                body="Eine kurze Tagesaufgabe hält Deinen Lauf am Leben.",
             ),
             data={"type": "streak_reminder", "date": today_id, "route": "/home"},
         )

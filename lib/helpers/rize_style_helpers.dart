@@ -7,10 +7,7 @@ const Color rizeOrange = Color(0xFFFF9857);
 const Color rizeRed = Color(0xFFFF5968);
 const Color rizeMutedText = Color(0xFFB9C7DB);
 
-BoxDecoration rizeCardDecoration({
-  Color? accentColor,
-  double radius = 24,
-}) {
+BoxDecoration rizeCardDecoration({Color? accentColor, double radius = 24}) {
   return BoxDecoration(
     borderRadius: BorderRadius.circular(radius),
     gradient: LinearGradient(
@@ -29,10 +26,7 @@ BoxDecoration rizeCardDecoration({
         offset: const Offset(0, 12),
       ),
       if (accentColor != null)
-        BoxShadow(
-          color: accentColor.withOpacity(0.06),
-          blurRadius: 28,
-        ),
+        BoxShadow(color: accentColor.withOpacity(0.06), blurRadius: 28),
     ],
   );
 }

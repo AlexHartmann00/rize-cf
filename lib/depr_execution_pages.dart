@@ -46,11 +46,9 @@ class WorkoutExecutionHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final int maxReps =
-        (workout.baseReps ?? 0) * workout.intensityFactor;
+    final int maxReps = (workout.baseReps ?? 0) * workout.intensityFactor;
 
-    final int seconds =
-        (workout.baseSeconds ?? 0) * workout.intensityFactor;
+    final int seconds = (workout.baseSeconds ?? 0) * workout.intensityFactor;
 
     return Column(
       mainAxisAlignment: MainAxisAlignment.start,
@@ -62,7 +60,6 @@ class WorkoutExecutionHeader extends StatelessWidget {
             fontWeight: FontWeight.bold,
             color: Colors.white,
             fontSize: 50,
-            
           ),
         ),
         Row(
@@ -93,9 +90,7 @@ class WorkoutExecutionHeader extends StatelessWidget {
             workout.videoExplanationUrl!.contains('yout'))
           Padding(
             padding: const EdgeInsets.all(8),
-            child: YoutubeVideo(
-              videoId: workout.youtubeVideoId,
-            ),
+            child: YoutubeVideo(videoId: workout.youtubeVideoId),
           ),
       ],
     );
@@ -119,14 +114,12 @@ class StaticWorkoutExecutionPage extends StatefulWidget {
 
 class _StaticWorkoutExecutionPageState
     extends State<StaticWorkoutExecutionPage> {
-
   bool showTimer = false;
   bool timerCompleted = false;
   int timerSeconds = 0;
 
   int get totalSeconds =>
-      (widget.workout.baseSeconds ?? 0) *
-      widget.workout.intensityFactor;
+      (widget.workout.baseSeconds ?? 0) * widget.workout.intensityFactor;
 
   Future<void> startTimer() async {
     WakelockPlus.enable();
@@ -154,11 +147,9 @@ class _StaticWorkoutExecutionPageState
   Future<void> finishRound() async {
     WakelockPlus.disable();
 
-    final workoutStep =
-        widget.workout.schedule[widget.scheduleEntryIndex];
+    final workoutStep = widget.workout.schedule[widget.scheduleEntryIndex];
 
-    widget.workout.schedule[widget.scheduleEntryIndex] =
-        WorkoutStep(
+    widget.workout.schedule[widget.scheduleEntryIndex] = WorkoutStep(
       timeOfDay: workoutStep.timeOfDay,
       plannedUnits: workoutStep.plannedUnits,
       completedUnits: workoutStep.plannedUnits,
@@ -181,33 +172,41 @@ class _StaticWorkoutExecutionPageState
             scheduleEntryIndex: widget.scheduleEntryIndex,
           ),
 
-          Expanded(child: SizedBox(),),
+          Expanded(child: SizedBox()),
 
           if (!showTimer && !timerCompleted)
-            IconButton(onPressed: startTimer, icon: Row(
-              mainAxisSize: MainAxisSize.min,
-              spacing: 10,
-              children: [
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(20),
+            IconButton(
+              onPressed: startTimer,
+              icon: Row(
+                mainAxisSize: MainAxisSize.min,
+                spacing: 10,
+                children: [
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Icon(Icons.play_arrow, color: Colors.blue),
                   ),
-                  child: Icon(Icons.play_arrow, color: Colors.blue),
-                ),
-                Text('Timer starten', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 30)),
-              ],
-            )),
-            
-          
+                  Text(
+                    'Timer starten',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 30,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
           if (showTimer)
             WorkoutTimerIndicator(
               remainingSeconds: timerSeconds,
               totalSeconds: totalSeconds,
             ),
 
-          if (timerCompleted)
-            FinishButton(onPressed: finishRound),
+          if (timerCompleted) FinishButton(onPressed: finishRound),
 
           SizedBox(height: 50),
         ],
@@ -289,6 +288,7 @@ class WorkoutTimerIndicator extends StatelessWidget {
     );
   }
 }
+
 class DynamicWorkoutExecutionPage extends StatefulWidget {
   final ScheduledWorkout workout;
   final int scheduleEntryIndex;
@@ -306,25 +306,20 @@ class DynamicWorkoutExecutionPage extends StatefulWidget {
 
 class _DynamicWorkoutExecutionPageState
     extends State<DynamicWorkoutExecutionPage> {
-
   int managedRepetitions = 0;
 
   int get maxReps =>
-      (widget.workout.baseReps ?? 0) *
-      widget.workout.intensityFactor;
+      (widget.workout.baseReps ?? 0) * widget.workout.intensityFactor;
 
   Future<void> finishRound() async {
     final completed = managedRepetitions >= maxReps;
 
-    final workoutStep =
-        widget.workout.schedule[widget.scheduleEntryIndex];
+    final workoutStep = widget.workout.schedule[widget.scheduleEntryIndex];
 
-    widget.workout.schedule[widget.scheduleEntryIndex] =
-        WorkoutStep(
+    widget.workout.schedule[widget.scheduleEntryIndex] = WorkoutStep(
       timeOfDay: workoutStep.timeOfDay,
       plannedUnits: workoutStep.plannedUnits,
-      completedUnits:
-          completed ? workoutStep.plannedUnits : 0,
+      completedUnits: completed ? workoutStep.plannedUnits : 0,
     );
 
     await uploadWorkoutToServer(widget.workout);
@@ -363,8 +358,7 @@ class _DynamicWorkoutExecutionPageState
               fontWeight: FontWeight.w700,
               color: Colors.white.withOpacity(0.45),
             ),
-            onChanged: (v) =>
-                setState(() => managedRepetitions = v),
+            onChanged: (v) => setState(() => managedRepetitions = v),
           ),
 
           const Text(
@@ -407,7 +401,7 @@ class FinishButton extends StatelessWidget {
               style: TextStyle(
                 color: Theme.of(context).primaryColorDark,
                 fontWeight: FontWeight.bold,
-                fontSize: 18
+                fontSize: 18,
               ),
             ),
             const SizedBox(width: 10),

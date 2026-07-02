@@ -144,7 +144,7 @@ class _SettingsPageState extends State<SettingsPage> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: <Widget>[
                                   Text(
-                                    'Daily-Spin-Erinnerung',
+                                    'Tagesaufgaben-Erinnerung',
                                     style: TextStyle(
                                       color: Colors.white,
                                       fontSize: 16,
@@ -153,7 +153,7 @@ class _SettingsPageState extends State<SettingsPage> {
                                   ),
                                   SizedBox(height: 3),
                                   Text(
-                                    'Ein freundlicher Impuls zu Deiner Wunschzeit.',
+                                    'Ein freundlicher Impuls, wenn Deine Tagesaufgabe noch offen ist.',
                                     style: TextStyle(
                                       color: Colors.white60,
                                       fontSize: 12,

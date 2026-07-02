@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:rize/helpers/rize_style_helpers.dart';
 
@@ -17,10 +16,7 @@ class WelcomeBrandHero extends StatelessWidget {
             gradient: const LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: <Color>[
-                Color(0xFF79D5FF),
-                Color(0xFF176BC7),
-              ],
+              colors: <Color>[Color(0xFF79D5FF), Color(0xFF176BC7)],
             ),
             boxShadow: <BoxShadow>[
               BoxShadow(
@@ -30,40 +26,35 @@ class WelcomeBrandHero extends StatelessWidget {
               ),
             ],
           ),
-          child: Image.asset('assets/brand/Logo transparent.png', height: 48,)
+          child: Image.asset('assets/brand/Logo transparent.png', height: 48),
         ),
         const SizedBox(height: 22),
         Text(
           'RIZE',
           style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                color: Colors.white,
-                fontWeight: FontWeight.w900,
-                fontStyle: FontStyle.italic,
-                letterSpacing: -2,
-              ),
+            color: Colors.white,
+            fontWeight: FontWeight.w900,
+            fontStyle: FontStyle.italic,
+            letterSpacing: -2,
+          ),
         ),
         const SizedBox(height: 8),
         Text(
           'Dein täglicher Impuls für einen stärkeren Körper.',
           textAlign: TextAlign.center,
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                color: Colors.white.withOpacity(0.72),
-                height: 1.4,
-                fontWeight: FontWeight.w600,
-              ),
+            color: Colors.white.withOpacity(0.72),
+            height: 1.4,
+            fontWeight: FontWeight.w600,
+          ),
         ),
         const SizedBox(height: 16),
         Container(
-          padding: const EdgeInsets.symmetric(
-            horizontal: 12,
-            vertical: 7,
-          ),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
           decoration: BoxDecoration(
             color: Colors.white.withOpacity(0.08),
             borderRadius: BorderRadius.circular(999),
-            border: Border.all(
-              color: Colors.white.withOpacity(0.08),
-            ),
+            border: Border.all(color: Colors.white.withOpacity(0.08)),
           ),
           child: Text(
             'EINE APP VON COACH FLO',
@@ -81,10 +72,7 @@ class WelcomeBrandHero extends StatelessWidget {
 }
 
 class WelcomeIntroCard extends StatelessWidget {
-  const WelcomeIntroCard({
-    super.key,
-    required this.onContinue,
-  });
+  const WelcomeIntroCard({super.key, required this.onContinue});
 
   final VoidCallback onContinue;
 
@@ -151,9 +139,9 @@ class AuthChoiceCard extends StatelessWidget {
                 child: Text(
                   'Wie möchtest Du starten?',
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w900,
-                      ),
+                    color: Colors.white,
+                    fontWeight: FontWeight.w900,
+                  ),
                 ),
               ),
             ],
@@ -225,14 +213,11 @@ class WelcomeAuthForm extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
                       Text(
-                        isLogin
-                            ? 'Willkommen zurück'
-                            : 'Dein RIZE-Konto',
-                        style:
-                            Theme.of(context).textTheme.titleLarge?.copyWith(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w900,
-                                ),
+                        isLogin ? 'Willkommen zurück' : 'Dein RIZE-Konto',
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w900,
+                        ),
                       ),
                       const SizedBox(height: 3),
                       Text(
@@ -298,13 +283,10 @@ class WelcomeAuthForm extends StatelessWidget {
               obscureText: obscurePassword,
               textInputAction: TextInputAction.done,
               autofillHints: <String>[
-                isLogin
-                    ? AutofillHints.password
-                    : AutofillHints.newPassword,
+                isLogin ? AutofillHints.password : AutofillHints.newPassword,
               ],
               suffixIcon: IconButton(
-                onPressed:
-                    isLoading ? null : onTogglePasswordVisibility,
+                onPressed: isLoading ? null : onTogglePasswordVisibility,
                 icon: Icon(
                   obscurePassword
                       ? Icons.visibility_outlined
@@ -393,9 +375,9 @@ class PasswordResetCard extends StatelessWidget {
                   child: Text(
                     'Passwort zurücksetzen',
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w900,
-                        ),
+                      color: Colors.white,
+                      fontWeight: FontWeight.w900,
+                    ),
                   ),
                 ),
               ],
@@ -463,9 +445,7 @@ class PasswordResetSuccessCard extends StatelessWidget {
             decoration: BoxDecoration(
               color: rizeGreen.withOpacity(0.14),
               shape: BoxShape.circle,
-              border: Border.all(
-                color: rizeGreen.withOpacity(0.30),
-              ),
+              border: Border.all(color: rizeGreen.withOpacity(0.30)),
             ),
             child: const Icon(
               Icons.mark_email_read_rounded,
@@ -478,9 +458,9 @@ class PasswordResetSuccessCard extends StatelessWidget {
             'E-Mail ist unterwegs',
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w900,
-                ),
+              color: Colors.white,
+              fontWeight: FontWeight.w900,
+            ),
           ),
           const SizedBox(height: 8),
           Text(
@@ -573,16 +553,11 @@ class WelcomeTextField extends StatelessWidget {
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(17),
-          borderSide: const BorderSide(
-            color: Color(0xFFD8E3F4),
-          ),
+          borderSide: const BorderSide(color: Color(0xFFD8E3F4)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(17),
-          borderSide: const BorderSide(
-            color: rizeBlue,
-            width: 1.5,
-          ),
+          borderSide: const BorderSide(color: rizeBlue, width: 1.5),
         ),
       ),
     );
@@ -613,17 +588,13 @@ class WelcomePrimaryButton extends StatelessWidget {
         foregroundColor: rizeBlue,
         disabledBackgroundColor: Colors.white.withOpacity(0.24),
         disabledForegroundColor: Colors.white.withOpacity(0.60),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(18),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
       ),
       icon: loading
           ? const SizedBox(
               width: 19,
               height: 19,
-              child: CircularProgressIndicator(
-                strokeWidth: 2.4,
-              ),
+              child: CircularProgressIndicator(strokeWidth: 2.4),
             )
           : Icon(icon),
       label: Text(
@@ -656,20 +627,13 @@ class WelcomeSecondaryButton extends StatelessWidget {
       style: OutlinedButton.styleFrom(
         minimumSize: const Size(double.infinity, 54),
         foregroundColor: Colors.white,
-        side: BorderSide(
-          color: Colors.white.withOpacity(0.18),
-        ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(18),
-        ),
+        side: BorderSide(color: Colors.white.withOpacity(0.18)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
       ),
       icon: Icon(icon),
       label: Text(
         label,
-        style: const TextStyle(
-          fontWeight: FontWeight.w900,
-          letterSpacing: 0.2,
-        ),
+        style: const TextStyle(fontWeight: FontWeight.w900, letterSpacing: 0.2),
       ),
     );
   }
@@ -699,11 +663,7 @@ class WelcomeBenefit extends StatelessWidget {
             color: rizeCyan.withOpacity(0.13),
             borderRadius: BorderRadius.circular(14),
           ),
-          child: Icon(
-            icon,
-            color: rizeCyan,
-            size: 21,
-          ),
+          child: Icon(icon, color: rizeCyan, size: 21),
         ),
         const SizedBox(width: 12),
         Expanded(
@@ -736,10 +696,7 @@ class WelcomeBenefit extends StatelessWidget {
 }
 
 class WelcomeGlassPanel extends StatelessWidget {
-  const WelcomeGlassPanel({
-    super.key,
-    required this.child,
-  });
+  const WelcomeGlassPanel({super.key, required this.child});
 
   final Widget child;
 
@@ -757,9 +714,7 @@ class WelcomeGlassPanel extends StatelessWidget {
             Colors.white.withOpacity(0.07),
           ],
         ),
-        border: Border.all(
-          color: Colors.white.withOpacity(0.12),
-        ),
+        border: Border.all(color: Colors.white.withOpacity(0.12)),
         boxShadow: <BoxShadow>[
           BoxShadow(
             color: Colors.black.withOpacity(0.17),

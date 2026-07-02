@@ -212,7 +212,7 @@ class _ProfilePageState extends State<ProfilePage> {
                             ? subscriptionCanceled
                                   ? 'Dein Zugang bleibt bis zum Ende des bezahlten Zeitraums aktiv.'
                                   : 'Du hast Zugriff auf die komplette Bibliothek.'
-                            : 'Alle Übungen. Jeder Spin. Dein volles Potenzial.',
+                            : 'Alle Übungen. Jede Tagesaufgabe. Dein volles Potenzial.',
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 20,

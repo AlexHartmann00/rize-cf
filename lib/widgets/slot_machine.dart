@@ -1,4 +1,3 @@
-
 import 'dart:async';
 import 'dart:math';
 
@@ -101,8 +100,7 @@ class _SlotMachineState extends State<SlotMachine>
       duration: const Duration(milliseconds: 900),
     );
 
-    _controllerProxy =
-        widget.controller ?? SlotMachineController._internal();
+    _controllerProxy = widget.controller ?? SlotMachineController._internal();
     _controllerProxy._attach(this);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -117,14 +115,12 @@ class _SlotMachineState extends State<SlotMachine>
     if (oldWidget.controller != widget.controller) {
       (oldWidget.controller ?? _controllerProxy)._detach(this);
 
-      _controllerProxy =
-          widget.controller ?? SlotMachineController._internal();
+      _controllerProxy = widget.controller ?? SlotMachineController._internal();
       _controllerProxy._attach(this);
     }
 
     if (oldWidget.reelCount != widget.reelCount) {
-      for (final FixedExtentScrollController controller
-          in _reelControllers) {
+      for (final FixedExtentScrollController controller in _reelControllers) {
         controller.dispose();
       }
 
@@ -164,8 +160,7 @@ class _SlotMachineState extends State<SlotMachine>
   void dispose() {
     _stopHapticSequence();
 
-    for (final FixedExtentScrollController controller
-        in _reelControllers) {
+    for (final FixedExtentScrollController controller in _reelControllers) {
       controller.dispose();
     }
 
@@ -177,8 +172,7 @@ class _SlotMachineState extends State<SlotMachine>
   }
 
   void _normalizeReel(int reelIndex) {
-    final FixedExtentScrollController controller =
-        _reelControllers[reelIndex];
+    final FixedExtentScrollController controller = _reelControllers[reelIndex];
 
     if (!controller.hasClients) return;
 
@@ -196,8 +190,7 @@ class _SlotMachineState extends State<SlotMachine>
       return const <int>[];
     }
 
-    if (targetIndices != null &&
-        targetIndices.length != widget.reelCount) {
+    if (targetIndices != null && targetIndices.length != widget.reelCount) {
       throw ArgumentError(
         'targetIndices must contain exactly ${widget.reelCount} values.',
       );
@@ -228,9 +221,7 @@ class _SlotMachineState extends State<SlotMachine>
     final List<int> resultIndices = <int>[];
     final List<Future<void>> reelAnimations = <Future<void>>[];
 
-    for (int reelIndex = 0;
-        reelIndex < _reelControllers.length;
-        reelIndex++) {
+    for (int reelIndex = 0; reelIndex < _reelControllers.length; reelIndex++) {
       final FixedExtentScrollController controller =
           _reelControllers[reelIndex];
       final int reelLength = widget.symbolsPerReel[reelIndex].length;
@@ -242,16 +233,13 @@ class _SlotMachineState extends State<SlotMachine>
       final int current = controller.selectedItem;
       final int currentSymbol = current % reelLength;
 
-      final int rounds = widget.spinMinRounds +
+      final int rounds =
+          widget.spinMinRounds +
           _random.nextInt(
-            max(
-              1,
-              widget.spinMaxRounds - widget.spinMinRounds + 1,
-            ),
+            max(1, widget.spinMaxRounds - widget.spinMinRounds + 1),
           );
 
-      final int delta =
-          (chosenIndex - currentSymbol + reelLength) % reelLength;
+      final int delta = (chosenIndex - currentSymbol + reelLength) % reelLength;
       final int target = current + rounds * reelLength + delta;
 
       final Duration delay = Duration(
@@ -259,8 +247,7 @@ class _SlotMachineState extends State<SlotMachine>
       );
 
       final Duration duration = Duration(
-        milliseconds:
-            1250 + reelIndex * 330 + _random.nextInt(260),
+        milliseconds: 1250 + reelIndex * 330 + _random.nextInt(260),
       );
 
       resultIndices.add(chosenIndex);
@@ -328,25 +315,25 @@ class _SlotMachineState extends State<SlotMachine>
 
     // A soft mechanical tick. We deliberately skip some ticks later in the
     // sequence so the haptic rhythm feels as though the reels are slowing.
-    _hapticTimer = Timer.periodic(
-      const Duration(milliseconds: 78),
-      (Timer timer) {
-        if (!_spinning) {
-          timer.cancel();
-          return;
-        }
+    _hapticTimer = Timer.periodic(const Duration(milliseconds: 78), (
+      Timer timer,
+    ) {
+      if (!_spinning) {
+        timer.cancel();
+        return;
+      }
 
-        tick += 1;
+      tick += 1;
 
-        final bool shouldPulse = tick < 16 ||
-            (tick < 28 && tick.isEven) ||
-            (tick >= 28 && tick % 3 == 0);
+      final bool shouldPulse =
+          tick < 16 ||
+          (tick < 28 && tick.isEven) ||
+          (tick >= 28 && tick % 3 == 0);
 
-        if (shouldPulse) {
-          unawaited(HapticFeedback.selectionClick());
-        }
-      },
-    );
+      if (shouldPulse) {
+        unawaited(HapticFeedback.selectionClick());
+      }
+    });
   }
 
   void _stopHapticSequence() {
@@ -357,10 +344,8 @@ class _SlotMachineState extends State<SlotMachine>
   @override
   Widget build(BuildContext context) {
     final bool narrow = MediaQuery.sizeOf(context).width < 390;
-    final double horizontalPadding =
-        widget.compact || narrow ? 10 : 14;
-    final double spacing =
-        widget.compact || narrow ? 5 : widget.reelSpacing;
+    final double horizontalPadding = widget.compact || narrow ? 10 : 14;
+    final double spacing = widget.compact || narrow ? 5 : widget.reelSpacing;
 
     return AnimatedBuilder(
       animation: _glowController,
@@ -378,10 +363,7 @@ class _SlotMachineState extends State<SlotMachine>
             gradient: const LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: <Color>[
-                Color(0xFFF9FBFF),
-                Color(0xFFE9F1FF),
-              ],
+              colors: <Color>[Color(0xFFF9FBFF), Color(0xFFE9F1FF)],
             ),
             border: Border.all(
               color: Colors.white.withOpacity(0.88),
@@ -395,9 +377,9 @@ class _SlotMachineState extends State<SlotMachine>
               ),
               if (_spinning)
                 BoxShadow(
-                  color: const Color(0xFF58C7F3).withOpacity(
-                    0.18 + _glowController.value * 0.12,
-                  ),
+                  color: const Color(
+                    0xFF58C7F3,
+                  ).withOpacity(0.18 + _glowController.value * 0.12),
                   blurRadius: 26,
                   spreadRadius: 1,
                 ),
@@ -410,9 +392,11 @@ class _SlotMachineState extends State<SlotMachine>
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: <Widget>[
-                    for (int index = 0;
-                        index < widget.reelCount;
-                        index++) ...<Widget>[
+                    for (
+                      int index = 0;
+                      index < widget.reelCount;
+                      index++
+                    ) ...<Widget>[
                       Expanded(
                         child: _RizeReel(
                           controller: _reelControllers[index],
@@ -454,16 +438,14 @@ class _SlotMachineState extends State<SlotMachine>
   void _selectItem(int reelIndex, int symbolIndex) {
     if (_spinning || !widget.enableItemTap) return;
 
-    final FixedExtentScrollController controller =
-        _reelControllers[reelIndex];
+    final FixedExtentScrollController controller = _reelControllers[reelIndex];
 
     if (!controller.hasClients) return;
 
     final int reelLength = widget.symbolsPerReel[reelIndex].length;
     final int current = controller.selectedItem;
     final int currentSymbol = current % reelLength;
-    final int delta =
-        (symbolIndex - currentSymbol + reelLength) % reelLength;
+    final int delta = (symbolIndex - currentSymbol + reelLength) % reelLength;
 
     if (widget.enableHaptics) {
       unawaited(HapticFeedback.selectionClick());
@@ -537,9 +519,7 @@ class _RizeReel extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: const Color(0xFFF5F8FE),
                     borderRadius: BorderRadius.circular(17),
-                    border: Border.all(
-                      color: const Color(0xFFD8E3F4),
-                    ),
+                    border: Border.all(color: const Color(0xFFD8E3F4)),
                   ),
                   child: ListWheelScrollView.useDelegate(
                     controller: controller,
@@ -591,12 +571,12 @@ class _RizeReel extends StatelessWidget {
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                         colors: <Color>[
-                          const Color(0xFF58C7F3).withOpacity(
-                            spinning ? 0.14 : 0.10,
-                          ),
-                          const Color(0xFF176BC7).withOpacity(
-                            spinning ? 0.16 : 0.11,
-                          ),
+                          const Color(
+                            0xFF58C7F3,
+                          ).withOpacity(spinning ? 0.14 : 0.10),
+                          const Color(
+                            0xFF176BC7,
+                          ).withOpacity(spinning ? 0.16 : 0.11),
                         ],
                       ),
                       border: Border.all(
@@ -703,14 +683,8 @@ class _ReelSymbol extends StatelessWidget {
             fontWeight: FontWeight.w800,
           ),
           child: IconTheme.merge(
-            data: const IconThemeData(
-              color: Color(0xFF176BC7),
-              size: 18,
-            ),
-            child: FittedBox(
-              fit: BoxFit.scaleDown,
-              child: child,
-            ),
+            data: const IconThemeData(color: Color(0xFF176BC7), size: 18),
+            child: FittedBox(fit: BoxFit.scaleDown, child: child),
           ),
         ),
       ),
@@ -760,10 +734,7 @@ class _PremiumLever extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final Animation<double> angle = Tween<double>(
-      begin: 0,
-      end: -0.32,
-    ).animate(
+    final Animation<double> angle = Tween<double>(begin: 0, end: -0.32).animate(
       CurvedAnimation(
         parent: animation,
         curve: Curves.easeOutBack,
@@ -792,10 +763,7 @@ class _PremiumLever extends StatelessWidget {
                 height: 28,
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
-                    colors: <Color>[
-                      Color(0xFF79D5FF),
-                      Color(0xFF176BC7),
-                    ],
+                    colors: <Color>[Color(0xFF79D5FF), Color(0xFF176BC7)],
                   ),
                   shape: BoxShape.circle,
                   boxShadow: <BoxShadow>[

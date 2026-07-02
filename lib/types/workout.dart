@@ -11,14 +11,19 @@ enum WorkoutType { static, dynamic }
 
 WorkoutType workoutTypeFromString(String type) {
   switch (type.toLowerCase()) {
+    case 'time':
     case 'static':
       return WorkoutType.static;
+    case 'reps':
     case 'dynamic':
       return WorkoutType.dynamic;
     default:
       throw ArgumentError('Unknown workout type: $type');
   }
 }
+
+String workoutTypeToFirestoreString(WorkoutType type) =>
+    type == WorkoutType.dynamic ? 'reps' : 'time';
 
 enum ImpactLevel { low, medium, high }
 
@@ -161,7 +166,7 @@ class Workout {
     'baseReps': baseReps,
     'baseSeconds': baseSeconds,
     'impactLevel': impactLevel.name,
-    'type': workoutType.name,
+    'type': workoutTypeToFirestoreString(workoutType),
     'impactScore': impactScore,
     'videoExplanationUrl': videoExplanationUrl,
     'properties': properties != null
@@ -312,7 +317,7 @@ class ScheduledWorkout extends Workout {
   }
 }
 
-/// A Daily Spin is a plan made up of one or more independent exercises.
+/// A Tagesaufgabe is a plan made up of one or more independent exercises.
 /// The exercises remain separate history records, so several plans per day and
 /// variable actual repetitions can be represented without changing `workouts`.
 class DailyWorkoutPlan {

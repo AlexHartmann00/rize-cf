@@ -9,10 +9,8 @@ double? asDouble(Object? value) {
 
 Map<String, dynamic> toDynamicMap(Map<String, Object?> source) {
   return source.map(
-    (String key, Object? value) => MapEntry<String, dynamic>(
-      key,
-      toDynamicValue(value),
-    ),
+    (String key, Object? value) =>
+        MapEntry<String, dynamic>(key, toDynamicValue(value)),
   );
 }
 

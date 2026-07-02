@@ -293,7 +293,7 @@ class WorkoutSummaryWidget extends StatelessWidget {
                                     icon: isStatic
                                         ? Icons.timer_outlined
                                         : Icons.repeat_rounded,
-                                    label: isStatic ? 'Statisch' : 'Dynamisch',
+                                    label: isStatic ? 'Zeit' : 'Wiederholungen',
                                   ),
                                 ],
                               ),

@@ -75,7 +75,7 @@ class ProUpgradeBanner extends StatelessWidget {
                     ),
                     const SizedBox(height: 3),
                     Text(
-                      'Dein Spin wählt aktuell aus $availableCount passenden Übungen.',
+                      'Deine Tagesaufgabe wählt aktuell aus $availableCount passenden Übungen.',
                       style: const TextStyle(
                         color: Colors.white60,
                         fontSize: 11,
@@ -263,13 +263,13 @@ class _ProUpgradeSheetState extends State<_ProUpgradeSheet> {
             ),
             const SizedBox(height: 9),
             const Text(
-              'Mit RIZE Pro greift jeder Daily Spin auf die vollständige Übungsbibliothek zu.',
+              'Mit RIZE Pro greift jede Tagesaufgabe auf die vollständige Übungsbibliothek zu.',
               style: TextStyle(color: Colors.white60, height: 1.45),
             ),
             const SizedBox(height: 18),
             const _Benefit(
               icon: Icons.cyclone_rounded,
-              text: 'Alle Übungen im Daily Spin',
+              text: 'Alle Übungen in der Tagesaufgabe',
             ),
             const _Benefit(
               icon: Icons.lock_open_rounded,

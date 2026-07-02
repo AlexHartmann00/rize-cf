@@ -1,5 +1,3 @@
-
-import 'package:flutter/material.dart' hide TimeOfDay;
 import 'package:rize/types/config.dart';
 import 'package:rize/types/workout.dart';
 import 'package:rize/utils.dart';
@@ -13,10 +11,12 @@ List<Workout> workoutsForUserIntensity({
     return List<Workout>.unmodifiable(workouts);
   }
 
-  final List<Workout> matches = workouts.where((Workout workout) {
-    return workout.impactScore >= intensityScore - tolerance &&
-        workout.impactScore <= intensityScore + tolerance;
-  }).toList(growable: false);
+  final List<Workout> matches = workouts
+      .where((Workout workout) {
+        return workout.impactScore >= intensityScore - tolerance &&
+            workout.impactScore <= intensityScore + tolerance;
+      })
+      .toList(growable: false);
 
   // Never leave the spin without options because the configured tolerance is
   // temporarily too narrow.
@@ -61,9 +61,7 @@ bool isDailyPlanActionable(ScheduledWorkout workout) {
 }
 
 bool canResetDailyPlan(ScheduledWorkout workout) {
-  return workout.schedule.every(
-    (WorkoutStep step) => step.completedUnits == 0,
-  );
+  return workout.schedule.every((WorkoutStep step) => step.completedUnits == 0);
 }
 
 int completedScheduleUnits(ScheduledWorkout workout) {
@@ -90,12 +88,16 @@ double dailyWorkoutProgress(ScheduledWorkout workout) {
 String homeGreeting(String? displayName, DateTime now) {
   final String name = _firstName(displayName) ?? 'Sportler';
 
+  if (now.hour < 6) return 'Hey, $name';
   if (now.hour < 11) return 'Guten Morgen, $name';
   if (now.hour < 17) return 'Hallo, $name';
   return 'Guten Abend, $name';
 }
 
 String dailyMotivation(DateTime now) {
+  if (now.hour < 6) {
+    return 'Noch wach? Dann lieber sanft bleiben – Deine Tagesaufgabe wartet ab 6 Uhr auf Dich.';
+  }
   if (now.hour < 11) {
     return 'Starte bewegt in den Tag – Dein Körper wird es Dir danken.';
   }

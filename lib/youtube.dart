@@ -22,7 +22,6 @@ class _YoutubeVideoState extends State<YoutubeVideo> {
         playsInline: true,
         origin: 'https://www.youtube-nocookie.com',
       ),
-      
     )..loadVideoById(videoId: widget.videoId);
   }
 
@@ -34,9 +33,6 @@ class _YoutubeVideoState extends State<YoutubeVideo> {
 
   @override
   Widget build(BuildContext context) {
-    return YoutubePlayer(
-      controller: _controller,
-      aspectRatio: 16 / 9,
-    );
+    return YoutubePlayer(controller: _controller, aspectRatio: 16 / 9);
   }
 }

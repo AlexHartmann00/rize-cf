@@ -17,25 +17,10 @@ class WorkoutDetailsHero extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bool isStatic = workout.workoutType == WorkoutType.static;
-    final Color impactColor = _impactColor(workout.impactScore);
 
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: <Color>[
-            Color(0xFF63C6F3),
-            Color(0xFF176BC7),
-            Color(0xFF0A3F8F),
-          ],
-        ),
-        borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(34),
-          bottomRight: Radius.circular(34),
-        ),
-      ),
+      decoration: rizeCardDecoration(accentColor: rizeCyan, radius: 28),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
@@ -71,7 +56,7 @@ class WorkoutDetailsHero extends StatelessWidget {
                     ),
                     const SizedBox(width: 6),
                     Text(
-                      isStatic ? 'Statisch' : 'Dynamisch',
+                      isStatic ? 'Zeit' : 'Wiederholungen',
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 12,
@@ -99,13 +84,9 @@ class WorkoutDetailsHero extends StatelessWidget {
             runSpacing: 10,
             children: <Widget>[
               _HeroPill(
-                icon: Icons.schedule_rounded,
-                label: workout.durationString,
-              ),
-              _HeroPill(
                 icon: Icons.bolt_rounded,
-                label: 'Impact ${workout.impactScore.toStringAsFixed(2)}',
-                color: impactColor,
+                label: 'Intensität ${_impactLabel(workout.impactLevel)}',
+                color: _impactColor(workout.impactScore),
               ),
               if (workout.isUnilateral)
                 const _HeroPill(
@@ -482,3 +463,9 @@ Color _impactColor(double score) {
       ) ??
       const Color(0xFFFF5968);
 }
+
+String _impactLabel(ImpactLevel level) => switch (level) {
+  ImpactLevel.low => 'niedrig',
+  ImpactLevel.medium => 'mittel',
+  ImpactLevel.high => 'hoch',
+};

@@ -84,62 +84,43 @@ class CoachFloManifestoCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return RizeCard(
       accentColor: rizeCyan,
-      child: Stack(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          Positioned(
-            right: -24,
-            top: -34,
-            child: Container(
-              width: 135,
-              height: 135,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: rizeCyan.withOpacity(0.08),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            decoration: BoxDecoration(
+              color: rizeCyan.withOpacity(0.13),
+              borderRadius: BorderRadius.circular(999),
+            ),
+            child: const Text(
+              'COACH FLO × RIZE',
+              style: TextStyle(
+                color: rizeCyan,
+                fontSize: 11,
+                letterSpacing: 1.1,
+                fontWeight: FontWeight.w900,
               ),
             ),
           ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 6,
-                ),
-                decoration: BoxDecoration(
-                  color: rizeCyan.withOpacity(0.13),
-                  borderRadius: BorderRadius.circular(999),
-                ),
-                child: const Text(
-                  'COACH FLO × RIZE',
-                  style: TextStyle(
-                    color: rizeCyan,
-                    fontSize: 11,
-                    letterSpacing: 1.1,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 18),
-              Text(
-                'Das Geheimnis des Erfolgs ist anzufangen.',
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w900,
-                  height: 1.08,
-                  letterSpacing: -0.6,
-                ),
-              ),
-              const SizedBox(height: 10),
-              Text(
-                'Dein Training passt sich Deinem Niveau und Deinem Alltag an. '
-                'Heute zählt nicht perfekt – heute zählt gemacht.',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Colors.white.withOpacity(0.68),
-                  height: 1.5,
-                ),
-              ),
-            ],
+          const SizedBox(height: 18),
+          Text(
+            'Das Geheimnis des Erfolgs ist anzufangen.',
+            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+              color: Colors.white,
+              fontWeight: FontWeight.w900,
+              height: 1.08,
+              letterSpacing: -0.6,
+            ),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            'Dein Training passt sich Deinem Niveau und Deinem Alltag an. '
+            'Heute zählt nicht perfekt – heute zählt gemacht.',
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: Colors.white.withOpacity(0.68),
+              height: 1.5,
+            ),
           ),
         ],
       ),
@@ -204,7 +185,7 @@ class DailySpinHero extends StatelessWidget {
               ),
               const SizedBox(height: 22),
               Text(
-                'Dein Daily Spin',
+                'Deine Tagesaufgabe',
                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                   color: Colors.white,
                   fontWeight: FontWeight.w900,
@@ -213,7 +194,7 @@ class DailySpinHero extends StatelessWidget {
               ),
               const SizedBox(height: 7),
               Text(
-                'Eine Übung. Deine Intensität. Ein klarer Impuls für heute.',
+                'Eine passende Aufgabe, Deine Intensität und ein klarer Impuls für heute.',
                 style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                   color: Colors.white.withOpacity(0.78),
                   height: 1.4,
@@ -233,7 +214,7 @@ class DailySpinHero extends StatelessWidget {
                 ),
                 icon: const Icon(Icons.play_arrow_rounded),
                 label: const Text(
-                  'HEUTIGES WORKOUT ZIEHEN',
+                  'TAGESAUFGABE ZIEHEN',
                   style: TextStyle(
                     fontWeight: FontWeight.w900,
                     letterSpacing: 0.25,
@@ -531,7 +512,7 @@ class CompletedWorkoutHero extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           Text(
-            'Dein nächster Daily Spin ist in $nextWorkoutIn bereit.',
+            'Deine nächste Tagesaufgabe ist in $nextWorkoutIn bereit.',
             textAlign: TextAlign.center,
             style: TextStyle(
               color: Colors.white.withOpacity(0.52),

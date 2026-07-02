@@ -6,6 +6,7 @@ import 'package:rize/helpers/date_helpers.dart';
 import 'package:rize/helpers/progress_formatters.dart';
 import 'package:rize/helpers/progress_statistics.dart';
 import 'package:rize/helpers/rize_style_helpers.dart';
+import 'package:rize/types/workout.dart';
 
 class ProgressHero extends StatelessWidget {
   const ProgressHero({
@@ -91,9 +92,7 @@ class ProgressHero extends StatelessWidget {
                           children: <Widget>[
                             Text(
                               '$currentStreak-Tage-Serie',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .headlineSmall
+                              style: Theme.of(context).textTheme.headlineSmall
                                   ?.copyWith(
                                     color: Colors.white,
                                     fontWeight: FontWeight.w900,
@@ -123,9 +122,7 @@ class ProgressHero extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: Colors.black.withOpacity(0.13),
                       borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: Colors.white.withOpacity(0.07),
-                      ),
+                      border: Border.all(color: Colors.white.withOpacity(0.07)),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -294,10 +291,10 @@ class _MetricCard extends StatelessWidget {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: -0.3,
-                ),
+              color: Colors.white,
+              fontWeight: FontWeight.w900,
+              letterSpacing: -0.3,
+            ),
           ),
           const SizedBox(height: 3),
           Text(
@@ -357,10 +354,10 @@ class ProgressChartCard extends StatelessWidget {
                     Text(
                       'Score-Entwicklung',
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: -0.4,
-                          ),
+                        color: Colors.white,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: -0.4,
+                      ),
                     ),
                     const SizedBox(height: 4),
                     Text(
@@ -453,12 +450,12 @@ class ProgressChartCard extends StatelessWidget {
                             interval: range.interval,
                             getTitlesWidget: (double value, TitleMeta meta) =>
                                 Text(
-                              formatScore(value, decimals: 1),
-                              style: TextStyle(
-                                color: Colors.white.withOpacity(0.46),
-                                fontSize: 10,
-                              ),
-                            ),
+                                  formatScore(value, decimals: 1),
+                                  style: TextStyle(
+                                    color: Colors.white.withOpacity(0.46),
+                                    fontSize: 10,
+                                  ),
+                                ),
                           ),
                         ),
                         bottomTitles: AxisTitles(
@@ -515,11 +512,11 @@ class ProgressChartCard extends StatelessWidget {
                             show: true,
                             getDotPainter: (_, __, ___, ____) =>
                                 FlDotCirclePainter(
-                              radius: 4,
-                              color: impactColor,
-                              strokeWidth: 2,
-                              strokeColor: const Color(0xFF164C91),
-                            ),
+                                  radius: 4,
+                                  color: impactColor,
+                                  strokeWidth: 2,
+                                  strokeColor: const Color(0xFF164C91),
+                                ),
                           ),
                           belowBarData: BarAreaData(show: false),
                         ),
@@ -583,11 +580,11 @@ class ActivityCalendarCard extends StatelessWidget {
   const ActivityCalendarCard({
     super.key,
     required this.month,
-    required this.activeDays,
+    required this.daySummaries,
   });
 
   final DateTime month;
-  final Set<int> activeDays;
+  final Map<int, CalendarDaySummary> daySummaries;
 
   static const List<String> _weekdays = <String>[
     'Mo',
@@ -621,10 +618,10 @@ class ActivityCalendarCard extends StatelessWidget {
                     Text(
                       'Aktivität im ${_monthLabel(month)}',
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: -0.4,
-                          ),
+                        color: Colors.white,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: -0.4,
+                      ),
                     ),
                     const SizedBox(height: 4),
                     Text(
@@ -647,7 +644,7 @@ class ActivityCalendarCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(999),
                 ),
                 child: Text(
-                  '${activeDays.length} Tage',
+                  '${daySummaries.length} Tage',
                   style: const TextStyle(
                     color: rizeCyan,
                     fontWeight: FontWeight.w900,
@@ -690,53 +687,271 @@ class ActivityCalendarCard extends StatelessWidget {
                 return const SizedBox.shrink();
               }
 
-              final bool active = activeDays.contains(day);
-              final bool isToday = now.year == month.year &&
+              final CalendarDaySummary? summary = daySummaries[day];
+              final bool active = summary != null;
+              final bool isToday =
+                  now.year == month.year &&
                   now.month == month.month &&
                   now.day == day;
 
-              return Container(
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  gradient: active
-                      ? const LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: <Color>[rizeCyan, rizeBlue],
-                        )
-                      : null,
-                  color: active ? null : Colors.white.withOpacity(0.045),
-                  borderRadius: BorderRadius.circular(11),
-                  border: Border.all(
-                    color: isToday
-                        ? rizeCyan
-                        : active
-                            ? Colors.white.withOpacity(0.2)
-                            : Colors.white.withOpacity(0.04),
-                    width: isToday ? 1.5 : 1,
-                  ),
-                  boxShadow: active
-                      ? <BoxShadow>[
-                          BoxShadow(
-                            color: rizeBlue.withOpacity(0.22),
-                            blurRadius: 10,
-                            offset: const Offset(0, 4),
-                          ),
-                        ]
-                      : null,
-                ),
-                child: Text(
-                  '$day',
-                  style: TextStyle(
-                    color: active
-                        ? Colors.white
-                        : Colors.white.withOpacity(0.58),
-                    fontSize: 11,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
+              return _CalendarDayTile(
+                day: day,
+                summary: summary,
+                isToday: isToday,
+                onTap: summary == null
+                    ? null
+                    : () => _showDaySummary(context, day, summary),
               );
             },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _showDaySummary(
+    BuildContext context,
+    int day,
+    CalendarDaySummary summary,
+  ) {
+    return showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: const Color(0xFF102F55),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      builder: (context) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 18, 20, 22),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: <Widget>[
+              Text(
+                '$day. ${_monthLabel(month)}',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 23,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                summary.completed
+                    ? 'Alles erledigt. Sehr sauber.'
+                    : '${(summary.completion * 100).round()} % erledigt – da ist noch ein bisschen Energie offen.',
+                style: const TextStyle(color: Colors.white60, height: 1.4),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: <Widget>[
+                  Expanded(
+                    child: _DaySummaryMetric(
+                      label: 'Tagesaufgaben',
+                      value: '${summary.workoutCount}',
+                      icon: Icons.flag_rounded,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: _DaySummaryMetric(
+                      label: 'Erledigt',
+                      value: '${(summary.completion * 100).round()} %',
+                      icon: Icons.check_circle_rounded,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: _DaySummaryMetric(
+                      label: 'Intensität',
+                      value: impactLevelLabel(summary.impactLevel),
+                      icon: Icons.bolt_rounded,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+@immutable
+class CalendarDaySummary {
+  const CalendarDaySummary({
+    required this.completion,
+    required this.impactScore,
+    required this.impactLevel,
+    required this.workoutCount,
+  });
+
+  final double completion;
+  final double impactScore;
+  final ImpactLevel impactLevel;
+  final int workoutCount;
+
+  bool get completed => completion >= 1;
+}
+
+class _CalendarDayTile extends StatelessWidget {
+  const _CalendarDayTile({
+    required this.day,
+    required this.summary,
+    required this.isToday,
+    required this.onTap,
+  });
+
+  final int day;
+  final CalendarDaySummary? summary;
+  final bool isToday;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final CalendarDaySummary? current = summary;
+    final bool active = current != null;
+    final Color fillColor = active
+        ? impactLevelColor(current.impactLevel)
+        : Colors.white.withOpacity(0.045);
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(11),
+        child: Ink(
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.045),
+            borderRadius: BorderRadius.circular(11),
+            border: Border.all(
+              color: isToday
+                  ? rizeCyan
+                  : active
+                  ? fillColor.withOpacity(0.45)
+                  : Colors.white.withOpacity(0.04),
+              width: isToday ? 1.5 : 1,
+            ),
+            boxShadow: active
+                ? <BoxShadow>[
+                    BoxShadow(
+                      color: fillColor.withOpacity(0.18),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ]
+                : null,
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(10),
+            child: Stack(
+              fit: StackFit.expand,
+              children: <Widget>[
+                if (active)
+                  CustomPaint(
+                    painter: _DiagonalFillPainter(
+                      progress: current.completion,
+                      color: fillColor,
+                    ),
+                  ),
+                Center(
+                  child: Text(
+                    '$day',
+                    style: TextStyle(
+                      color: active
+                          ? Colors.white
+                          : Colors.white.withOpacity(0.58),
+                      fontSize: 11,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _DiagonalFillPainter extends CustomPainter {
+  const _DiagonalFillPainter({required this.progress, required this.color});
+
+  final double progress;
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final double value = progress.clamp(0.0, 1.0);
+    final double diagonal = size.width + size.height;
+    final double filled = diagonal * value;
+    final Path path = Path()
+      ..moveTo(size.width, size.height)
+      ..lineTo(size.width, math.max(0, size.height - filled))
+      ..lineTo(math.max(0, size.width - filled), size.height)
+      ..close();
+
+    if (value >= 0.999) {
+      path
+        ..reset()
+        ..addRect(Offset.zero & size);
+    }
+
+    final Paint paint = Paint()
+      ..shader = LinearGradient(
+        begin: Alignment.bottomRight,
+        end: Alignment.topLeft,
+        colors: <Color>[color, color.withOpacity(0.72)],
+      ).createShader(Offset.zero & size);
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant _DiagonalFillPainter oldDelegate) {
+    return oldDelegate.progress != progress || oldDelegate.color != color;
+  }
+}
+
+class _DaySummaryMetric extends StatelessWidget {
+  const _DaySummaryMetric({
+    required this.label,
+    required this.value,
+    required this.icon,
+  });
+
+  final String label;
+  final String value;
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.07),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        children: <Widget>[
+          Icon(icon, color: rizeCyan, size: 20),
+          const SizedBox(height: 8),
+          Text(
+            value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(color: Colors.white54, fontSize: 10),
           ),
         ],
       ),
@@ -791,9 +1006,7 @@ class ProgressLoadingState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Center(
-      child: CircularProgressIndicator(color: rizeCyan),
-    );
+    return const Center(child: CircularProgressIndicator(color: rizeCyan));
   }
 }
 
@@ -854,10 +1067,7 @@ class _EmptyChart extends StatelessWidget {
 
 List<FlSpot> _spots(List<ProgressPoint> points) => points
     .where((ProgressPoint point) => point.value != null)
-    .map(
-      (ProgressPoint point) =>
-          FlSpot(point.index.toDouble(), point.value!),
-    )
+    .map((ProgressPoint point) => FlSpot(point.index.toDouble(), point.value!))
     .toList(growable: false);
 
 _ChartRange _chartRange(List<double> values) {

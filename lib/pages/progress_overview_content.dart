@@ -166,7 +166,7 @@ class _ProgressDashboard extends StatelessWidget {
               MetricGrid(
                 items: <MetricItem>[
                   MetricItem(
-                    label: 'Spins',
+                    label: 'Einheiten',
                     value: '${statistics.completedUnits}',
                     icon: Icons.cyclone_rounded,
                   ),
@@ -199,10 +199,7 @@ class _ProgressDashboard extends StatelessWidget {
               const SizedBox(height: 16),
               ActivityCalendarCard(
                 month: today,
-                activeDays: activeDayNumbersForMonth(
-                  statistics.activeDays,
-                  today,
-                ),
+                daySummaries: _calendarSummaries(history, today),
               ),
             ],
           ),
@@ -214,4 +211,45 @@ class _ProgressDashboard extends StatelessWidget {
 
 extension<T> on Iterable<T> {
   T? get lastOrNull => isEmpty ? null : last;
+}
+
+Map<int, CalendarDaySummary> _calendarSummaries(
+  List<ScheduledWorkout> history,
+  DateTime month,
+) {
+  final Map<int, List<ScheduledWorkout>> byDay =
+      <int, List<ScheduledWorkout>>{};
+  for (final ScheduledWorkout workout in history) {
+    final DateTime? date = workout.scheduledDay;
+    if (date == null || date.year != month.year || date.month != month.month) {
+      continue;
+    }
+    byDay.putIfAbsent(date.day, () => <ScheduledWorkout>[]).add(workout);
+  }
+
+  return byDay.map((int day, List<ScheduledWorkout> workouts) {
+    int planned = 0;
+    int completed = 0;
+    double impactScore = 0;
+    ImpactLevel level = ImpactLevel.low;
+    for (final ScheduledWorkout workout in workouts) {
+      impactScore = (impactScore + workout.impactScore).clamp(0, 1);
+      level = workout.impactLevel.index > level.index
+          ? workout.impactLevel
+          : level;
+      for (final WorkoutStep step in workout.schedule) {
+        planned += step.plannedUnits;
+        completed += step.completedUnits.clamp(0, step.plannedUnits);
+      }
+    }
+    return MapEntry<int, CalendarDaySummary>(
+      day,
+      CalendarDaySummary(
+        completion: planned <= 0 ? 0 : (completed / planned).clamp(0.0, 1.0),
+        impactScore: impactScore,
+        impactLevel: level,
+        workoutCount: workouts.length,
+      ),
+    );
+  });
 }

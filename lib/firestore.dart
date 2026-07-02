@@ -144,8 +144,7 @@ Future<void> uploadWorkoutToServer(ScheduledWorkout workout) async {
       .doc(userId)
       .collection('workoutHistory');
   final bool isNewSession = workout.historyId == null;
-  final DocumentReference<Map<String, dynamic>> reference =
-      isNewSession
+  final DocumentReference<Map<String, dynamic>> reference = isNewSession
       ? history.doc()
       : history.doc(workout.historyId);
   workout.historyId = reference.id;
