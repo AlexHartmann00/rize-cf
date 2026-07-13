@@ -22,6 +22,7 @@ import 'package:rize/widgets/muscle_visualizer.dart';
 import 'package:rize/widgets/workout_rounds_list.dart';
 import 'package:rize/widgets/pro_upgrade_cta.dart';
 import 'package:rize/widgets/anamnesis_questionnaire_flow.dart';
+import 'package:rize/widgets/drag_safe_filter_chip.dart';
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.title});
@@ -144,11 +145,17 @@ class HomePageSlotMachineWidget extends StatefulWidget {
 }
 
 class _HomePageSlotMachineWidgetState extends State<HomePageSlotMachineWidget> {
+  String get _includedMuscleGroupsKey =>
+      'dailyWorkoutIncludedMuscleGroups:${globals.authenticatedUserId}';
+  String get _excludedMuscleTagsKey =>
+      'dailyWorkoutExcludedMuscleTags:${globals.authenticatedUserId}';
+
   final SlotMachineController _slotController = SlotMachineController();
 
   List<ScheduledWorkout> _selectedWorkouts = <ScheduledWorkout>[];
   int _exerciseCount = 1;
   Set<String> _selectedMuscleGroups = <String>{};
+  Set<String> _excludedMuscleTags = <String>{};
   bool _showSpinExperience = false;
   bool _isSpinning = false;
   bool _questionnaireChecked = false;
@@ -159,10 +166,44 @@ class _HomePageSlotMachineWidgetState extends State<HomePageSlotMachineWidget> {
   void initState() {
     super.initState();
     _historyFuture = loadWorkoutHistoryFromServer();
+    _restoreMuscleFilters();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _openQuestionnaireWhenRequired();
     });
+  }
+
+  Future<void> _restoreMuscleFilters() async {
+    final SharedPreferences preferences = await SharedPreferences.getInstance();
+    if (!mounted) return;
+    setState(() {
+      _selectedMuscleGroups =
+          preferences.getStringList(_includedMuscleGroupsKey)?.toSet() ??
+          <String>{};
+      _excludedMuscleTags =
+          preferences.getStringList(_excludedMuscleTagsKey)?.toSet() ??
+          <String>{};
+    });
+  }
+
+  Future<void> _updateMuscleFilters(
+    ({Set<String> included, Set<String> excluded}) filters,
+  ) async {
+    setState(() {
+      _selectedMuscleGroups = filters.included;
+      _excludedMuscleTags = filters.excluded;
+    });
+    final SharedPreferences preferences = await SharedPreferences.getInstance();
+    await Future.wait(<Future<bool>>[
+      preferences.setStringList(
+        _includedMuscleGroupsKey,
+        filters.included.toList(growable: false)..sort(),
+      ),
+      preferences.setStringList(
+        _excludedMuscleTagsKey,
+        filters.excluded.toList(growable: false)..sort(),
+      ),
+    ]);
   }
 
   Future<void> _openQuestionnaireWhenRequired() async {
@@ -284,8 +325,8 @@ class _HomePageSlotMachineWidgetState extends State<HomePageSlotMachineWidget> {
           onExerciseCountChanged: (int value) =>
               setState(() => _exerciseCount = value),
           selectedMuscleGroups: _selectedMuscleGroups,
-          onMuscleGroupsChanged: (Set<String> value) =>
-              setState(() => _selectedMuscleGroups = value),
+          excludedMuscleTags: _excludedMuscleTags,
+          onMuscleFiltersChanged: _updateMuscleFilters,
           onSpin: _spinWorkout,
           onClose: () {
             setState(() {
@@ -438,13 +479,26 @@ class _HomePageSlotMachineWidgetState extends State<HomePageSlotMachineWidget> {
       return;
     }
 
+    final List<Workout> eligibleWorkouts = isPro
+        ? workouts
+              .where(
+                (Workout workout) => workoutMatchesMuscleFilters(
+                  workout,
+                  includedMuscleGroups: _selectedMuscleGroups,
+                  excludedTags: _excludedMuscleTags,
+                ),
+              )
+              .toList(growable: false)
+        : workouts;
     final Random random = Random();
-    final List<Workout> pool = List<Workout>.of(workouts)..shuffle(random);
+    final List<Workout> pool = List<Workout>.of(eligibleWorkouts)
+      ..shuffle(random);
     final List<Workout> diverseSelection = isPro
         ? selectDiverseWorkouts(
             workouts: pool,
             count: requestedCount,
             muscleFilter: _selectedMuscleGroups,
+            excludedTags: _excludedMuscleTags,
           )
         : <Workout>[pool[random.nextInt(pool.length)]];
 
@@ -453,7 +507,7 @@ class _HomePageSlotMachineWidgetState extends State<HomePageSlotMachineWidget> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              'Für diesen Fokus sind nur ${diverseSelection.length} unterschiedliche Übungen verfügbar. Wähle weitere Muskelgruppen oder weniger Übungen.',
+              'Für diese Filter sind nur ${diverseSelection.length} unterschiedliche Übungen verfügbar. Passe Muskelgruppen, Ausschlüsse oder die Übungsanzahl an.',
             ),
           ),
         );
@@ -483,7 +537,7 @@ class _HomePageSlotMachineWidgetState extends State<HomePageSlotMachineWidget> {
           });
       final ScheduledWorkout workout = spunWorkouts.first;
 
-      final List<String> names = workouts
+      final List<String> names = eligibleWorkouts
           .map((Workout item) => item.name)
           .toSet()
           .toList(growable: false);
@@ -532,7 +586,8 @@ class _DailySpinPanel extends StatelessWidget {
     required this.exerciseCount,
     required this.onExerciseCountChanged,
     required this.selectedMuscleGroups,
-    required this.onMuscleGroupsChanged,
+    required this.excludedMuscleTags,
+    required this.onMuscleFiltersChanged,
   });
 
   final SlotMachineController controller;
@@ -542,7 +597,9 @@ class _DailySpinPanel extends StatelessWidget {
   final int exerciseCount;
   final ValueChanged<int> onExerciseCountChanged;
   final Set<String> selectedMuscleGroups;
-  final ValueChanged<Set<String>> onMuscleGroupsChanged;
+  final Set<String> excludedMuscleTags;
+  final ValueChanged<({Set<String> included, Set<String> excluded})>
+  onMuscleFiltersChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -563,12 +620,14 @@ class _DailySpinPanel extends StatelessWidget {
           )
         : entitledWorkouts;
 
-    final List<Workout> visibleSpinPool =
-        isPro && selectedMuscleGroups.isNotEmpty
+    final List<Workout> visibleSpinPool = isPro
         ? workouts
               .where(
-                (Workout workout) =>
-                    workout.usedMuscleGroups.any(selectedMuscleGroups.contains),
+                (Workout workout) => workoutMatchesMuscleFilters(
+                  workout,
+                  includedMuscleGroups: selectedMuscleGroups,
+                  excludedTags: excludedMuscleTags,
+                ),
               )
               .toList(growable: false)
         : workouts;
@@ -695,9 +754,10 @@ class _DailySpinPanel extends StatelessWidget {
             const SizedBox(height: 14),
             _MuscleFocusButton(
               selectedGroups: selectedMuscleGroups,
+              excludedTags: excludedMuscleTags,
               onTap: isSpinning
                   ? null
-                  : () => _selectMuscleGroups(context, workouts),
+                  : () => _selectMuscleFilters(context, workouts),
             ),
           ] else ...<Widget>[
             ProFeatureLock(
@@ -777,7 +837,7 @@ class _DailySpinPanel extends StatelessWidget {
     _ => '5 Übungen · Volle Energie',
   };
 
-  Future<void> _selectMuscleGroups(
+  Future<void> _selectMuscleFilters(
     BuildContext context,
     List<Workout> workouts,
   ) async {
@@ -790,25 +850,49 @@ class _DailySpinPanel extends StatelessWidget {
             (String a, String b) =>
                 muscleGroupLabel(a).compareTo(muscleGroupLabel(b)),
           );
-    final Set<String>? result = await showModalBottomSheet<Set<String>>(
+    final List<String> tags =
+        workouts
+            .expand((Workout workout) => workout.tags)
+            .map((String tag) => tag.trim())
+            .where((String tag) => tag.isNotEmpty)
+            .toSet()
+            .toList()
+          ..sort(
+            (String a, String b) =>
+                muscleGroupLabel(a).compareTo(muscleGroupLabel(b)),
+          );
+    // Keep the draft outside the route builder. The modal route can rebuild
+    // while it is dragged; recreating these sets there would restore the
+    // persisted filters and discard every change made since opening the sheet.
+    Set<String> includedDraft = Set<String>.of(selectedMuscleGroups);
+    Set<String> excludedDraft = Set<String>.of(excludedMuscleTags);
+    final ({Set<String> included, Set<String> excluded})?
+    result = await showModalBottomSheet<({Set<String> included, Set<String> excluded})>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (BuildContext context) {
-        Set<String> draft = Set<String>.of(selectedMuscleGroups);
         return StatefulBuilder(
           builder: (BuildContext context, StateSetter setModalState) {
             final int matchingCount = workouts
                 .where(
-                  (Workout workout) =>
-                      draft.isEmpty ||
-                      workout.usedMuscleGroups.any(draft.contains),
+                  (Workout workout) => workoutMatchesMuscleFilters(
+                    workout,
+                    includedMuscleGroups: includedDraft,
+                    excludedTags: excludedDraft,
+                  ),
                 )
                 .length;
             return SafeArea(
               top: false,
+              bottom: false,
               child: Container(
-                padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
+                padding: EdgeInsets.fromLTRB(
+                  20,
+                  10,
+                  20,
+                  20 + MediaQuery.paddingOf(context).bottom,
+                ),
                 decoration: const BoxDecoration(
                   color: Color(0xFF102F55),
                   borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
@@ -848,34 +932,131 @@ class _DailySpinPanel extends StatelessWidget {
                     const SizedBox(height: 16),
                     Flexible(
                       child: SingleChildScrollView(
-                        child: Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: <Widget>[
-                            FilterChip(
-                              label: const Text('Alles offen'),
-                              avatar: const Icon(
-                                Icons.auto_awesome_rounded,
-                                size: 17,
-                              ),
-                              selected: draft.isEmpty,
-                              onSelected: (_) =>
-                                  setModalState(() => draft = <String>{}),
-                            ),
-                            ...groups.map(
-                              (String group) => FilterChip(
-                                label: Text(muscleGroupLabel(group)),
-                                selected: draft.contains(group),
-                                onSelected: (bool selected) {
-                                  setModalState(() {
-                                    draft = Set<String>.of(draft);
-                                    selected
-                                        ? draft.add(group)
-                                        : draft.remove(group);
-                                  });
-                                },
+                            const Text(
+                              'MUSKELGRUPPEN EINSCHLIESSEN',
+                              style: TextStyle(
+                                color: Color(0xFF9DDEF9),
+                                fontSize: 10,
+                                letterSpacing: 0.8,
+                                fontWeight: FontWeight.w900,
                               ),
                             ),
+                            const SizedBox(height: 8),
+                            Wrap(
+                              spacing: 8,
+                              runSpacing: 8,
+                              children: <Widget>[
+                                DragSafeFilterChip(
+                                  key: const ValueKey<String>(
+                                    'include-all-muscles',
+                                  ),
+                                  label: const Text('Alles offen'),
+                                  avatar: const Icon(
+                                    Icons.auto_awesome_rounded,
+                                    size: 17,
+                                  ),
+                                  selected: includedDraft.isEmpty,
+                                  onSelected: (_) {
+                                    setModalState(
+                                      () => includedDraft = <String>{},
+                                    );
+                                  },
+                                ),
+                                ...groups.map(
+                                  (String group) => DragSafeFilterChip(
+                                    key: ValueKey<String>('include-$group'),
+                                    label: Text(muscleGroupLabel(group)),
+                                    selected: includedDraft.contains(group),
+                                    onSelected: (bool selected) {
+                                      setModalState(() {
+                                        includedDraft = Set<String>.of(
+                                          includedDraft,
+                                        );
+                                        selected
+                                            ? includedDraft.add(group)
+                                            : includedDraft.remove(group);
+                                      });
+                                    },
+                                  ),
+                                ),
+                              ],
+                            ),
+                            if (tags.isNotEmpty) ...<Widget>[
+                              const SizedBox(height: 18),
+                              const Text(
+                                'MUSKELGRUPPEN AUSSCHLIESSEN',
+                                style: TextStyle(
+                                  color: Color(0xFFFF9AA3),
+                                  fontSize: 10,
+                                  letterSpacing: 0.8,
+                                  fontWeight: FontWeight.w900,
+                                ),
+                              ),
+                              const SizedBox(height: 5),
+                              const Text(
+                                'Ausschlüsse werden anhand der Tags der Übungen geprüft.',
+                                style: TextStyle(
+                                  color: Color(0xFFDC8B94),
+                                  fontSize: 11,
+                                  height: 1.35,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Wrap(
+                                spacing: 8,
+                                runSpacing: 8,
+                                children: <Widget>[
+                                  DragSafeFilterChip(
+                                    key: const ValueKey<String>(
+                                      'exclude-no-tags',
+                                    ),
+                                    label: const Text('Nichts ausschließen'),
+                                    avatar: const Icon(
+                                      Icons.check_circle_outline_rounded,
+                                      size: 17,
+                                    ),
+                                    selected: excludedDraft.isEmpty,
+                                    selectedColor: const Color(
+                                      0xFFFF6B78,
+                                    ).withOpacity(0.28),
+                                    onSelected: (_) {
+                                      setModalState(
+                                        () => excludedDraft = <String>{},
+                                      );
+                                    },
+                                  ),
+                                  ...tags.map(
+                                    (String tag) => DragSafeFilterChip(
+                                      key: ValueKey<String>('exclude-$tag'),
+                                      label: Text(muscleGroupLabel(tag)),
+                                      selected: excludedDraft.contains(tag),
+                                      selectedColor: const Color(
+                                        0xFFFF6B78,
+                                      ).withOpacity(0.28),
+                                      checkmarkColor: const Color(0xFFFFB3BA),
+                                      side: BorderSide(
+                                        color: excludedDraft.contains(tag)
+                                            ? const Color(0xFFFF7E89)
+                                            : Colors.white24,
+                                      ),
+                                      onSelected: (bool selected) {
+                                        setModalState(() {
+                                          excludedDraft = Set<String>.of(
+                                            excludedDraft,
+                                          );
+                                          selected
+                                              ? excludedDraft.add(tag)
+                                              : excludedDraft.remove(tag);
+                                        });
+                                      },
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
                           ],
                         ),
                       ),
@@ -884,7 +1065,10 @@ class _DailySpinPanel extends StatelessWidget {
                     FilledButton(
                       onPressed: matchingCount == 0
                           ? null
-                          : () => Navigator.pop(context, draft),
+                          : () => Navigator.pop(context, (
+                              included: includedDraft,
+                              excluded: excludedDraft,
+                            )),
                       style: FilledButton.styleFrom(
                         minimumSize: const Size.fromHeight(52),
                         backgroundColor: Colors.white,
@@ -894,9 +1078,9 @@ class _DailySpinPanel extends StatelessWidget {
                         ),
                       ),
                       child: Text(
-                        draft.isEmpty
+                        includedDraft.isEmpty && excludedDraft.isEmpty
                             ? 'ALLE MUSKELGRUPPEN · $matchingCount ÜBUNGEN'
-                            : 'FOKUS ÜBERNEHMEN · $matchingCount ÜBUNGEN',
+                            : 'FILTER ÜBERNEHMEN · $matchingCount ÜBUNGEN',
                         style: const TextStyle(fontWeight: FontWeight.w900),
                       ),
                     ),
@@ -908,14 +1092,19 @@ class _DailySpinPanel extends StatelessWidget {
         );
       },
     );
-    if (result != null) onMuscleGroupsChanged(result);
+    if (result != null) onMuscleFiltersChanged(result);
   }
 }
 
 class _MuscleFocusButton extends StatelessWidget {
-  const _MuscleFocusButton({required this.selectedGroups, this.onTap});
+  const _MuscleFocusButton({
+    required this.selectedGroups,
+    required this.excludedTags,
+    this.onTap,
+  });
 
   final Set<String> selectedGroups;
+  final Set<String> excludedTags;
   final VoidCallback? onTap;
 
   @override
@@ -923,6 +1112,9 @@ class _MuscleFocusButton extends StatelessWidget {
     final String label = selectedGroups.isEmpty
         ? 'Alle Muskelgruppen'
         : selectedGroups.map(muscleGroupLabel).join(' · ');
+    final String excludedLabel = excludedTags.isEmpty
+        ? 'Nichts ausgeschlossen'
+        : excludedTags.map(muscleGroupLabel).join(' · ');
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -964,6 +1156,19 @@ class _MuscleFocusButton extends StatelessWidget {
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 13,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 5),
+                    Text(
+                      'AUSSCHLUSS · $excludedLabel',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: excludedTags.isEmpty
+                            ? Colors.white38
+                            : const Color(0xFFFF9AA3),
+                        fontSize: 10,
                         fontWeight: FontWeight.w800,
                       ),
                     ),

@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter/material.dart' hide TimeOfDay;
 import 'package:rize/helpers/workout_library_helpers.dart';
+import 'package:rize/helpers/muscle_group_labels.dart';
 import 'package:rize/types/workout.dart';
 import 'package:rize/widgets/workout_rounds_list.dart';
 import 'package:rize/pages/settings_page.dart';
@@ -9,20 +10,117 @@ import 'package:rize/widgets/anamnesis_questionnaire_flow.dart';
 import 'package:rize/widgets/pro_upgrade_cta.dart';
 import 'package:rize/helpers/milestone_service.dart';
 import 'package:rize/widgets/milestone_widgets.dart';
+import 'package:rize/base_widgets.dart';
+import 'package:rize/widgets/drag_safe_filter_chip.dart';
 
-Workout workout(String id, List<String> muscles) => Workout(
+Workout workout(
+  String id,
+  List<String> muscles, {
+  List<String> tags = const <String>[],
+}) => Workout(
   id: id,
   name: id,
   description: '',
   coachingCues: '',
   usedMuscleGroups: muscles,
-  tags: const <String>[],
+  tags: tags,
   workoutType: WorkoutType.dynamic,
   impactScore: 0.5,
   baseReps: 10,
 );
 
 void main() {
+  testWidgets('swiping from a filter chip does not select it', (
+    WidgetTester tester,
+  ) async {
+    final Set<String> selected = <String>{};
+    const List<String> tags = <String>[
+      'Impact',
+      'Knee',
+      'LowerBack',
+      'Shoulder',
+      'Wrist',
+    ];
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SingleChildScrollView(
+            child: Column(
+              children: <Widget>[
+                const SizedBox(height: 150),
+                SizedBox(
+                  width: 400,
+                  child: Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: tags
+                        .map(
+                          (String tag) => DragSafeFilterChip(
+                            key: ValueKey<String>(tag),
+                            label: Text(tag),
+                            selected: selected.contains(tag),
+                            onSelected: (bool value) => value
+                                ? selected.add(tag)
+                                : selected.remove(tag),
+                          ),
+                        )
+                        .toList(growable: false),
+                  ),
+                ),
+                const SizedBox(height: 800),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+
+    await tester.drag(
+      find.byKey(const ValueKey<String>('Impact')),
+      const Offset(0, -40),
+    );
+    await tester.pump();
+
+    expect(selected, isEmpty);
+
+    final Offset wristBottomRight = tester.getBottomRight(
+      find.byKey(const ValueKey<String>('Wrist')),
+    );
+    await tester.dragFrom(
+      wristBottomRight + const Offset(30, -10),
+      const Offset(0, -40),
+    );
+    await tester.pump();
+
+    expect(selected, isEmpty);
+
+    await tester.tap(find.byKey(const ValueKey<String>('Wrist')));
+    await tester.pump();
+
+    expect(selected, <String>{'Wrist'});
+  });
+
+  testWidgets('RIZE background fills the viewport with short content', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(
+      const MaterialApp(home: RizeScaffold(body: SizedBox(height: 100))),
+    );
+
+    expect(
+      tester.getSize(find.byKey(const ValueKey<String>('rize-background'))),
+      tester.view.physicalSize / tester.view.devicePixelRatio,
+    );
+  });
+
+  test('exclusion tags have German labels', () {
+    expect(muscleGroupLabel('Impact'), 'Stoßbelastung');
+    expect(muscleGroupLabel('Knee'), 'Knie');
+    expect(muscleGroupLabel('LowerBack'), 'Unterer Rücken');
+    expect(muscleGroupLabel('Shoulder'), 'Schulter');
+    expect(muscleGroupLabel('Wrist'), 'Handgelenk');
+  });
+
   test('daily plan aggregates multiple independently completed workouts', () {
     final first = ScheduledWorkout.fromBaseWorkout(
       workout('a', const <String>['chest']),
@@ -106,6 +204,23 @@ void main() {
     );
 
     expect(selection.map((Workout item) => item.id), <String>['chest']);
+  });
+
+  test('muscle exclusion uses workout tags instead of muscle groups', () {
+    final List<Workout> selection = selectDiverseWorkouts(
+      workouts: <Workout>[
+        workout('tagged', <String>['chest'], tags: <String>['shoulders']),
+        workout('muscle-only', <String>['shoulders']),
+        workout('allowed', <String>['back']),
+      ],
+      count: 3,
+      excludedTags: const <String>{'SHOULDERS'},
+    );
+
+    expect(selection.map((Workout item) => item.id), <String>[
+      'muscle-only',
+      'allowed',
+    ]);
   });
 
   test('multiple selected muscle groups are rotated first', () {

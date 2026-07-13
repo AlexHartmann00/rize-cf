@@ -223,6 +223,8 @@ class WorkoutSummaryWidget extends StatelessWidget {
 
     return Material(
       color: Colors.transparent,
+      borderRadius: BorderRadius.circular(24),
+      clipBehavior: Clip.antiAlias,
       child: InkWell(
         borderRadius: BorderRadius.circular(24),
         onTap: () {
@@ -244,18 +246,6 @@ class WorkoutSummaryWidget extends StatelessWidget {
               ],
             ),
             border: Border.all(color: Colors.white.withOpacity(0.14)),
-            boxShadow: <BoxShadow>[
-              BoxShadow(
-                color: Colors.black.withOpacity(0.16),
-                blurRadius: 24,
-                offset: const Offset(0, 12),
-              ),
-              BoxShadow(
-                color: Colors.white.withOpacity(0.05),
-                blurRadius: 0,
-                offset: const Offset(0, 1),
-              ),
-            ],
           ),
           child: Stack(
             children: <Widget>[

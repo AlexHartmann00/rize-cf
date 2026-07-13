@@ -1,18 +1,16 @@
-import 'package:rize/globals.dart' as globals;
-import 'package:rize/main.dart'
-    show HomePageSlotMachineWidget, WorkoutLibraryPage;
 import 'package:flutter/material.dart';
 
 class RizeScaffold extends StatefulWidget {
-  Widget body;
-  BottomNavigationBar? bottomNavigationBar;
-  AppBar? appBar;
-  RizeScaffold({
+  const RizeScaffold({
     super.key,
     required this.body,
     this.bottomNavigationBar,
     this.appBar,
   });
+
+  final Widget body;
+  final BottomNavigationBar? bottomNavigationBar;
+  final AppBar? appBar;
 
   @override
   State<RizeScaffold> createState() => _RizeScaffoldState();
@@ -21,11 +19,18 @@ class RizeScaffold extends StatefulWidget {
 class _RizeScaffoldState extends State<RizeScaffold> {
   @override
   Widget build(BuildContext context) {
+    final double backgroundOffset = widget.bottomNavigationBar == null
+        ? 0
+        : (kBottomNavigationBarHeight + MediaQuery.paddingOf(context).bottom) /
+              2;
     return Scaffold(
       appBar: widget.appBar,
       bottomNavigationBar: widget.bottomNavigationBar,
       backgroundColor: Colors.transparent,
       body: Container(
+        key: const ValueKey<String>('rize-background'),
+        width: double.infinity,
+        height: double.infinity,
         decoration: BoxDecoration(
           gradient: RadialGradient(
             radius: 1.3,
@@ -36,12 +41,19 @@ class _RizeScaffoldState extends State<RizeScaffold> {
         ),
         child: Stack(
           children: [
-            Center(
-              child: SizedBox(
-                width: MediaQuery.sizeOf(context).width * 0.55,
-                child: Image.asset(
-                  'assets/brand/rize_logo_r.png',
-                  color: Colors.white.withAlpha(50),
+            Positioned.fill(
+              child: Transform.translate(
+                offset: Offset(0, backgroundOffset),
+                child: Align(
+                  alignment: Alignment.center,
+                  child: FractionallySizedBox(
+                    widthFactor: 0.55,
+                    child: Image.asset(
+                      'assets/brand/rize_logo_r.png',
+                      fit: BoxFit.contain,
+                      color: Colors.white.withAlpha(50),
+                    ),
+                  ),
                 ),
               ),
             ),

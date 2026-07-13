@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:rize/globals.dart' as globals;
 import 'package:rize/helpers/workout_library_helpers.dart';
 import 'package:rize/types/workout.dart';
-import 'package:rize/base_widgets.dart';
 import 'package:rize/widgets/workout_library_widgets.dart';
 import 'package:rize/widgets/pro_upgrade_cta.dart';
 
@@ -124,6 +123,8 @@ class _WorkoutLibraryPageState extends State<WorkoutLibraryPage> {
                                   workouts.length;
                               return Material(
                                 color: Colors.transparent,
+                                borderRadius: BorderRadius.circular(22),
+                                clipBehavior: Clip.antiAlias,
                                 child: InkWell(
                                   onTap: () => showProUpgradeSheet(
                                     context,

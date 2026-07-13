@@ -131,18 +131,40 @@ List<Workout> availableWorkoutsForUser({
       : freeWorkoutSelection(workouts, intensityScore);
 }
 
+/// Applies the inclusive muscle-group filter and tag-based exclusions.
+bool workoutMatchesMuscleFilters(
+  Workout workout, {
+  Set<String> includedMuscleGroups = const <String>{},
+  Set<String> excludedTags = const <String>{},
+}) {
+  final Set<String> normalizedExcludedTags = excludedTags
+      .map((String tag) => tag.trim().toLowerCase())
+      .where((String tag) => tag.isNotEmpty)
+      .toSet();
+  final bool matchesMuscleFocus =
+      includedMuscleGroups.isEmpty ||
+      workout.usedMuscleGroups.any(includedMuscleGroups.contains);
+  final bool hasExcludedTag = workout.tags.any(
+    (String tag) => normalizedExcludedTags.contains(tag.trim().toLowerCase()),
+  );
+  return matchesMuscleFocus && !hasExcludedTag;
+}
+
 /// Picks unique exercises while maximizing newly covered muscle groups.
 /// Pass a shuffled input list when randomized tie-breaking is desired.
 List<Workout> selectDiverseWorkouts({
   required Iterable<Workout> workouts,
   required int count,
   Set<String> muscleFilter = const <String>{},
+  Set<String> excludedTags = const <String>{},
 }) {
   final List<Workout> remaining = workouts
       .where(
-        (Workout workout) =>
-            muscleFilter.isEmpty ||
-            workout.usedMuscleGroups.any(muscleFilter.contains),
+        (Workout workout) => workoutMatchesMuscleFilters(
+          workout,
+          includedMuscleGroups: muscleFilter,
+          excludedTags: excludedTags,
+        ),
       )
       .toList();
   final List<Workout> result = <Workout>[];

@@ -13,6 +13,11 @@ const Map<String, String> _muscleGroupLabels = <String, String>{
   'triceps': 'Trizeps',
   'upper back': 'Oberer Rücken',
   'calves': 'Waden',
+  'impact': 'Stoßbelastung',
+  'knee': 'Knie',
+  'lowerback': 'Unterer Rücken',
+  'shoulder': 'Schulter',
+  'wrist': 'Handgelenk',
 };
 
 String muscleGroupLabel(String technicalName) =>
