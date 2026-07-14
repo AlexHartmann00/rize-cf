@@ -349,7 +349,10 @@ class _HomePageSlotMachineWidgetState extends State<HomePageSlotMachineWidget> {
                 eyebrow:
                     'ÜBUNG ${entry.$1 + 1} VON ${_selectedWorkouts.length}',
                 progress: 0,
-                schedule: WorkoutRoundsList(workout: entry.$2),
+                schedule: WorkoutRoundsList(
+                  workout: entry.$2,
+                  onRoundCompleted: _refreshWorkoutProgress,
+                ),
                 muscleVisualization: MuscleVisualization(workout: entry.$2),
                 onOpenTechnique: () => _openWorkout(entry.$2),
                 onReset: entry.$1 == 0
@@ -392,7 +395,10 @@ class _HomePageSlotMachineWidgetState extends State<HomePageSlotMachineWidget> {
               workout: entry.$2,
               eyebrow: 'ÜBUNG ${entry.$1 + 1} VON ${plan.workouts.length}',
               progress: dailyWorkoutProgress(entry.$2),
-              schedule: WorkoutRoundsList(workout: entry.$2),
+              schedule: WorkoutRoundsList(
+                workout: entry.$2,
+                onRoundCompleted: _refreshWorkoutProgress,
+              ),
               muscleVisualization: MuscleVisualization(workout: entry.$2),
               onOpenTechnique: () => _openWorkout(entry.$2),
               onReset: entry.$1 == 0 && plan.workouts.every(canResetDailyPlan)
@@ -568,12 +574,23 @@ class _HomePageSlotMachineWidgetState extends State<HomePageSlotMachineWidget> {
     }
   }
 
-  void _openWorkout(ScheduledWorkout workout) {
-    Navigator.of(context).push(
-      MaterialPageRoute<void>(
+  Future<void> _openWorkout(ScheduledWorkout workout) async {
+    final bool? completed = await Navigator.of(context).push<bool>(
+      MaterialPageRoute<bool>(
         builder: (_) => WorkoutDetailsPage(workout: workout),
       ),
     );
+
+    if (completed == true && mounted) {
+      _refreshWorkoutProgress();
+    }
+  }
+
+  void _refreshWorkoutProgress() {
+    if (!mounted) return;
+    setState(() {
+      _historyFuture = loadWorkoutHistoryFromServer();
+    });
   }
 }
 

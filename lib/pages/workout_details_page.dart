@@ -106,19 +106,23 @@ class WorkoutDetailsPage extends StatelessWidget {
     return url != null && url.toLowerCase().contains('youtu');
   }
 
-  void _startWorkout(BuildContext context) {
+  Future<void> _startWorkout(BuildContext context) async {
     if (workout is! ScheduledWorkout) {
       Navigator.of(context).pop();
       return;
     }
 
-    Navigator.of(context).push(
-      MaterialPageRoute<void>(
+    final bool? completed = await Navigator.of(context).push<bool>(
+      MaterialPageRoute<bool>(
         builder: (_) => WorkoutExecutionPage(
           workout: workout as ScheduledWorkout,
           scheduleEntryIndex: 0,
         ),
       ),
     );
+
+    if (completed == true && context.mounted) {
+      Navigator.of(context).pop(true);
+    }
   }
 }

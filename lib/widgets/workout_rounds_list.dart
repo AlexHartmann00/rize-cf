@@ -3,9 +3,14 @@ import 'package:rize/pages/workout_execution_page.dart';
 import 'package:rize/types/workout.dart';
 
 class WorkoutRoundsList extends StatefulWidget {
-  const WorkoutRoundsList({super.key, required this.workout});
+  const WorkoutRoundsList({
+    super.key,
+    required this.workout,
+    this.onRoundCompleted,
+  });
 
   final ScheduledWorkout workout;
+  final VoidCallback? onRoundCompleted;
 
   @override
   State<WorkoutRoundsList> createState() => _WorkoutRoundsListState();
@@ -90,7 +95,10 @@ class _WorkoutRoundsListState extends State<WorkoutRoundsList> {
         ),
       ),
     );
-    if (completed == true && mounted) setState(() {});
+    if (completed == true && mounted) {
+      setState(() {});
+      widget.onRoundCompleted?.call();
+    }
   }
 
   bool _timeIsValid(TimeOfDay value) {
