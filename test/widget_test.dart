@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter/material.dart' hide TimeOfDay;
 import 'package:rize/helpers/workout_library_helpers.dart';
 import 'package:rize/helpers/muscle_group_labels.dart';
+import 'package:rize/helpers/home_page_helpers.dart';
 import 'package:rize/types/workout.dart';
 import 'package:rize/widgets/workout_rounds_list.dart';
 import 'package:rize/pages/settings_page.dart';
@@ -119,6 +120,59 @@ void main() {
     expect(muscleGroupLabel('LowerBack'), 'Unterer Rücken');
     expect(muscleGroupLabel('Shoulder'), 'Schulter');
     expect(muscleGroupLabel('Wrist'), 'Handgelenk');
+    expect(muscleGroupLabel('Front Shoulders'), 'Vordere Schultern');
+    expect(muscleGroupLabel('Rear Shoulders'), 'Hintere Schultern');
+  });
+
+  test('YouTube IDs are extracted from current sharing URL formats', () {
+    expect(
+      youtubeVideoIdFromUrl('https://youtu.be/5BNYPq1WRek?si=uUvfJDTpBjhSgVhT'),
+      '5BNYPq1WRek',
+    );
+    expect(
+      youtubeVideoIdFromUrl('https://www.youtube.com/watch?v=5BNYPq1WRek'),
+      '5BNYPq1WRek',
+    );
+    expect(
+      youtubeVideoIdFromUrl('https://www.youtube.com/embed/5BNYPq1WRek'),
+      '5BNYPq1WRek',
+    );
+    expect(youtubeVideoIdFromUrl('https://example.com/5BNYPq1WRek'), isEmpty);
+  });
+
+  test('library search matches German muscle names', () {
+    final Workout shoulderWorkout = workout('rotation', const <String>[
+      'Rear Shoulders',
+    ]);
+    expect(workoutMatchesSearch(shoulderWorkout, 'hintere Schulter'), isTrue);
+    expect(workoutMatchesSearch(shoulderWorkout, 'vordere Schulter'), isFalse);
+  });
+
+  test('free Pro nudge appears once after five completed workouts', () {
+    expect(
+      shouldShowFreeProNudge(
+        isPro: false,
+        completedWorkoutCount: 4,
+        wasAlreadyShown: false,
+      ),
+      isFalse,
+    );
+    expect(
+      shouldShowFreeProNudge(
+        isPro: false,
+        completedWorkoutCount: 5,
+        wasAlreadyShown: false,
+      ),
+      isTrue,
+    );
+    expect(
+      shouldShowFreeProNudge(
+        isPro: false,
+        completedWorkoutCount: 6,
+        wasAlreadyShown: true,
+      ),
+      isFalse,
+    );
   });
 
   test('daily plan aggregates multiple independently completed workouts', () {

@@ -117,6 +117,14 @@ String completedMessage(int streak) {
   return '$streak Tage Serie. Konsequenz schlägt Motivation.';
 }
 
+bool shouldShowFreeProNudge({
+  required bool isPro,
+  required int completedWorkoutCount,
+  required bool wasAlreadyShown,
+}) {
+  return !isPro && !wasAlreadyShown && completedWorkoutCount >= 5;
+}
+
 Duration timeUntilTomorrow(DateTime now) {
   final DateTime tomorrow = DateTime(now.year, now.month, now.day + 1);
   return tomorrow.difference(now);

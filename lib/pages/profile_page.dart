@@ -4,6 +4,7 @@ import 'package:rize/helpers/auth_service.dart';
 import 'package:rize/helpers/pro_checkout_service.dart';
 import 'package:rize/pages/settings_page.dart';
 import 'package:rize/pages/welcome_page.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -13,6 +14,74 @@ class ProfilePage extends StatefulWidget {
 
 class _ProfilePageState extends State<ProfilePage> {
   bool _busy = false;
+
+  Future<void> _openCoachFlo() async {
+    await _openExternalUri(Uri.parse('https://www.coach-flo.de'));
+  }
+
+  Future<void> _openPrivacyPolicy() async {
+    await _openExternalUri(Uri.parse('https://www.coach-flo.de/datenschutz'));
+  }
+
+  Future<void> _requestAccountDeletion() async {
+    final bool? confirmed = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) => AlertDialog(
+        title: const Text('Konto und Daten löschen?'),
+        content: const Text(
+          'Wir öffnen eine vorbereitete E-Mail an Coach Flo. Nach Deiner '
+          'Bestätigung werden Dein RIZE-Konto und die zugehörigen '
+          'Trainingsdaten gelöscht. Ein aktives RIZE-Pro-Abo wird dabei '
+          'ebenfalls beendet.',
+        ),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Abbrechen'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: Colors.redAccent),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Löschung anfragen'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+
+    final String email =
+        authServiceNotifier.value.currentUser?.email ?? 'nicht angegeben';
+    final String userId = authServiceNotifier.value.currentUser?.uid ?? '';
+    final Uri request = Uri(
+      scheme: 'mailto',
+      path: 'info@coach-flo.de',
+      queryParameters: <String, String>{
+        'subject': 'RIZE – Konto und Daten löschen',
+        'body':
+            'Hallo Coach Flo,\n\nbitte lösche mein RIZE-Konto und alle '
+            'zugehörigen Daten.\n\nE-Mail: $email\nNutzer-ID: $userId\n',
+      },
+    );
+    await _openExternalUri(request);
+  }
+
+  Future<void> _openExternalUri(Uri uri) async {
+    final bool opened = await launchUrl(
+      uri,
+      mode: LaunchMode.externalApplication,
+    );
+    if (!opened && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            uri.scheme == 'mailto'
+                ? 'Keine E-Mail-App gefunden. Schreibe bitte an info@coach-flo.de.'
+                : 'Der Link konnte nicht geöffnet werden.',
+          ),
+        ),
+      );
+    }
+  }
 
   Future<void> _editName() async {
     final controller = TextEditingController(
@@ -244,7 +313,11 @@ class _ProfilePageState extends State<ProfilePage> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                _tile(Icons.person_outline_rounded, 'Name ändern', _editName),
+                _tile(
+                  Icons.sports_gymnastics_rounded,
+                  'Über deinen Coach',
+                  _openCoachFlo,
+                ),
                 _tile(
                   Icons.lock_reset_rounded,
                   'Passwort zurücksetzen',
@@ -257,6 +330,17 @@ class _ProfilePageState extends State<ProfilePage> {
                     context,
                     MaterialPageRoute(builder: (_) => const SettingsPage()),
                   ),
+                ),
+                _tile(
+                  Icons.privacy_tip_outlined,
+                  'Datenschutz',
+                  _openPrivacyPolicy,
+                ),
+                _tile(
+                  Icons.delete_forever_outlined,
+                  'Konto und Daten löschen',
+                  _requestAccountDeletion,
+                  destructive: true,
                 ),
                 _tile(Icons.logout_rounded, 'Abmelden', () async {
                   await authServiceNotifier.value.signOut();

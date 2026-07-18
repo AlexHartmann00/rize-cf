@@ -159,6 +159,7 @@ class _HomePageSlotMachineWidgetState extends State<HomePageSlotMachineWidget> {
   bool _showSpinExperience = false;
   bool _isSpinning = false;
   bool _questionnaireChecked = false;
+  bool _checkingProNudge = false;
 
   late Future<List<ScheduledWorkout>> _historyFuture;
 
@@ -420,7 +421,6 @@ class _HomePageSlotMachineWidgetState extends State<HomePageSlotMachineWidget> {
           banner,
           const SizedBox(height: 14),
         ],
-        const CoachFloManifestoCard(),
       ],
     );
   }
@@ -451,8 +451,6 @@ class _HomePageSlotMachineWidgetState extends State<HomePageSlotMachineWidget> {
           streak: streak,
           nextWorkoutIn: compactDuration(remaining),
         ),
-        const SizedBox(height: 14),
-        const CoachFloManifestoCard(),
       ],
     );
   }
@@ -586,11 +584,46 @@ class _HomePageSlotMachineWidgetState extends State<HomePageSlotMachineWidget> {
     }
   }
 
-  void _refreshWorkoutProgress() {
+  Future<void> _refreshWorkoutProgress() async {
     if (!mounted) return;
+    final Future<List<ScheduledWorkout>> historyFuture =
+        loadWorkoutHistoryFromServer();
     setState(() {
-      _historyFuture = loadWorkoutHistoryFromServer();
+      _historyFuture = historyFuture;
     });
+
+    final List<ScheduledWorkout> history = await historyFuture;
+    await _showProNudgeWhenEligible(history);
+  }
+
+  Future<void> _showProNudgeWhenEligible(List<ScheduledWorkout> history) async {
+    if (_checkingProNudge || globals.userData?.isPro == true || !mounted) {
+      return;
+    }
+    _checkingProNudge = true;
+    try {
+      final SharedPreferences preferences =
+          await SharedPreferences.getInstance();
+      final String preferenceKey =
+          'freeProNudgeAfterFive:${globals.authenticatedUserId}';
+      final bool wasAlreadyShown = preferences.getBool(preferenceKey) ?? false;
+      final int completedWorkoutCount = history
+          .where((ScheduledWorkout workout) => workout.isCompleted)
+          .length;
+      if (!shouldShowFreeProNudge(
+        isPro: globals.userData?.isPro == true,
+        completedWorkoutCount: completedWorkoutCount,
+        wasAlreadyShown: wasAlreadyShown,
+      )) {
+        return;
+      }
+
+      await preferences.setBool(preferenceKey, true);
+      if (!mounted) return;
+      await showProUpgradeSheet(context, source: 'five_completed_workouts');
+    } finally {
+      _checkingProNudge = false;
+    }
   }
 }
 
