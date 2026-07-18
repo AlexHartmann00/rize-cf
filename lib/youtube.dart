@@ -20,7 +20,7 @@ class _YoutubeVideoState extends State<YoutubeVideo> {
         showFullscreenButton: true,
         mute: false,
         playsInline: true,
-        origin: 'https://www.youtube-nocookie.com',
+        interfaceLanguage: 'de',
       ),
     )..loadVideoById(videoId: widget.videoId);
   }

@@ -17,11 +17,11 @@ class MuscleVisualization extends StatelessWidget {
   const MuscleVisualization({
     super.key,
     required this.workout,
-    this.compact = false,
+    this.large = false,
   });
 
   final Workout workout;
-  final bool compact;
+  final bool large;
 
   @override
   Widget build(BuildContext context) {
@@ -39,7 +39,7 @@ class MuscleVisualization extends StatelessWidget {
         children: <Widget>[
           _MuscleBodies(
             groups: workout.usedMuscleGroups,
-            height: compact ? 62 : 72,
+            height: large ? 132 : 72,
             primaryColor: primaryMuscleColor,
             secondaryColor: secondaryMuscleColor,
           ),

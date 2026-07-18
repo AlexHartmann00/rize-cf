@@ -4,8 +4,37 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:rize/firestore.dart';
 import 'package:rize/utils.dart' as utils;
 import 'package:rize/types/muscle_group.dart';
+import 'package:rize/helpers/muscle_group_labels.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+String youtubeVideoIdFromUrl(String? value) {
+  final String rawValue = value?.trim() ?? '';
+  if (rawValue.isEmpty) return '';
+
+  final Uri? uri = Uri.tryParse(rawValue);
+  if (uri == null) return '';
+
+  final String host = uri.host.toLowerCase();
+  String? candidate;
+  if (host == 'youtu.be' || host.endsWith('.youtu.be')) {
+    candidate = uri.pathSegments.firstOrNull;
+  } else if (host == 'youtube.com' || host.endsWith('.youtube.com')) {
+    candidate = uri.queryParameters['v'];
+    if ((candidate == null || candidate.isEmpty) &&
+        uri.pathSegments.length >= 2 &&
+        const <String>{
+          'embed',
+          'shorts',
+          'live',
+        }.contains(uri.pathSegments.first.toLowerCase())) {
+      candidate = uri.pathSegments[1];
+    }
+  }
+
+  final String videoId = candidate?.trim() ?? '';
+  return RegExp(r'^[A-Za-z0-9_-]{11}$').hasMatch(videoId) ? videoId : '';
+}
 
 enum WorkoutType { static, dynamic }
 
@@ -69,7 +98,13 @@ class Workout {
   String get filterString {
     String tagString = tags.join(' ');
     String muscleGroupString = usedMuscleGroups.join(' ');
-    return '$name $description $tagString $muscleGroupString'.toLowerCase();
+    String germanMuscleGroupString = usedMuscleGroups
+        .map(muscleGroupLabel)
+        .join(' ');
+    String germanTagString = tags.map(muscleGroupLabel).join(' ');
+    return '$name $description $tagString $muscleGroupString '
+            '$germanMuscleGroupString $germanTagString'
+        .toLowerCase();
   }
 
   bool get isUnilateral {
@@ -90,17 +125,7 @@ class Workout {
     return null;
   }
 
-  String get youtubeVideoId {
-    if (videoExplanationUrl == null) {
-      return '';
-    }
-
-    if (!videoExplanationUrl!.contains('youtu')) {
-      return '';
-    }
-
-    return videoExplanationUrl!.split('/').last;
-  }
+  String get youtubeVideoId => youtubeVideoIdFromUrl(videoExplanationUrl);
 
   String get durationString => baseSeconds != null
       ? '${(baseSeconds ?? 0)} Sekunden'

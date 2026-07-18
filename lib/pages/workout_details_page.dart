@@ -61,7 +61,7 @@ class WorkoutDetailsPage extends StatelessWidget {
                           icon: Icons.accessibility_new_rounded,
                           child: MuscleVisualization(
                             workout: workout,
-                            compact: true,
+                            large: true,
                           ),
                         ),
                       ],
@@ -102,8 +102,7 @@ class WorkoutDetailsPage extends StatelessWidget {
   }
 
   bool get _hasYoutubeVideo {
-    final String? url = workout.videoExplanationUrl;
-    return url != null && url.toLowerCase().contains('youtu');
+    return workout.youtubeVideoId.isNotEmpty;
   }
 
   Future<void> _startWorkout(BuildContext context) async {

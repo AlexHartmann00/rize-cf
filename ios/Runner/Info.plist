@@ -86,6 +86,7 @@
 		<string>www.youtube.com</string>
 		<string>m.youtube.com</string>
 		<string>youtube-nocookie.com</string>
+		<string>www.youtube-nocookie.com</string>
 		<string>googlevideo.com</string>
 	</array>
 	<key>io.flutter.embedded_views_preview</key>
