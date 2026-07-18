@@ -1,4 +1,4 @@
-package de.coach-flo.rize
+package de.coachflo.rize
 
 import io.flutter.embedding.android.FlutterActivity
 

@@ -4,7 +4,7 @@
       "android": {
         "default": {
           "projectId": "rize-11838",
-          "appId": "1:1004261898852:android:daf8a299f6f2c05b1b7d71",
+          "appId": "1:1004261898852:android:530b4139f3b5a9d91b7d71",
           "fileOutput": "android/app/google-services.json"
         }
       },
@@ -20,7 +20,7 @@
         "lib/firebase_options.dart": {
           "projectId": "rize-11838",
           "configurations": {
-            "android": "1:1004261898852:android:daf8a299f6f2c05b1b7d71",
+            "android": "1:1004261898852:android:530b4139f3b5a9d91b7d71",
             "ios": "1:1004261898852:ios:42a07e11533ae9f01b7d71"
           }
         }

@@ -74,7 +74,7 @@ class AuthService {
             password: password,
           );
 
-      await _configurePushNotifications();
+      await configurePushNotifications();
 
       return AuthResult.success(credential);
     } on FirebaseAuthException catch (error) {
@@ -125,7 +125,7 @@ class AuthService {
         await user.reload();
 
         await createUserDocument(user.uid);
-        await _configurePushNotifications();
+        await configurePushNotifications();
       }
 
       return AuthResult.success(credential);
@@ -219,7 +219,7 @@ class AuthService {
     await user.updatePassword(newPassword);
   }
 
-  Future<void> _configurePushNotifications() async {
+  Future<void> configurePushNotifications() async {
     try {
       await _firebaseMessaging.requestPermission(
         alert: true,

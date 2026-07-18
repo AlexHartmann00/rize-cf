@@ -1,0 +1,6 @@
+# Copy this file to key.properties and replace every placeholder.
+# Keep key.properties and the keystore outside version control and back them up.
+storePassword=REPLACE_WITH_UPLOAD_KEYSTORE_PASSWORD
+keyPassword=REPLACE_WITH_UPLOAD_KEY_PASSWORD
+keyAlias=upload
+storeFile=../upload-keystore.jks

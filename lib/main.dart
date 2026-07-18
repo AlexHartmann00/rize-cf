@@ -1,7 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:numberpicker/numberpicker.dart';
 import 'package:rize/base_widgets.dart';
 import 'package:rize/firebase_options.dart';
@@ -83,23 +82,7 @@ void main() async {
           userData.intensityScore <= level.maxScore,
     );
 
-    FirebaseMessaging messaging = FirebaseMessaging.instance;
-    await messaging.requestPermission(
-      alert: true,
-      announcement: true,
-      badge: true,
-      carPlay: false,
-      criticalAlert: false,
-      provisional: true,
-      sound: true,
-      providesAppNotificationSettings: true,
-    );
-    await Future.delayed(Duration(seconds: 1));
-    String? apnsToken = await messaging.getAPNSToken();
-    print('APNs Token: $apnsToken');
-    await Future.delayed(Duration(seconds: 1));
-    String? fcmToken = await messaging.getToken();
-    await updateUserFCMToken(fcmToken);
+    await authServiceNotifier.value.configurePushNotifications();
 
     //SharedPreferences prefs = await SharedPreferences.getInstance();
     //prefs.setBool('anamnesisDone', false);
