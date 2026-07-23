@@ -206,6 +206,29 @@ void main() {
     expect(plan.isCompleted, isFalse);
   });
 
+  test('planned workouts keep completion state independent', () {
+    final List<WorkoutStep> sharedSchedule = <WorkoutStep>[
+      WorkoutStep(timeOfDay: TimeOfDay.any, plannedUnits: 1, completedUnits: 0),
+      WorkoutStep(timeOfDay: TimeOfDay.any, plannedUnits: 1, completedUnits: 0),
+    ];
+    final ScheduledWorkout first = ScheduledWorkout.fromBaseWorkout(
+      workout('first', const <String>['chest']),
+      sharedSchedule,
+      1,
+    );
+    final ScheduledWorkout second = ScheduledWorkout.fromBaseWorkout(
+      workout('second', const <String>['legs']),
+      sharedSchedule,
+      1,
+    );
+
+    first.schedule[0].completedUnits = 1;
+
+    expect(first.schedule[0].completedUnits, 1);
+    expect(second.schedule[0].completedUnits, 0);
+    expect(sharedSchedule[0].completedUnits, 0);
+  });
+
   test('free selection covers muscle groups with few workouts', () {
     final selection = freeWorkoutSelection(
       <Workout>[

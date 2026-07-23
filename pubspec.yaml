@@ -66,7 +66,9 @@ flutter_launcher_icons:
   android: "launcher_icon"
   ios: true
   remove_alpha_ios: true
-  image_path: "assets/brand/Logo transparent.png"
+  image_path: "assets/brand/rize_logo_r_blue_white.png"
+  adaptive_icon_background: "#FFFFFF"
+  adaptive_icon_foreground: "assets/brand/rize_logo_r_blue_white.png"
   min_sdk_android: 21 # android min sdk min:16, default 21
 
 # For information on the generic Dart part of this file, see the

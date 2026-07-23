@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="rize_launch_background">#0D376D</color>
-	<color name="ic_launcher_background">#0D376D</color>
+	<color name="ic_launcher_background">#FFFFFF</color>
 </resources>

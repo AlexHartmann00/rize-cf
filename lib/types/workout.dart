@@ -228,9 +228,11 @@ class ScheduledWorkout extends Workout {
     super.videoExplanationUrl,
     super.properties,
     // own field
-    required this.schedule,
+    required List<WorkoutStep> schedule,
     required this.intensityFactor,
-  });
+  }) : schedule = schedule
+           .map((WorkoutStep step) => WorkoutStep.copy(step))
+           .toList(growable: false);
 
   String get durationString => baseSeconds != null
       ? '${(baseSeconds ?? 0) * intensityFactor} Sekunden'
@@ -402,6 +404,12 @@ class WorkoutStep {
     required this.completedUnits,
     this.actualValue,
   });
+
+  WorkoutStep.copy(WorkoutStep other)
+    : timeOfDay = other.timeOfDay,
+      plannedUnits = other.plannedUnits,
+      completedUnits = other.completedUnits,
+      actualValue = other.actualValue;
 
   factory WorkoutStep.fromTuple((TimeOfDay, int, int) input) {
     return WorkoutStep(
