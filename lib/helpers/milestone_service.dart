@@ -237,7 +237,8 @@ const List<MilestoneDefinition> milestoneDefinitions = <MilestoneDefinition>[
     target: 3600,
     emoji: '🗿',
     title: 'Eine Stunde Stabilität',
-    message: '60 Minuten Haltezeit – echte Kontrolle, Stück für Stück.',
+    message:
+        '60 Minuten mit zeitbasierten Übungen – echte Kontrolle, Stück für Stück.',
   ),
   MilestoneDefinition(
     id: 'rounds_10',
@@ -336,7 +337,8 @@ const List<MilestoneDefinition> milestoneDefinitions = <MilestoneDefinition>[
     target: 1800,
     emoji: '⏱️',
     title: '30 Minuten Stabilität',
-    message: 'Eine halbe Stunde Haltezeit in diesem Monat gesammelt.',
+    message:
+        'Eine halbe Stunde mit zeitbasierten Übungen in diesem Monat gesammelt.',
   ),
   MilestoneDefinition(
     id: 'month_muscles_8',

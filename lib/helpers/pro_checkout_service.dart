@@ -11,7 +11,11 @@ const String _checkoutEndpoint =
 const String _cancelEndpoint =
     'https://europe-west1-rize-11838.cloudfunctions.net/cancel_pro_subscription';
 
-Future<void> startProCheckout() async {
+enum ProBillingPeriod { monthly, yearly }
+
+Future<void> startProCheckout({
+  ProBillingPeriod billingPeriod = ProBillingPeriod.monthly,
+}) async {
   final User? user = FirebaseAuth.instance.currentUser;
   if (user == null) throw StateError('Bitte melde Dich erneut an.');
   final String token = await user.getIdToken() ?? '';
@@ -21,7 +25,13 @@ Future<void> startProCheckout() async {
       'Authorization': 'Bearer $token',
       'Content-Type': 'application/json',
     },
-    body: jsonEncode(<String, Object?>{'locale': 'de_DE'}),
+    body: jsonEncode(<String, Object?>{
+      'locale': 'de_DE',
+      'plan': switch (billingPeriod) {
+        ProBillingPeriod.monthly => 'rize_pro_monthly',
+        ProBillingPeriod.yearly => 'rize_pro_yearly',
+      },
+    }),
   );
   if (response.statusCode != 200) {
     print(response.body);

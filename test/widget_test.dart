@@ -382,7 +382,8 @@ void main() {
     );
 
     expect(find.text('DEINE RUNDEN'), findsOneWidget);
-    expect(find.text('START'), findsNWidgets(3));
+    expect(find.text('START'), findsOneWidget);
+    expect(find.text('GESPERRT'), findsNWidgets(2));
     expect(tester.takeException(), isNull);
   });
 
@@ -464,6 +465,39 @@ void main() {
     );
     await tester.tap(find.text('Mehr Abwechslung mit RIZE Pro'));
     expect(tapped, isTrue);
+  });
+
+  testWidgets('Pro checkout offers monthly and yearly billing', (
+    WidgetTester tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(390, 844));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: Builder(
+            builder: (BuildContext context) => TextButton(
+              onPressed: () =>
+                  showProUpgradeSheet(context, source: 'billing_test'),
+              child: const Text('Abo öffnen'),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('Abo öffnen'));
+    await tester.pumpAndSettle();
+    expect(find.text('RIZE PRO · 3,99 € / MONAT'), findsOneWidget);
+    expect(
+      find.text('Monatliche Verlängerung, wenn nicht gekündigt.'),
+      findsOneWidget,
+    );
+
+    await tester.tap(find.text('JÄHRLICH'));
+    await tester.pumpAndSettle();
+    expect(find.text('RIZE PRO · 39,90 € / JAHR'), findsOneWidget);
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('milestone overview fits a mobile viewport', (

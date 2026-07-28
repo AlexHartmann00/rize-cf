@@ -1037,21 +1037,12 @@ class _DailySpinPanel extends StatelessWidget {
                             if (tags.isNotEmpty) ...<Widget>[
                               const SizedBox(height: 18),
                               const Text(
-                                'MUSKELGRUPPEN AUSSCHLIESSEN',
+                                'BEREICHE AUSSCHLIESSEN',
                                 style: TextStyle(
                                   color: Color(0xFFFF9AA3),
                                   fontSize: 10,
                                   letterSpacing: 0.8,
                                   fontWeight: FontWeight.w900,
-                                ),
-                              ),
-                              const SizedBox(height: 5),
-                              const Text(
-                                'Ausschlüsse werden anhand der Tags der Übungen geprüft.',
-                                style: TextStyle(
-                                  color: Color(0xFFDC8B94),
-                                  fontSize: 11,
-                                  height: 1.35,
                                 ),
                               ),
                               const SizedBox(height: 8),

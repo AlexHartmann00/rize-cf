@@ -7,6 +7,7 @@ import 'package:rize/helpers/progress_formatters.dart';
 import 'package:rize/helpers/progress_statistics.dart';
 import 'package:rize/widgets/progress_overview_widgets.dart';
 import 'package:rize/widgets/milestone_widgets.dart';
+import 'package:rize/widgets/pro_upgrade_cta.dart';
 import 'package:rize/types/workout.dart';
 
 class ProgressOverviewContent extends StatelessWidget {
@@ -115,6 +116,7 @@ class _ProgressDashboard extends StatelessWidget {
     final int current = currentStreak(statistics.activeDays, today);
     final int best = bestStreak(statistics.activeDays);
     final dynamic userData = globals.userData;
+    final bool isPro = userData?.isPro == true;
     final String level = userData?.intensityLevel.label ?? 'Start';
     final double levelProgress = userData == null
         ? 0
@@ -176,7 +178,7 @@ class _ProgressDashboard extends StatelessWidget {
                     icon: Icons.repeat_rounded,
                   ),
                   MetricItem(
-                    label: 'Haltezeit',
+                    label: 'Zeitbasierte Übungen',
                     value: formatDuration(statistics.staticSeconds),
                     icon: Icons.timer_outlined,
                   ),
@@ -190,17 +192,28 @@ class _ProgressDashboard extends StatelessWidget {
               const SizedBox(height: 16),
               MilestoneOverviewCard(history: history),
               const SizedBox(height: 16),
-              ProgressChartCard(
-                impactPoints: impactPoints,
-                scorePoints: scorePoints,
-                currentScore: currentScore,
-                lastImpact: statistics.lastImpact,
-              ),
-              const SizedBox(height: 16),
-              ActivityCalendarCard(
-                month: today,
-                daySummaries: _calendarSummaries(history, today),
-              ),
+              if (isPro) ...<Widget>[
+                ProgressChartCard(
+                  impactPoints: impactPoints,
+                  scorePoints: scorePoints,
+                  currentScore: currentScore,
+                  lastImpact: statistics.lastImpact,
+                ),
+                const SizedBox(height: 16),
+                ActivityCalendarCard(
+                  month: today,
+                  daySummaries: _calendarSummaries(history, today),
+                ),
+              ] else
+                ProFeatureLock(
+                  title: 'Mehr Fortschritt mit RIZE Pro',
+                  description:
+                      'Entdecke Deine Verlaufskurven und alle Details im Aktivitätskalender.',
+                  onTap: () => showProUpgradeSheet(
+                    context,
+                    source: 'progress_after_milestones',
+                  ),
+                ),
             ],
           ),
         ),
@@ -249,6 +262,24 @@ Map<int, CalendarDaySummary> _calendarSummaries(
         impactScore: impactScore,
         impactLevel: level,
         workoutCount: workouts.length,
+        workouts: workouts
+            .map((ScheduledWorkout workout) {
+              final int workoutPlanned = workout.schedule.fold<int>(
+                0,
+                (int total, WorkoutStep step) => total + step.plannedUnits,
+              );
+              final int workoutCompleted = workout.schedule.fold<int>(
+                0,
+                (int total, WorkoutStep step) =>
+                    total + step.completedUnits.clamp(0, step.plannedUnits),
+              );
+              return CalendarWorkoutSummary(
+                name: workout.name,
+                completedRounds: workoutCompleted,
+                plannedRounds: workoutPlanned,
+              );
+            })
+            .toList(growable: false),
       ),
     );
   });

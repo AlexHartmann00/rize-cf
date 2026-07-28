@@ -385,10 +385,8 @@ class _WorkoutExecutionPageState extends State<WorkoutExecutionPage> {
                   ? DynamicRepControl(
                       current: _currentValue,
                       target: _target,
-                      paused: _phase == WorkoutExecutionPhase.paused,
                       onChanged: _setRepValue,
-                      onPauseToggle: _togglePause,
-                      onFinishEarly: _completeCurrentSubStep,
+                      onComplete: _completeCurrentSubStep,
                     )
                   : StaticTimerControl(
                       remainingSeconds: _remainingSeconds,

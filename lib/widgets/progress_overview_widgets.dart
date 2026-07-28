@@ -688,7 +688,6 @@ class ActivityCalendarCard extends StatelessWidget {
               }
 
               final CalendarDaySummary? summary = daySummaries[day];
-              final bool active = summary != null;
               final bool isToday =
                   now.year == month.year &&
                   now.month == month.month &&
@@ -721,7 +720,7 @@ class ActivityCalendarCard extends StatelessWidget {
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
       builder: (context) => SafeArea(
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(20, 18, 20, 22),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -770,6 +769,60 @@ class ActivityCalendarCard extends StatelessWidget {
                   ),
                 ],
               ),
+              const SizedBox(height: 20),
+              Text(
+                'Übungen an diesem Tag',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+              const SizedBox(height: 10),
+              ...summary.workouts.map(
+                (CalendarWorkoutSummary workout) => Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 13,
+                      vertical: 11,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.065),
+                      borderRadius: BorderRadius.circular(15),
+                    ),
+                    child: Row(
+                      children: <Widget>[
+                        Icon(
+                          workout.completed
+                              ? Icons.check_circle_rounded
+                              : Icons.fitness_center_rounded,
+                          color: workout.completed ? rizeGreen : rizeCyan,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            workout.name,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Text(
+                          '${workout.completedRounds} / ${workout.plannedRounds} Runden',
+                          style: const TextStyle(
+                            color: Colors.white60,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
             ],
           ),
         ),
@@ -785,14 +838,31 @@ class CalendarDaySummary {
     required this.impactScore,
     required this.impactLevel,
     required this.workoutCount,
+    required this.workouts,
   });
 
   final double completion;
   final double impactScore;
   final ImpactLevel impactLevel;
   final int workoutCount;
+  final List<CalendarWorkoutSummary> workouts;
 
   bool get completed => completion >= 1;
+}
+
+@immutable
+class CalendarWorkoutSummary {
+  const CalendarWorkoutSummary({
+    required this.name,
+    required this.completedRounds,
+    required this.plannedRounds,
+  });
+
+  final String name;
+  final int completedRounds;
+  final int plannedRounds;
+
+  bool get completed => plannedRounds > 0 && completedRounds >= plannedRounds;
 }
 
 class _CalendarDayTile extends StatelessWidget {

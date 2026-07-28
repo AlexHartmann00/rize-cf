@@ -27,6 +27,20 @@ def get_db():
 TZ = ZoneInfo("Europe/Berlin")
 MOLLIE_API_URL = "https://api.mollie.com/v2"
 MOLLIE_API_KEY = 'test_hFcKKUsqM2kK7UQsCyHu4bFuy9JN6Q'#params.SecretParam("MOLLIE_API_KEY")
+PRO_PLANS = {
+    "rize_pro_monthly": {
+        "amount": "3.99",
+        "description": "RIZE Pro Monatsabo",
+        "interval": "1 month",
+        "months": 1,
+    },
+    "rize_pro_yearly": {
+        "amount": "39.90",
+        "description": "RIZE Pro Jahresabo",
+        "interval": "12 months",
+        "months": 12,
+    },
+}
 
 
 # -------------------------------------------------------------------
@@ -740,15 +754,35 @@ def _mollie_headers():
     return {"Authorization": f"Bearer {key}", "Content-Type": "application/json"}
 
 
+def _subscription_start_date(months: int) -> str:
+    """Return the same calendar day after the already-paid billing period."""
+    today = datetime.now(TZ).date()
+    month_index = today.month - 1 + months
+    year = today.year + month_index // 12
+    month = month_index % 12 + 1
+
+    next_month = month % 12 + 1
+    next_month_year = year + (1 if month == 12 else 0)
+    last_day = (
+        datetime(next_month_year, next_month, 1).date() - timedelta(days=1)
+    ).day
+    return today.replace(year=year, month=month, day=min(today.day, last_day)).isoformat()
+
+
 @https_fn.on_request(region="europe-west1")
 def create_pro_checkout(req: https_fn.Request) -> https_fn.Response:
-    """Create Mollie's required first payment for a monthly mandate."""
+    """Create Mollie's required first payment for the selected Pro plan."""
     authorization = req.headers.get("Authorization", "")
     if not authorization.startswith("Bearer "):
         return https_fn.Response("Unauthorized", status=401)
     try:
         decoded = auth.verify_id_token(authorization[7:])
         user_id = decoded["uid"]
+        request_data = req.get_json(silent=True) or {}
+        requested_plan = request_data.get("plan", "rize_pro_monthly")
+        plan = PRO_PLANS.get(requested_plan)
+        if plan is None:
+            return https_fn.Response("Invalid plan", status=400)
         user_ref = get_db().collection("users").document(user_id)
         user = user_ref.get().to_dict() or {}
         customer_id = user.get("mollieCustomerId")
@@ -768,19 +802,26 @@ def create_pro_checkout(req: https_fn.Request) -> https_fn.Response:
             f"{MOLLIE_API_URL}/payments",
             headers=_mollie_headers(),
             json={
-                "amount": {"currency": "EUR", "value": "3.99"},
-                "description": "RIZE Pro Monatsabo",
+                "amount": {"currency": "EUR", "value": plan["amount"]},
+                "description": plan["description"],
                 "customerId": customer_id,
                 "sequenceType": "first",
                 "redirectUrl": app_url,
                 "webhookUrl": f"{public_base}/mollie_webhook",
-                "metadata": {"userId": user_id, "plan": "rize_pro_monthly"},
+                "metadata": {"userId": user_id, "plan": requested_plan},
             },
             timeout=12,
         )
         payment_response.raise_for_status()
         payment = payment_response.json()
-        user_ref.set({"mollieInitialPaymentId": payment["id"], "subscriptionStatus": "pending"}, merge=True)
+        user_ref.set(
+            {
+                "mollieInitialPaymentId": payment["id"],
+                "subscriptionStatus": "pending",
+                "pendingSubscriptionPlan": requested_plan,
+            },
+            merge=True,
+        )
         return https_fn.Response(
             json.dumps({"checkoutUrl": payment["_links"]["checkout"]["href"]}),
             status=200,
@@ -864,17 +905,27 @@ def mollie_webhook(req: https_fn.Request) -> https_fn.Response:
         user_ref = get_db().collection("users").document(user_id)
         user = user_ref.get().to_dict() or {}
         if payment.get("status") == "paid":
-            updates = {"isPro": True, "subscriptionStatus": "active", "mollieLastPaymentId": payment_id}
+            plan_id = metadata.get("plan") or user.get(
+                "pendingSubscriptionPlan", "rize_pro_monthly"
+            )
+            plan = PRO_PLANS.get(plan_id, PRO_PLANS["rize_pro_monthly"])
+            updates = {
+                "isPro": True,
+                "subscriptionStatus": "active",
+                "subscriptionPlan": plan_id,
+                "mollieLastPaymentId": payment_id,
+            }
             if not user.get("mollieSubscriptionId"):
                 subscription_response = requests.post(
                     f"{MOLLIE_API_URL}/customers/{payment['customerId']}/subscriptions",
                     headers=_mollie_headers(),
                     json={
-                        "amount": {"currency": "EUR", "value": "3.99"},
-                        "interval": "1 month",
-                        "description": "RIZE Pro Monatsabo",
+                        "amount": {"currency": "EUR", "value": plan["amount"]},
+                        "interval": plan["interval"],
+                        "startDate": _subscription_start_date(plan["months"]),
+                        "description": plan["description"],
                         "webhookUrl": f"{os.environ.get('PUBLIC_FUNCTIONS_BASE_URL', 'https://europe-west1-rize-11838.cloudfunctions.net')}/mollie_webhook",
-                        "metadata": {"userId": user_id, "plan": "rize_pro_monthly"},
+                        "metadata": {"userId": user_id, "plan": plan_id},
                     },
                     timeout=12,
                 )

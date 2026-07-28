@@ -4,6 +4,7 @@ import 'package:rize/helpers/auth_service.dart';
 import 'package:rize/helpers/pro_checkout_service.dart';
 import 'package:rize/pages/settings_page.dart';
 import 'package:rize/pages/welcome_page.dart';
+import 'package:rize/widgets/pro_upgrade_cta.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class ProfilePage extends StatefulWidget {
@@ -16,7 +17,7 @@ class _ProfilePageState extends State<ProfilePage> {
   bool _busy = false;
 
   Future<void> _openCoachFlo() async {
-    await _openExternalUri(Uri.parse('https://www.coach-flo.de'));
+    await _openExternalUri(Uri.parse('https://linktr.ee/coachflo_'));
   }
 
   Future<void> _openPrivacyPolicy() async {
@@ -126,19 +127,7 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Future<void> _startCheckout() async {
-    setState(() => _busy = true);
-    try {
-      await startProCheckout();
-    } catch (error) {
-      if (mounted)
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(error.toString().replaceFirst('Bad state: ', '')),
-          ),
-        );
-    } finally {
-      if (mounted) setState(() => _busy = false);
-    }
+    await showProUpgradeSheet(context, source: 'profile');
   }
 
   Future<void> _cancelSubscription() async {
@@ -293,7 +282,7 @@ class _ProfilePageState extends State<ProfilePage> {
                         FilledButton(
                           onPressed: _busy ? null : _startCheckout,
                           child: Text(
-                            _busy ? 'WIRD GEÖFFNET …' : 'FÜR 3,99 € / MONAT',
+                            _busy ? 'BITTE WARTEN …' : 'ABO AUSWÄHLEN',
                           ),
                         ),
                       ] else if (!subscriptionCanceled) ...<Widget>[

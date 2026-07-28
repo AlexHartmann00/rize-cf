@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:rize/helpers/muscle_group_labels.dart';
 import 'package:rize/helpers/rize_style_helpers.dart';
 import 'package:rize/types/workout.dart';
 import 'package:rize/widgets/rize_card.dart';
@@ -95,17 +94,6 @@ class WorkoutDetailsHero extends StatelessWidget {
                 ),
             ],
           ),
-          if (workout.usedMuscleGroups.isNotEmpty) ...<Widget>[
-            const SizedBox(height: 18),
-            Text(
-              workout.usedMuscleGroups.map(muscleGroupLabel).join(' · '),
-              style: TextStyle(
-                color: Colors.white.withOpacity(0.72),
-                fontSize: 13,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ],
         ],
       ),
     );
@@ -281,74 +269,15 @@ class CoachingCueList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final List<String> cues = _splitCues(coachingCues);
-
-    return Column(
-      children: cues
-          .asMap()
-          .entries
-          .map((MapEntry<int, String> entry) {
-            return Padding(
-              padding: EdgeInsets.only(
-                bottom: entry.key == cues.length - 1 ? 0 : 10,
-              ),
-              child: Container(
-                padding: const EdgeInsets.all(13),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.06),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: Colors.white.withOpacity(0.06)),
-                ),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Container(
-                      width: 26,
-                      height: 26,
-                      decoration: BoxDecoration(
-                        color: rizeCyan.withOpacity(0.14),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Center(
-                        child: Text(
-                          '${entry.key + 1}',
-                          style: const TextStyle(
-                            color: rizeCyan,
-                            fontSize: 11,
-                            fontWeight: FontWeight.w900,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        entry.value,
-                        style: TextStyle(
-                          color: Colors.white.withOpacity(0.78),
-                          height: 1.4,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          })
-          .toList(growable: false),
+    return Text(
+      coachingCues.trim(),
+      style: TextStyle(
+        color: Colors.white.withOpacity(0.78),
+        height: 1.5,
+        fontSize: 14,
+        fontWeight: FontWeight.w600,
+      ),
     );
-  }
-
-  List<String> _splitCues(String value) {
-    final List<String> parts = value
-        .split(RegExp(r'[\n•;]+'))
-        .map((String item) => item.trim())
-        .where((String item) => item.isNotEmpty)
-        .toList(growable: false);
-
-    return parts.isEmpty ? <String>[value] : parts;
   }
 }
 

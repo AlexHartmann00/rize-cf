@@ -192,11 +192,12 @@ class _ProUpgradeSheet extends StatefulWidget {
 
 class _ProUpgradeSheetState extends State<_ProUpgradeSheet> {
   bool _loading = false;
+  ProBillingPeriod _billingPeriod = ProBillingPeriod.monthly;
 
   Future<void> _checkout() async {
     setState(() => _loading = true);
     try {
-      await startProCheckout();
+      await startProCheckout(billingPeriod: _billingPeriod);
     } catch (error) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -267,6 +268,26 @@ class _ProUpgradeSheetState extends State<_ProUpgradeSheet> {
               style: TextStyle(color: Colors.white60, height: 1.45),
             ),
             const SizedBox(height: 18),
+            SegmentedButton<ProBillingPeriod>(
+              segments: const <ButtonSegment<ProBillingPeriod>>[
+                ButtonSegment<ProBillingPeriod>(
+                  value: ProBillingPeriod.monthly,
+                  label: Text('MONATLICH'),
+                ),
+                ButtonSegment<ProBillingPeriod>(
+                  value: ProBillingPeriod.yearly,
+                  label: Text('JÄHRLICH'),
+                ),
+              ],
+              selected: <ProBillingPeriod>{_billingPeriod},
+              showSelectedIcon: false,
+              onSelectionChanged: _loading
+                  ? null
+                  : (Set<ProBillingPeriod> selection) {
+                      setState(() => _billingPeriod = selection.first);
+                    },
+            ),
+            const SizedBox(height: 18),
             const _Benefit(
               icon: Icons.cyclone_rounded,
               text: 'Alle Übungen in der Tagesaufgabe',
@@ -296,16 +317,20 @@ class _ProUpgradeSheetState extends State<_ProUpgradeSheet> {
                       height: 20,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : const Text(
-                      'RIZE PRO · 3,99 € / MONAT',
-                      style: TextStyle(fontWeight: FontWeight.w900),
+                  : Text(
+                      _billingPeriod == ProBillingPeriod.monthly
+                          ? 'RIZE PRO · 3,99 € / MONAT'
+                          : 'RIZE PRO · 39,90 € / JAHR',
+                      style: const TextStyle(fontWeight: FontWeight.w900),
                     ),
             ),
             const SizedBox(height: 9),
-            const Text(
-              'Monatlich kündbar.',
+            Text(
+              _billingPeriod == ProBillingPeriod.monthly
+                  ? 'Monatliche Verlängerung, wenn nicht gekündigt.'
+                  : 'Jährliche Verlängerung, wenn nicht gekündigt. Du zahlst nur 10 statt 12 Monate.',
               textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.white38, fontSize: 11),
+              style: const TextStyle(color: Colors.white38, fontSize: 11),
             ),
           ],
         ),

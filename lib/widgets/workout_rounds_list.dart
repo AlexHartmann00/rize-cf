@@ -50,8 +50,14 @@ class _WorkoutRoundsListState extends State<WorkoutRoundsList> {
           ],
         ),
         const SizedBox(height: 10),
-        ...widget.workout.schedule.indexed.map(
-          ((int, WorkoutStep) entry) => Padding(
+        ...widget.workout.schedule.indexed.map(((int, WorkoutStep) entry) {
+          final bool unlocked = widget.workout.schedule
+              .take(entry.$1)
+              .every(
+                (WorkoutStep previous) =>
+                    previous.completedUnits >= previous.plannedUnits,
+              );
+          return Padding(
             padding: EdgeInsets.only(
               bottom: entry.$1 == widget.workout.schedule.length - 1 ? 0 : 8,
             ),
@@ -59,15 +65,24 @@ class _WorkoutRoundsListState extends State<WorkoutRoundsList> {
               index: entry.$1,
               workout: widget.workout,
               step: entry.$2,
+              unlocked: unlocked,
               onStart: () => _startRound(entry.$2, entry.$1),
             ),
-          ),
-        ),
+          );
+        }),
       ],
     );
   }
 
   Future<void> _startRound(WorkoutStep step, int index) async {
+    final bool unlocked = widget.workout.schedule
+        .take(index)
+        .every(
+          (WorkoutStep previous) =>
+              previous.completedUnits >= previous.plannedUnits,
+        );
+    if (!unlocked) return;
+
     if (step.timeOfDay != TimeOfDay.any && !_timeIsValid(step.timeOfDay)) {
       await showDialog<void>(
         context: context,
@@ -117,12 +132,14 @@ class _RoundTile extends StatelessWidget {
     required this.index,
     required this.workout,
     required this.step,
+    required this.unlocked,
     required this.onStart,
   });
 
   final int index;
   final ScheduledWorkout workout;
   final WorkoutStep step;
+  final bool unlocked;
   final VoidCallback onStart;
 
   @override
@@ -160,6 +177,12 @@ class _RoundTile extends StatelessWidget {
             ),
             child: completed
                 ? const Icon(Icons.check_rounded, color: Colors.white, size: 21)
+                : !unlocked
+                ? const Icon(
+                    Icons.lock_outline_rounded,
+                    color: Colors.white54,
+                    size: 19,
+                  )
                 : Text(
                     '${index + 1}',
                     style: const TextStyle(
@@ -175,7 +198,11 @@ class _RoundTile extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
                 Text(
-                  completed ? 'Runde geschafft' : 'Runde ${index + 1}',
+                  completed
+                      ? 'Runde geschafft'
+                      : unlocked
+                      ? 'Runde ${index + 1}'
+                      : 'Erst Runde $index abschließen',
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 14,
@@ -215,7 +242,7 @@ class _RoundTile extends StatelessWidget {
                     ),
                   )
                 : FilledButton(
-                    onPressed: onStart,
+                    onPressed: unlocked ? onStart : null,
                     style: FilledButton.styleFrom(
                       padding: EdgeInsets.zero,
                       backgroundColor: Colors.white,
@@ -224,9 +251,9 @@ class _RoundTile extends StatelessWidget {
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    child: const Text(
-                      'START',
-                      style: TextStyle(
+                    child: Text(
+                      unlocked ? 'START' : 'GESPERRT',
+                      style: const TextStyle(
                         fontSize: 11,
                         letterSpacing: 0.5,
                         fontWeight: FontWeight.w900,

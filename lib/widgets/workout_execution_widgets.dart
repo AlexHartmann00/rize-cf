@@ -131,7 +131,7 @@ class WorkoutReadyCard extends StatelessWidget {
               const SizedBox(height: 8),
               Text(
                 workout.workoutType == WorkoutType.dynamic
-                    ? '$target Wiederholungen – tippe während der Übung einfach auf den Bildschirm.'
+                    ? '$target Wiederholungen.'
                     : '$target Sekunden – der Timer läuft für Dich mit.',
                 textAlign: TextAlign.center,
                 style: TextStyle(
@@ -233,18 +233,14 @@ class DynamicRepControl extends StatelessWidget {
     super.key,
     required this.current,
     required this.target,
-    required this.paused,
     required this.onChanged,
-    required this.onPauseToggle,
-    required this.onFinishEarly,
+    required this.onComplete,
   });
 
   final int current;
   final int target;
-  final bool paused;
   final ValueChanged<int> onChanged;
-  final VoidCallback onPauseToggle;
-  final VoidCallback onFinishEarly;
+  final VoidCallback onComplete;
 
   @override
   Widget build(BuildContext context) {
@@ -291,27 +287,24 @@ class DynamicRepControl extends StatelessWidget {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: <Widget>[
-                      IgnorePointer(
-                        ignoring: paused,
-                        child: NumberPicker(
-                          value: current,
-                          minValue: 0,
-                          maxValue: (target * 2).clamp(target + 10, 999),
-                          itemHeight: 88,
-                          itemWidth: 180,
-                          axis: Axis.vertical,
-                          textStyle: TextStyle(
-                            color: Colors.white.withOpacity(0.25),
-                            fontSize: 42,
-                            fontWeight: FontWeight.w700,
-                          ),
-                          selectedTextStyle: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 88,
-                            fontWeight: FontWeight.w900,
-                          ),
-                          onChanged: onChanged,
+                      NumberPicker(
+                        value: current,
+                        minValue: 0,
+                        maxValue: (target * 2).clamp(target + 10, 999),
+                        itemHeight: 88,
+                        itemWidth: 180,
+                        axis: Axis.vertical,
+                        textStyle: TextStyle(
+                          color: Colors.white.withOpacity(0.25),
+                          fontSize: 42,
+                          fontWeight: FontWeight.w700,
                         ),
+                        selectedTextStyle: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 88,
+                          fontWeight: FontWeight.w900,
+                        ),
+                        onChanged: onChanged,
                       ),
                       const SizedBox(height: 12),
                       Text(
@@ -333,9 +326,7 @@ class DynamicRepControl extends StatelessWidget {
                           borderRadius: BorderRadius.circular(999),
                         ),
                         child: Text(
-                          paused
-                              ? 'Pausiert'
-                              : 'Am Rad drehen · Ziel flexibel über- oder unterschreiten',
+                          'Am Rad drehen · Ziel flexibel über- oder unterschreiten',
                           style: TextStyle(
                             color: Colors.white.withOpacity(0.68),
                             fontSize: 12,
@@ -351,10 +342,21 @@ class DynamicRepControl extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 14),
-        WorkoutExecutionControls(
-          paused: paused,
-          onPauseToggle: onPauseToggle,
-          onFinishEarly: onFinishEarly,
+        FilledButton.icon(
+          onPressed: onComplete,
+          style: FilledButton.styleFrom(
+            minimumSize: const Size(double.infinity, 56),
+            backgroundColor: Colors.white,
+            foregroundColor: rizeBlue,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(18),
+            ),
+          ),
+          icon: const Icon(Icons.check_rounded),
+          label: const Text(
+            'RUNDE ABSCHLIESSEN',
+            style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: 0.3),
+          ),
         ),
       ],
     );
