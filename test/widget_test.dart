@@ -11,6 +11,7 @@ import 'package:rize/widgets/anamnesis_questionnaire_flow.dart';
 import 'package:rize/widgets/pro_upgrade_cta.dart';
 import 'package:rize/helpers/milestone_service.dart';
 import 'package:rize/widgets/milestone_widgets.dart';
+import 'package:rize/widgets/muscle_visualizer.dart';
 import 'package:rize/base_widgets.dart';
 import 'package:rize/widgets/drag_safe_filter_chip.dart';
 
@@ -31,6 +32,27 @@ Workout workout(
 );
 
 void main() {
+  test('shoulder muscle aliases resolve to the matching view assets', () {
+    final MuscleVisualizer visualizer = MuscleVisualizer();
+
+    expect(
+      visualizer.groupToAsset('Front Shoulders', true),
+      'assets/muscle_graphics/front/shoulders.png',
+    );
+    expect(
+      visualizer.groupToAsset('Rear Shoulders', false),
+      'assets/muscle_graphics/back/shoulders.png',
+    );
+    expect(
+      visualizer.groupToAsset('Shoulder', true),
+      'assets/muscle_graphics/front/shoulders.png',
+    );
+    expect(
+      visualizer.groupToAsset('Shoulder', false),
+      'assets/muscle_graphics/back/shoulders.png',
+    );
+  });
+
   testWidgets('swiping from a filter chip does not select it', (
     WidgetTester tester,
   ) async {

@@ -711,9 +711,9 @@
     },
     {
       "name": "youtube_player_iframe",
-      "rootUri": "file:///Users/alexhartmann/.pub-cache/hosted/pub.dev/youtube_player_iframe-5.2.2",
+      "rootUri": "file:///Users/alexhartmann/.pub-cache/hosted/pub.dev/youtube_player_iframe-6.0.2",
       "packageUri": "lib/",
-      "languageVersion": "3.5"
+      "languageVersion": "3.10"
     },
     {
       "name": "youtube_player_iframe_web",

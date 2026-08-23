@@ -96,7 +96,7 @@ String homeGreeting(String? displayName, DateTime now) {
 
 String dailyMotivation(DateTime now) {
   if (now.hour < 6) {
-    return 'Noch wach? Dann lieber sanft bleiben – Deine Tagesaufgabe wartet ab 6 Uhr auf Dich.';
+    return 'Noch wach? Deine Tagesaufgabe wartet ab 6 Uhr auf Dich.';
   }
   if (now.hour < 11) {
     return 'Starte bewegt in den Tag – Dein Körper wird es Dir danken.';

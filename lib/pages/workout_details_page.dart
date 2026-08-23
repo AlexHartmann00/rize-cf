@@ -73,7 +73,7 @@ class WorkoutDetailsPage extends StatelessWidget {
                       ],
                       const SizedBox(height: 14),
                       WorkoutDetailsSection(
-                        title: 'Coach-Flo-Tipps',
+                        title: 'Coach-Flo-Tipp',
                         subtitle:
                             'Darauf solltest Du während der Bewegung achten.',
                         icon: Icons.psychology_alt_rounded,

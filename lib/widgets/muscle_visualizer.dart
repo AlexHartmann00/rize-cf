@@ -2,9 +2,31 @@ import 'package:flutter/material.dart';
 import 'package:rize/helpers/muscle_group_labels.dart';
 import 'package:rize/types/workout.dart';
 
+String? _muscleAssetPath(String groupName, bool isFront) {
+  String assetName = groupName.trim().toLowerCase();
+  switch (assetName) {
+    case 'front shoulder':
+    case 'front shoulders':
+      if (!isFront) return null;
+      assetName = 'shoulders';
+      break;
+    case 'rear shoulder':
+    case 'rear shoulders':
+      if (isFront) return null;
+      assetName = 'shoulders';
+      break;
+    case 'shoulder':
+      assetName = 'shoulders';
+      break;
+  }
+  final String side = isFront ? 'front' : 'back';
+  return 'assets/muscle_graphics/$side/$assetName.png';
+}
+
 class MuscleVisualizer {
   String groupToAsset(String groupName, bool isFront) {
-    return 'assets/muscle_graphics/${isFront ? "front" : "back"}/${groupName.toLowerCase()}.png';
+    return _muscleAssetPath(groupName, isFront) ??
+        'assets/muscle_graphics/${isFront ? "front" : "back"}/${groupName.toLowerCase()}.png';
   }
 
   ImageProvider getMuscleImage(String groupName, bool isFront) {
@@ -31,8 +53,8 @@ class MuscleVisualization extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        border: Border.all(color: Colors.white.withOpacity(0.08)),
-        color: Colors.white.withOpacity(0.055),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+        color: Colors.white.withValues(alpha: 0.055),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Row(
@@ -135,26 +157,29 @@ class _BodyStack extends StatelessWidget {
   final Color primaryColor;
   final Color secondaryColor;
 
+  Widget _muscleOverlay((int, String) entry) {
+    final String? assetPath = _muscleAssetPath(entry.$2, isFront);
+    if (assetPath == null) return const SizedBox.shrink();
+    return Image.asset(
+      assetPath,
+      color: entry.$1 == 0 ? primaryColor : secondaryColor,
+      colorBlendMode: BlendMode.srcIn,
+      height: height,
+      errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final String side = isFront ? 'front' : 'back';
     return Stack(
       children: <Widget>[
+        ...groups.indexed.map(_muscleOverlay),
         Image.asset(
           'assets/muscle_graphics/$side/base_$side.png',
           height: height,
           color: Colors.white,
           colorBlendMode: BlendMode.srcIn,
-        ),
-        ...groups.indexed.map(
-          (entry) => Image.asset(
-            'assets/muscle_graphics/$side/${entry.$2.toLowerCase()}.png',
-            color: entry.$1 == 0 ? primaryColor : secondaryColor,
-            colorBlendMode: BlendMode.srcIn,
-            height: height,
-            errorBuilder: (context, error, stackTrace) =>
-                const SizedBox.shrink(),
-          ),
         ),
       ],
     );
