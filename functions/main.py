@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta
-from typing import Any, Tuple
+from typing import Any, Mapping, Tuple
 from zoneinfo import ZoneInfo
 
 import os
@@ -10,6 +10,21 @@ import json
 import requests
 from firebase_admin import auth, firestore, initialize_app, messaging
 from firebase_functions import firestore_fn, https_fn, scheduler_fn
+from firebase_functions.params import SecretParam
+
+from billing_service import (
+    build_invoice_snapshot,
+    default_business_profile,
+    format_eur,
+    get_or_create_invoice,
+)
+from email_service import (
+    cancellation_message,
+    invoice_message,
+    payment_failed_message,
+    send_email,
+    subscription_ended_message,
+)
 
 
 initialize_app()
@@ -26,7 +41,8 @@ def get_db():
 
 TZ = ZoneInfo("Europe/Berlin")
 MOLLIE_API_URL = "https://api.mollie.com/v2"
-MOLLIE_API_KEY = 'test_hFcKKUsqM2kK7UQsCyHu4bFuy9JN6Q'#params.SecretParam("MOLLIE_API_KEY")
+MOLLIE_API_KEY = SecretParam("MOLLIE_API_KEY")
+RESEND_API_KEY = SecretParam("RESEND_API_KEY")
 PRO_PLANS = {
     "rize_pro_monthly": {
         "amount": "3.99",
@@ -36,7 +52,7 @@ PRO_PLANS = {
     },
     "rize_pro_yearly": {
         "amount": "39.90",
-        "description": "RIZE Pro Jahresabo",
+        "description": "RIZE Pro-Jahresabo",
         "interval": "12 months",
         "months": 12,
     },
@@ -747,11 +763,233 @@ def send_streak_reminders(event: scheduler_fn.ScheduledEvent) -> None:
             print(f"Streak reminder failed: userId={user_snap.id}, error={error}")
 
 
-def _mollie_headers():
-    key = MOLLIE_API_KEY
+def _mollie_headers(*, idempotency_key: str | None = None):
+    key = MOLLIE_API_KEY.value
     if not key:
         raise RuntimeError("MOLLIE_API_KEY is not configured")
-    return {"Authorization": f"Bearer {key}", "Content-Type": "application/json"}
+    headers = {
+        "Authorization": f"Bearer {key}",
+        "Content-Type": "application/json",
+    }
+    if idempotency_key:
+        headers["Idempotency-Key"] = idempotency_key[:255]
+    return headers
+
+
+def _resend_sender() -> str:
+    return os.environ.get(
+        "RESEND_FROM_EMAIL",
+        "RIZE · Coach Flo <rechnung@coach-flo.de>",
+    )
+
+
+def _billing_reply_to() -> str:
+    return os.environ.get("BILLING_REPLY_TO", "info@coach-flo.de")
+
+
+def _invoice_business_profile() -> dict[str, str]:
+    profile = default_business_profile()
+    environment_fields = {
+        "legalName": "INVOICE_LEGAL_NAME",
+        "street": "INVOICE_STREET",
+        "postalCity": "INVOICE_POSTAL_CITY",
+        "phone": "INVOICE_PHONE",
+        "email": "INVOICE_EMAIL",
+        "website": "INVOICE_WEBSITE",
+        "bankName": "INVOICE_BANK_NAME",
+        "iban": "INVOICE_IBAN",
+        "bic": "INVOICE_BIC",
+    }
+    for field, variable in environment_fields.items():
+        configured = os.environ.get(variable)
+        if configured:
+            profile[field] = configured.strip()
+    return profile
+
+
+def _build_invoice_pdf(invoice: Mapping[str, Any]) -> bytes:
+    # Import lazily so non-billing Function startup checks do not require the
+    # PDF renderer before deployment dependencies have been installed.
+    from invoice_pdf import build_invoice_pdf
+
+    return build_invoice_pdf(invoice)
+
+
+def _public_functions_base() -> str:
+    return os.environ.get(
+        "PUBLIC_FUNCTIONS_BASE_URL",
+        "https://europe-west1-rize-11838.cloudfunctions.net",
+    ).rstrip("/")
+
+
+def _customer_identity(user_id: str) -> tuple[str, str]:
+    user = auth.get_user(user_id)
+    return user.display_name or "Sportler", user.email or ""
+
+
+def _resolve_payment_user_id(payment: dict[str, Any]) -> str | None:
+    metadata = payment.get("metadata") or {}
+    if not isinstance(metadata, dict):
+        metadata = {}
+    user_id = metadata.get("userId")
+    if user_id:
+        return str(user_id)
+    subscription_id = payment.get("subscriptionId")
+    if not subscription_id:
+        return None
+    matches = list(
+        get_db()
+        .collection("users")
+        .where("mollieSubscriptionId", "==", subscription_id)
+        .limit(1)
+        .stream()
+    )
+    return matches[0].id if matches else None
+
+
+def _send_user_email_once(
+    *,
+    user_id: str,
+    recipient: str,
+    event_id: str,
+    message,
+) -> str | None:
+    event_ref = (
+        get_db().collection("users").document(user_id).collection("emailEvents").document(event_id)
+    )
+    existing = event_ref.get()
+    existing_data = existing.to_dict() if existing.exists else {}
+    if (existing_data or {}).get("status") == "sent":
+        return (existing_data or {}).get("resendEmailId")
+
+    event_ref.set(
+        {
+            "status": "sending",
+            "recipient": recipient,
+            "updatedAt": firestore.SERVER_TIMESTAMP,
+        },
+        merge=True,
+    )
+    try:
+        email_id = send_email(
+            api_key=RESEND_API_KEY.value,
+            sender=_resend_sender(),
+            recipient=recipient,
+            message=message,
+            idempotency_key=event_id,
+            reply_to=_billing_reply_to(),
+        )
+    except Exception as error:
+        event_ref.set(
+            {
+                "status": "failed",
+                "error": str(error)[:500],
+                "updatedAt": firestore.SERVER_TIMESTAMP,
+            },
+            merge=True,
+        )
+        raise
+    event_ref.set(
+        {
+            "status": "sent",
+            "resendEmailId": email_id,
+            "sentAt": firestore.SERVER_TIMESTAMP,
+            "updatedAt": firestore.SERVER_TIMESTAMP,
+        },
+        merge=True,
+    )
+    return email_id
+
+
+def _create_and_send_payment_invoice(
+    *,
+    payment: dict[str, Any],
+    user_id: str,
+    user_data: dict[str, Any],
+    plan_id: str,
+    plan: dict[str, Any],
+    force_send: bool = False,
+) -> dict[str, Any]:
+    customer_name, customer_email = _customer_identity(user_id)
+    if not customer_email:
+        raise RuntimeError(f"User {user_id} has no email address")
+    snapshot = build_invoice_snapshot(
+        payment=payment,
+        user_id=user_id,
+        customer_name=customer_name,
+        customer_email=customer_email,
+        user_data=user_data,
+        plan_id=plan_id,
+        plan=plan,
+        now=datetime.now(TZ),
+        business_profile=_invoice_business_profile(),
+    )
+    snapshot["taxNote"] = os.environ.get(
+        "INVOICE_TAX_NOTE",
+        str(snapshot["taxNote"]),
+    )
+    invoice, _ = get_or_create_invoice(get_db(), snapshot)
+    payment_id = str(payment.get("id") or invoice.get("paymentId") or "")
+    invoice_ref = get_db().collection("invoices").document(payment_id)
+    if invoice.get("emailStatus") == "sent" and not force_send:
+        return invoice
+
+    pdf_bytes = _build_invoice_pdf(invoice)
+    message = invoice_message(
+        customer_name=customer_name,
+        invoice_number=str(invoice["invoiceNumber"]),
+        plan_name=str(plan.get("description") or invoice.get("description")),
+        total_label=format_eur(invoice.get("total")),
+        is_initial=str(payment.get("sequenceType") or "") == "first",
+        pdf_bytes=pdf_bytes,
+    )
+    event_id = f"invoice-{payment_id}" if not force_send else f"invoice-{payment_id}-resend-{datetime.now(TZ).strftime('%Y%m%d%H%M%S')}"
+    try:
+        email_id = _send_user_email_once(
+            user_id=user_id,
+            recipient=customer_email,
+            event_id=event_id,
+            message=message,
+        )
+    except Exception as error:
+        invoice_ref.set(
+            {
+                "emailStatus": "failed",
+                "emailError": str(error)[:500],
+                "updatedAt": firestore.SERVER_TIMESTAMP,
+            },
+            merge=True,
+        )
+        raise
+    invoice_ref.set(
+        {
+            "emailStatus": "sent",
+            "resendEmailId": email_id,
+            "emailedAt": firestore.SERVER_TIMESTAMP,
+            "updatedAt": firestore.SERVER_TIMESTAMP,
+        },
+        merge=True,
+    )
+    invoice["emailStatus"] = "sent"
+    invoice["resendEmailId"] = email_id
+    return invoice
+
+
+def _send_subscription_message(
+    *,
+    user_id: str,
+    event_id: str,
+    message,
+) -> str | None:
+    customer_name, customer_email = _customer_identity(user_id)
+    if not customer_email:
+        return None
+    return _send_user_email_once(
+        user_id=user_id,
+        recipient=customer_email,
+        event_id=event_id,
+        message=message,
+    )
 
 
 def _subscription_start_date(months: int) -> str:
@@ -769,7 +1007,7 @@ def _subscription_start_date(months: int) -> str:
     return today.replace(year=year, month=month, day=min(today.day, last_day)).isoformat()
 
 
-@https_fn.on_request(region="europe-west1")
+@https_fn.on_request(region="europe-west1", secrets=[MOLLIE_API_KEY])
 def create_pro_checkout(req: https_fn.Request) -> https_fn.Response:
     """Create Mollie's required first payment for the selected Pro plan."""
     authorization = req.headers.get("Authorization", "")
@@ -796,7 +1034,7 @@ def create_pro_checkout(req: https_fn.Request) -> https_fn.Response:
             customer_response.raise_for_status()
             customer_id = customer_response.json()["id"]
             user_ref.set({"mollieCustomerId": customer_id}, merge=True)
-        public_base = os.environ.get("PUBLIC_FUNCTIONS_BASE_URL", "https://europe-west1-rize-11838.cloudfunctions.net")
+        public_base = _public_functions_base()
         app_url = os.environ.get("APP_RETURN_URL", "https://rize-11838.web.app/payment-complete")
         payment_response = requests.post(
             f"{MOLLIE_API_URL}/payments",
@@ -832,7 +1070,10 @@ def create_pro_checkout(req: https_fn.Request) -> https_fn.Response:
         return https_fn.Response("Checkout unavailable", status=502)
 
 
-@https_fn.on_request(region="europe-west1")
+@https_fn.on_request(
+    region="europe-west1",
+    secrets=[MOLLIE_API_KEY, RESEND_API_KEY],
+)
 def cancel_pro_subscription(req: https_fn.Request) -> https_fn.Response:
     """Cancel the authenticated user's active Mollie subscription."""
     authorization = req.headers.get("Authorization", "")
@@ -876,6 +1117,23 @@ def cancel_pro_subscription(req: https_fn.Request) -> https_fn.Response:
             },
             merge=True,
         )
+        customer_name, _ = _customer_identity(user_id)
+        try:
+            _send_subscription_message(
+                user_id=user_id,
+                event_id=f"subscription-canceled-{subscription_id}",
+                message=cancellation_message(
+                    customer_name=customer_name,
+                    access_until=access_until,
+                ),
+            )
+        except Exception as email_error:
+            # The cancellation already succeeded at Mollie. Do not tell the
+            # client it failed only because the confirmation mail is delayed.
+            print(
+                "Cancellation email failed: "
+                f"userId={user_id}, subscriptionId={subscription_id}, error={email_error}"
+            )
         return https_fn.Response(
             json.dumps({"status": "canceled", "accessUntil": access_until}),
             status=200,
@@ -886,25 +1144,32 @@ def cancel_pro_subscription(req: https_fn.Request) -> https_fn.Response:
         return https_fn.Response("Cancellation unavailable", status=502)
 
 
-@https_fn.on_request(region="europe-west1")
+@https_fn.on_request(
+    region="europe-west1",
+    secrets=[MOLLIE_API_KEY, RESEND_API_KEY],
+)
 def mollie_webhook(req: https_fn.Request) -> https_fn.Response:
     payment_id = req.form.get("id") or (req.get_json(silent=True) or {}).get("id")
     if not payment_id:
         return https_fn.Response("Missing id", status=400)
     try:
-        response = requests.get(f"{MOLLIE_API_URL}/payments/{payment_id}", headers=_mollie_headers(), timeout=12)
+        response = requests.get(
+            f"{MOLLIE_API_URL}/payments/{payment_id}",
+            headers=_mollie_headers(),
+            timeout=12,
+        )
         response.raise_for_status()
         payment = response.json()
         metadata = payment.get("metadata") or {}
-        user_id = metadata.get("userId")
-        if not user_id and payment.get("subscriptionId"):
-            matches = list(get_db().collection("users").where("mollieSubscriptionId", "==", payment["subscriptionId"]).limit(1).stream())
-            user_id = matches[0].id if matches else None
+        if not isinstance(metadata, dict):
+            metadata = {}
+        user_id = _resolve_payment_user_id(payment)
         if not user_id:
             return https_fn.Response("OK", status=200)
         user_ref = get_db().collection("users").document(user_id)
         user = user_ref.get().to_dict() or {}
-        if payment.get("status") == "paid":
+        payment_status = str(payment.get("status") or "")
+        if payment_status == "paid":
             plan_id = metadata.get("plan") or user.get(
                 "pendingSubscriptionPlan", "rize_pro_monthly"
             )
@@ -914,17 +1179,24 @@ def mollie_webhook(req: https_fn.Request) -> https_fn.Response:
                 "subscriptionStatus": "active",
                 "subscriptionPlan": plan_id,
                 "mollieLastPaymentId": payment_id,
+                "mollieLastPaymentStatus": "paid",
+                "mollieLastPaidAt": payment.get("paidAt"),
             }
-            if not user.get("mollieSubscriptionId"):
+            if (
+                not user.get("mollieSubscriptionId")
+                and payment.get("sequenceType") == "first"
+            ):
                 subscription_response = requests.post(
                     f"{MOLLIE_API_URL}/customers/{payment['customerId']}/subscriptions",
-                    headers=_mollie_headers(),
+                    headers=_mollie_headers(
+                        idempotency_key=f"rize-subscription-{payment_id}"
+                    ),
                     json={
                         "amount": {"currency": "EUR", "value": plan["amount"]},
                         "interval": plan["interval"],
                         "startDate": _subscription_start_date(plan["months"]),
                         "description": plan["description"],
-                        "webhookUrl": f"{os.environ.get('PUBLIC_FUNCTIONS_BASE_URL', 'https://europe-west1-rize-11838.cloudfunctions.net')}/mollie_webhook",
+                        "webhookUrl": f"{_public_functions_base()}/mollie_webhook",
                         "metadata": {"userId": user_id, "plan": plan_id},
                     },
                     timeout=12,
@@ -932,9 +1204,346 @@ def mollie_webhook(req: https_fn.Request) -> https_fn.Response:
                 subscription_response.raise_for_status()
                 updates["mollieSubscriptionId"] = subscription_response.json()["id"]
             user_ref.set(updates, merge=True)
-        elif payment.get("status") in ("failed", "canceled", "expired"):
-            user_ref.set({"subscriptionStatus": payment["status"]}, merge=True)
+            user.update(updates)
+            _create_and_send_payment_invoice(
+                payment=payment,
+                user_id=user_id,
+                user_data=user,
+                plan_id=str(plan_id),
+                plan=plan,
+            )
+        elif payment_status in ("failed", "canceled", "expired"):
+            is_recurring = payment.get("sequenceType") == "recurring" or bool(
+                payment.get("subscriptionId")
+            )
+            subscription_status = "payment_failed" if is_recurring else payment_status
+            user_ref.set(
+                {
+                    "subscriptionStatus": subscription_status,
+                    "mollieLastPaymentId": payment_id,
+                    "mollieLastPaymentStatus": payment_status,
+                    "subscriptionPaymentIssueAt": firestore.SERVER_TIMESTAMP,
+                },
+                merge=True,
+            )
+            if is_recurring:
+                plan_id = metadata.get("plan") or user.get(
+                    "subscriptionPlan", "rize_pro_monthly"
+                )
+                plan = PRO_PLANS.get(plan_id, PRO_PLANS["rize_pro_monthly"])
+                customer_name, _ = _customer_identity(user_id)
+                _send_subscription_message(
+                    user_id=user_id,
+                    event_id=f"payment-{payment_id}-{payment_status}",
+                    message=payment_failed_message(
+                        customer_name=customer_name,
+                        plan_name=str(plan["description"]),
+                    ),
+                )
         return https_fn.Response("OK", status=200)
     except Exception as error:
         print(f"Mollie webhook failed: paymentId={payment_id}, error={error}")
         return https_fn.Response("Retry", status=500)
+
+
+def _verified_request_user(req: https_fn.Request) -> dict[str, Any] | None:
+    authorization = req.headers.get("Authorization", "")
+    if not authorization.startswith("Bearer "):
+        return None
+    try:
+        return auth.verify_id_token(authorization[7:])
+    except Exception:
+        return None
+
+
+def _json_response(payload: Mapping[str, Any], status: int = 200) -> https_fn.Response:
+    return https_fn.Response(
+        json.dumps(payload, ensure_ascii=False),
+        status=status,
+        headers={"Content-Type": "application/json; charset=utf-8"},
+    )
+
+
+@https_fn.on_request(region="europe-west1")
+def update_billing_profile(req: https_fn.Request) -> https_fn.Response:
+    """Store the authenticated user's invoice recipient details."""
+    decoded = _verified_request_user(req)
+    if decoded is None:
+        return https_fn.Response("Unauthorized", status=401)
+    if req.method not in ("POST", "PUT"):
+        return https_fn.Response("Method not allowed", status=405)
+    data = req.get_json(silent=True) or {}
+    allowed = {
+        "fullName": 120,
+        "company": 120,
+        "street": 160,
+        "postalCode": 20,
+        "city": 100,
+        "country": 80,
+        "vatId": 40,
+    }
+    profile: dict[str, str] = {}
+    for key, max_length in allowed.items():
+        value = str(data.get(key) or "").strip()
+        if len(value) > max_length:
+            return _json_response({"error": f"{key} is too long"}, status=400)
+        profile[key] = value
+    if not profile["fullName"]:
+        return _json_response({"error": "fullName is required"}, status=400)
+    if not profile["country"]:
+        profile["country"] = "Deutschland"
+    get_db().collection("users").document(decoded["uid"]).set(
+        {
+            "billingProfile": profile,
+            "billingProfileUpdatedAt": firestore.SERVER_TIMESTAMP,
+        },
+        merge=True,
+    )
+    return _json_response({"billingProfile": profile})
+
+
+@https_fn.on_request(
+    region="europe-west1",
+    secrets=[MOLLIE_API_KEY, RESEND_API_KEY],
+)
+def create_invoice(req: https_fn.Request) -> https_fn.Response:
+    """Admin-only backfill endpoint for a verified paid Mollie payment."""
+    decoded = _verified_request_user(req)
+    if decoded is None:
+        return https_fn.Response("Unauthorized", status=401)
+    if req.method != "POST":
+        return https_fn.Response("Method not allowed", status=405)
+    if decoded.get("admin") is not True and decoded.get("billingAdmin") is not True:
+        return https_fn.Response("Forbidden", status=403)
+    data = req.get_json(silent=True) or {}
+    payment_id = str(data.get("paymentId") or "").strip()
+    if not payment_id:
+        return _json_response({"error": "paymentId is required"}, status=400)
+    try:
+        payment_response = requests.get(
+            f"{MOLLIE_API_URL}/payments/{payment_id}",
+            headers=_mollie_headers(),
+            timeout=12,
+        )
+        payment_response.raise_for_status()
+        payment = payment_response.json()
+        if payment.get("status") != "paid":
+            return _json_response({"error": "Payment is not paid"}, status=409)
+        user_id = _resolve_payment_user_id(payment)
+        if not user_id:
+            return _json_response({"error": "Payment has no RIZE user"}, status=404)
+        user_ref = get_db().collection("users").document(user_id)
+        user_data = user_ref.get().to_dict() or {}
+        metadata = payment.get("metadata") or {}
+        if not isinstance(metadata, dict):
+            metadata = {}
+        plan_id = metadata.get("plan") or user_data.get(
+            "subscriptionPlan", "rize_pro_monthly"
+        )
+        plan = PRO_PLANS.get(plan_id, PRO_PLANS["rize_pro_monthly"])
+        invoice = _create_and_send_payment_invoice(
+            payment=payment,
+            user_id=user_id,
+            user_data=user_data,
+            plan_id=str(plan_id),
+            plan=plan,
+            force_send=bool(data.get("forceSend")),
+        )
+        return _json_response(
+            {
+                "invoiceId": payment_id,
+                "invoiceNumber": invoice["invoiceNumber"],
+                "emailStatus": invoice.get("emailStatus"),
+            }
+        )
+    except Exception as error:
+        print(f"Manual invoice creation failed: paymentId={payment_id}, error={error}")
+        return _json_response({"error": "Invoice creation failed"}, status=502)
+
+
+@https_fn.on_request(region="europe-west1", secrets=[RESEND_API_KEY])
+def resend_invoice(req: https_fn.Request) -> https_fn.Response:
+    """Email an existing invoice PDF again to its authenticated owner."""
+    decoded = _verified_request_user(req)
+    if decoded is None:
+        return https_fn.Response("Unauthorized", status=401)
+    if req.method != "POST":
+        return https_fn.Response("Method not allowed", status=405)
+    data = req.get_json(silent=True) or {}
+    invoice_id = str(data.get("invoiceId") or "").strip()
+    if not invoice_id:
+        return _json_response({"error": "invoiceId is required"}, status=400)
+    invoice_ref = get_db().collection("invoices").document(invoice_id)
+    invoice_snap = invoice_ref.get()
+    if not invoice_snap.exists:
+        return https_fn.Response("Not found", status=404)
+    invoice = invoice_snap.to_dict() or {}
+    if invoice.get("userId") != decoded["uid"]:
+        return https_fn.Response("Forbidden", status=403)
+    try:
+        customer_name, customer_email = _customer_identity(decoded["uid"])
+        pdf_bytes = _build_invoice_pdf(invoice)
+        plan = PRO_PLANS.get(
+            invoice.get("planId"), PRO_PLANS["rize_pro_monthly"]
+        )
+        message = invoice_message(
+            customer_name=customer_name,
+            invoice_number=str(invoice["invoiceNumber"]),
+            plan_name=str(plan["description"]),
+            total_label=format_eur(invoice.get("total")),
+            is_initial=invoice.get("sequenceType") == "first",
+            pdf_bytes=pdf_bytes,
+        )
+        email_id = _send_user_email_once(
+            user_id=decoded["uid"],
+            recipient=customer_email,
+            event_id=f"invoice-{invoice_id}-resend-{datetime.now(TZ).strftime('%Y%m%d%H%M%S')}",
+            message=message,
+        )
+        invoice_ref.set(
+            {
+                "emailStatus": "sent",
+                "resendEmailId": email_id,
+                "emailedAt": firestore.SERVER_TIMESTAMP,
+            },
+            merge=True,
+        )
+        return _json_response({"status": "sent", "resendEmailId": email_id})
+    except Exception as error:
+        print(f"Invoice resend failed: invoiceId={invoice_id}, error={error}")
+        return _json_response({"error": "Invoice email failed"}, status=502)
+
+
+@https_fn.on_request(region="europe-west1")
+def download_invoice(req: https_fn.Request) -> https_fn.Response:
+    """Return an existing invoice PDF to its authenticated owner."""
+    decoded = _verified_request_user(req)
+    if decoded is None:
+        return https_fn.Response("Unauthorized", status=401)
+    if req.method != "GET":
+        return https_fn.Response("Method not allowed", status=405)
+    data = req.get_json(silent=True) or {}
+    invoice_id = str(req.args.get("invoiceId") or data.get("invoiceId") or "").strip()
+    if not invoice_id:
+        return _json_response({"error": "invoiceId is required"}, status=400)
+    invoice_snap = get_db().collection("invoices").document(invoice_id).get()
+    if not invoice_snap.exists:
+        return https_fn.Response("Not found", status=404)
+    invoice = invoice_snap.to_dict() or {}
+    if invoice.get("userId") != decoded["uid"]:
+        return https_fn.Response("Forbidden", status=403)
+    pdf_bytes = _build_invoice_pdf(invoice)
+    invoice_number = str(invoice.get("invoiceNumber") or invoice_id)
+    return https_fn.Response(
+        pdf_bytes,
+        status=200,
+        headers={
+            "Content-Type": "application/pdf",
+            "Content-Disposition": f'attachment; filename="Rechnung-{invoice_number}.pdf"',
+            "Cache-Control": "private, no-store",
+        },
+    )
+
+
+@https_fn.on_request(region="europe-west1")
+def list_invoices(req: https_fn.Request) -> https_fn.Response:
+    """List invoice metadata for the authenticated user."""
+    decoded = _verified_request_user(req)
+    if decoded is None:
+        return https_fn.Response("Unauthorized", status=401)
+    if req.method != "GET":
+        return https_fn.Response("Method not allowed", status=405)
+    invoices = []
+    query = (
+        get_db()
+        .collection("invoices")
+        .where("userId", "==", decoded["uid"])
+        .order_by("issueDate", direction=firestore.Query.DESCENDING)
+        .limit(50)
+    )
+    for snapshot in query.stream():
+        invoice = snapshot.to_dict() or {}
+        invoices.append(
+            {
+                "invoiceId": snapshot.id,
+                "invoiceNumber": invoice.get("invoiceNumber"),
+                "issueDate": invoice.get("issueDate"),
+                "description": invoice.get("description"),
+                "total": invoice.get("total"),
+                "currency": invoice.get("currency"),
+                "paymentStatus": invoice.get("paymentStatus"),
+                "emailStatus": invoice.get("emailStatus"),
+            }
+        )
+    return _json_response({"invoices": invoices})
+
+
+@scheduler_fn.on_schedule(
+    schedule="15 4 * * *",
+    timezone="Europe/Berlin",
+    secrets=[MOLLIE_API_KEY, RESEND_API_KEY],
+)
+def reconcile_mollie_subscriptions(
+    event: scheduler_fn.ScheduledEvent,
+) -> None:
+    """Detect Mollie-side subscription termination, which has no classic webhook."""
+    users = get_db().collection("users").where(
+        "subscriptionStatus", "in", ["active", "payment_failed"]
+    ).stream()
+    for user_snap in users:
+        user = user_snap.to_dict() or {}
+        customer_id = user.get("mollieCustomerId")
+        subscription_id = user.get("mollieSubscriptionId")
+        if not customer_id or not subscription_id:
+            continue
+        try:
+            response = requests.get(
+                f"{MOLLIE_API_URL}/customers/{customer_id}/subscriptions/{subscription_id}",
+                headers=_mollie_headers(),
+                timeout=12,
+            )
+            response.raise_for_status()
+            subscription = response.json()
+            mollie_status = str(subscription.get("status") or "")
+            user_ref = get_db().collection("users").document(user_snap.id)
+            if mollie_status == "active":
+                if user.get("subscriptionStatus") != "active":
+                    user_ref.set(
+                        {
+                            "subscriptionStatus": "active",
+                            "mollieSubscriptionStatus": mollie_status,
+                            "subscriptionPaymentIssueAt": firestore.DELETE_FIELD,
+                        },
+                        merge=True,
+                    )
+                continue
+            if mollie_status not in ("canceled", "suspended", "completed"):
+                continue
+            access_until = subscription.get("nextPaymentDate")
+            access_active = False
+            if access_until:
+                try:
+                    access_active = datetime.fromisoformat(str(access_until)).date() >= datetime.now(TZ).date()
+                except ValueError:
+                    access_active = False
+            user_ref.set(
+                {
+                    "isPro": access_active,
+                    "subscriptionStatus": "canceled" if access_active else "ended",
+                    "proAccessUntil": access_until,
+                    "mollieSubscriptionStatus": mollie_status,
+                    "subscriptionReconciledAt": firestore.SERVER_TIMESTAMP,
+                },
+                merge=True,
+            )
+            customer_name, _ = _customer_identity(user_snap.id)
+            _send_subscription_message(
+                user_id=user_snap.id,
+                event_id=f"subscription-ended-{subscription_id}",
+                message=subscription_ended_message(customer_name=customer_name),
+            )
+        except Exception as error:
+            print(
+                "Subscription reconciliation failed: "
+                f"userId={user_snap.id}, subscriptionId={subscription_id}, error={error}"
+            )
