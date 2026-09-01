@@ -89,7 +89,7 @@ class IntensityLevel {
 
   ScheduledWorkout applyToWorkout(ScheduledWorkout workout) {
     int newFactor = _clampFactor(workout.intensityFactor);
-    return ScheduledWorkout(
+    final ScheduledWorkout adjusted = ScheduledWorkout(
       id: workout.id,
       name: workout.name,
       description: workout.description,
@@ -115,6 +115,11 @@ class IntensityLevel {
       schedule: workout.schedule,
       intensityFactor: newFactor,
     );
+    adjusted.scheduledDay = workout.scheduledDay;
+    adjusted.historyId = workout.historyId;
+    adjusted.planId = workout.planId;
+    adjusted.planPosition = workout.planPosition;
+    return adjusted;
   }
 
   int _clampFactor(int factor) {

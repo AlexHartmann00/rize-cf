@@ -5,6 +5,17 @@ import 'package:rize/types/workout.dart';
 String? _muscleAssetPath(String groupName, bool isFront) {
   String assetName = groupName.trim().toLowerCase();
   switch (assetName) {
+    case 'hamstrings':
+      assetName = 'hamstring';
+      break;
+    case 'lowerback':
+      assetName = 'lower back';
+      break;
+    case 'calf':
+    case 'calves':
+      if (isFront) return null;
+      assetName = 'calves';
+      break;
     case 'front shoulder':
     case 'front shoulders':
       if (!isFront) return null;
@@ -22,6 +33,9 @@ String? _muscleAssetPath(String groupName, bool isFront) {
   final String side = isFront ? 'front' : 'back';
   return 'assets/muscle_graphics/$side/$assetName.png';
 }
+
+String? muscleAssetPath(String groupName, bool isFront) =>
+    _muscleAssetPath(groupName, isFront);
 
 class MuscleVisualizer {
   String groupToAsset(String groupName, bool isFront) {
@@ -160,13 +174,28 @@ class _BodyStack extends StatelessWidget {
   Widget _muscleOverlay((int, String) entry) {
     final String? assetPath = _muscleAssetPath(entry.$2, isFront);
     if (assetPath == null) return const SizedBox.shrink();
-    return Image.asset(
-      assetPath,
-      color: entry.$1 == 0 ? primaryColor : secondaryColor,
-      colorBlendMode: BlendMode.srcIn,
-      height: height,
-      errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),
-    );
+    final String normalizedGroup = entry.$2.trim().toLowerCase();
+    final Color color = entry.$1 == 0 ? primaryColor : secondaryColor;
+
+    if (!isFront &&
+        (normalizedGroup == 'upper back' || normalizedGroup == 'triceps')) {
+      return _SymmetricMuscleMask(
+        key: ValueKey<String>('symmetric-$normalizedGroup-back'),
+        assetPath: assetPath,
+        color: color,
+        height: height,
+      );
+    }
+    if (!isFront &&
+        (normalizedGroup == 'lower back' || normalizedGroup == 'lowerback')) {
+      return _CentralMuscleMask(
+        key: const ValueKey<String>('central-lower-back'),
+        assetPath: assetPath,
+        color: color,
+        height: height,
+      );
+    }
+    return _muscleImage(assetPath: assetPath, color: color, height: height);
   }
 
   @override
@@ -184,4 +213,116 @@ class _BodyStack extends StatelessWidget {
       ],
     );
   }
+}
+
+Widget _muscleImage({
+  required String assetPath,
+  required Color color,
+  required double height,
+  BoxFit? fit,
+}) {
+  return Image.asset(
+    assetPath,
+    color: color,
+    colorBlendMode: BlendMode.srcIn,
+    height: height,
+    fit: fit,
+    errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),
+  );
+}
+
+class _SymmetricMuscleMask extends StatelessWidget {
+  const _SymmetricMuscleMask({
+    super.key,
+    required this.assetPath,
+    required this.color,
+    required this.height,
+  });
+
+  final String assetPath;
+  final Color color;
+  final double height;
+
+  @override
+  Widget build(BuildContext context) {
+    final double width = height * 129 / 400;
+    Widget image() => _muscleImage(
+      assetPath: assetPath,
+      color: color,
+      height: height,
+      fit: BoxFit.fill,
+    );
+
+    // The right-hand half is the canonical mask. Mirroring it removes the
+    // one-sided subdivisions from the source artwork without shifting it.
+    return SizedBox(
+      width: width,
+      height: height,
+      child: Stack(
+        fit: StackFit.expand,
+        children: <Widget>[
+          ClipRect(clipper: const _HalfClipper(right: true), child: image()),
+          ClipRect(
+            clipper: const _HalfClipper(right: false),
+            child: Transform.flip(flipX: true, child: image()),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CentralMuscleMask extends StatelessWidget {
+  const _CentralMuscleMask({
+    super.key,
+    required this.assetPath,
+    required this.color,
+    required this.height,
+  });
+
+  final String assetPath;
+  final Color color;
+  final double height;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: height * 129 / 400,
+      height: height,
+      child: ClipRect(
+        clipper: const _CenterClipper(),
+        child: _muscleImage(
+          assetPath: assetPath,
+          color: color,
+          height: height,
+          fit: BoxFit.fill,
+        ),
+      ),
+    );
+  }
+}
+
+class _HalfClipper extends CustomClipper<Rect> {
+  const _HalfClipper({required this.right});
+
+  final bool right;
+
+  @override
+  Rect getClip(Size size) => right
+      ? Rect.fromLTWH(size.width / 2, 0, size.width / 2, size.height)
+      : Rect.fromLTWH(0, 0, size.width / 2, size.height);
+
+  @override
+  bool shouldReclip(_HalfClipper oldClipper) => oldClipper.right != right;
+}
+
+class _CenterClipper extends CustomClipper<Rect> {
+  const _CenterClipper();
+
+  @override
+  Rect getClip(Size size) =>
+      Rect.fromLTWH(size.width * 0.39, 0, size.width * 0.22, size.height);
+
+  @override
+  bool shouldReclip(_CenterClipper oldClipper) => false;
 }

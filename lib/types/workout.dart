@@ -212,6 +212,7 @@ class ScheduledWorkout extends Workout {
   /// immutable workout id this is unique for every execution.
   String? historyId;
   String? planId;
+  int? planPosition;
 
   ScheduledWorkout({
     // super fields
@@ -230,6 +231,7 @@ class ScheduledWorkout extends Workout {
     // own field
     required List<WorkoutStep> schedule,
     required this.intensityFactor,
+    this.planPosition,
   }) : schedule = schedule
            .map((WorkoutStep step) => WorkoutStep.copy(step))
            .toList(growable: false);
@@ -305,6 +307,7 @@ class ScheduledWorkout extends Workout {
     );
     result.historyId = json['historyId'] as String?;
     result.planId = json['planId'] as String?;
+    result.planPosition = (json['planPosition'] as num?)?.toInt();
     final scheduledAt = json['scheduledAt'];
     if (scheduledAt is Timestamp) result.scheduledDay = scheduledAt.toDate();
     if (scheduledAt is String)
@@ -327,6 +330,7 @@ class ScheduledWorkout extends Workout {
           .toList(),
       'intensityFactor': intensityFactor,
       'planId': planId,
+      'planPosition': planPosition,
     });
     return baseJson;
   }

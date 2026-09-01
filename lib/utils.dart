@@ -77,24 +77,41 @@ String workoutScheduleToString(List<WorkoutStep> schedule) {
 }
 
 int computeCurrentStreakFromHistory(List<ScheduledWorkout> history) {
-  int streak = 0;
-  DateTime today = DateTime.now();
-  history.sort((a, b) => b.scheduledDay!.compareTo(a.scheduledDay!));
+  return computeCurrentStreakFromHistoryAt(history, DateTime.now());
+}
 
-  for (ScheduledWorkout workout in history) {
-    DateTime workoutDate = workout.scheduledDay!;
-    Duration difference = today.difference(workoutDate);
-    if (difference.inDays == streak) {
-      if (workout.isCompleted) {
-        streak += 1;
-      } else {
-        break;
-      }
-    } else if (difference.inDays > streak) {
-      break;
-    }
+int computeCurrentStreakFromHistoryAt(
+  Iterable<ScheduledWorkout> history,
+  DateTime today,
+) {
+  final Set<DateTime> activeDays = history
+      .where(
+        (ScheduledWorkout workout) =>
+            workout.scheduledDay != null &&
+            workout.schedule.any((WorkoutStep step) => step.completedUnits > 0),
+      )
+      .map(
+        (ScheduledWorkout workout) => DateTime(
+          workout.scheduledDay!.year,
+          workout.scheduledDay!.month,
+          workout.scheduledDay!.day,
+        ),
+      )
+      .toSet();
+
+  if (activeDays.isEmpty) return 0;
+
+  DateTime cursor = DateTime(today.year, today.month, today.day);
+  if (!activeDays.contains(cursor)) {
+    cursor = cursor.subtract(const Duration(days: 1));
+    if (!activeDays.contains(cursor)) return 0;
   }
 
+  int streak = 0;
+  while (activeDays.contains(cursor)) {
+    streak++;
+    cursor = cursor.subtract(const Duration(days: 1));
+  }
   return streak;
 }
 

@@ -495,8 +495,18 @@ class _HomePageSlotMachineWidgetState extends State<HomePageSlotMachineWidget> {
               .toList(growable: false)
         : workouts;
     final Random random = Random();
-    final List<Workout> pool = List<Workout>.of(eligibleWorkouts)
+    List<ScheduledWorkout> history = const <ScheduledWorkout>[];
+    try {
+      history = await _historyFuture;
+    } on Object {
+      // The spin still works if the optional variety history is unavailable.
+    }
+    final List<Workout> shuffledPool = List<Workout>.of(eligibleWorkouts)
       ..shuffle(random);
+    final List<Workout> pool = prioritizeWorkoutsForRecentVariety(
+      workouts: shuffledPool,
+      history: history,
+    );
     final List<Workout> diverseSelection = isPro
         ? selectDiverseWorkouts(
             workouts: pool,
@@ -504,7 +514,7 @@ class _HomePageSlotMachineWidgetState extends State<HomePageSlotMachineWidget> {
             muscleFilter: _selectedMuscleGroups,
             excludedTags: _excludedMuscleTags,
           )
-        : <Workout>[pool[random.nextInt(pool.length)]];
+        : <Workout>[pool.first];
 
     if (diverseSelection.length < requestedCount) {
       if (mounted) {
@@ -537,6 +547,7 @@ class _HomePageSlotMachineWidgetState extends State<HomePageSlotMachineWidget> {
                   : random.nextInt(intensities.length)],
             );
             item.planId = planId;
+            item.planPosition = index;
             return level.applyToWorkout(item);
           });
       final ScheduledWorkout workout = spunWorkouts.first;
@@ -916,223 +927,231 @@ class _DailySpinPanel extends StatelessWidget {
     // persisted filters and discard every change made since opening the sheet.
     Set<String> includedDraft = Set<String>.of(selectedMuscleGroups);
     Set<String> excludedDraft = Set<String>.of(excludedMuscleTags);
-    final ({Set<String> included, Set<String> excluded})?
-    result = await showModalBottomSheet<({Set<String> included, Set<String> excluded})>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (BuildContext context) {
-        return StatefulBuilder(
-          builder: (BuildContext context, StateSetter setModalState) {
-            final int matchingCount = workouts
-                .where(
-                  (Workout workout) => workoutMatchesMuscleFilters(
-                    workout,
-                    includedMuscleGroups: includedDraft,
-                    excludedTags: excludedDraft,
-                  ),
-                )
-                .length;
-            return SafeArea(
-              top: false,
-              bottom: false,
-              child: Container(
-                padding: EdgeInsets.fromLTRB(
-                  20,
-                  10,
-                  20,
-                  20 + MediaQuery.paddingOf(context).bottom,
-                ),
-                decoration: const BoxDecoration(
-                  color: Color(0xFF102F55),
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: <Widget>[
-                    Center(
-                      child: Container(
-                        width: 42,
-                        height: 4,
-                        decoration: BoxDecoration(
-                          color: Colors.white24,
-                          borderRadius: BorderRadius.circular(999),
+    final ({Set<String> included, Set<String> excluded})? result =
+        await showModalBottomSheet<
+          ({Set<String> included, Set<String> excluded})
+        >(
+          context: context,
+          isScrollControlled: true,
+          backgroundColor: Colors.transparent,
+          builder: (BuildContext context) {
+            return StatefulBuilder(
+              builder: (BuildContext context, StateSetter setModalState) {
+                final int matchingCount = workouts
+                    .where(
+                      (Workout workout) => workoutMatchesMuscleFilters(
+                        workout,
+                        includedMuscleGroups: includedDraft,
+                        excludedTags: excludedDraft,
+                      ),
+                    )
+                    .length;
+                return SafeArea(
+                  top: false,
+                  bottom: false,
+                  child: Container(
+                    padding: EdgeInsets.fromLTRB(
+                      20,
+                      10,
+                      20,
+                      20 + MediaQuery.paddingOf(context).bottom,
+                    ),
+                    decoration: const BoxDecoration(
+                      color: Color(0xFF102F55),
+                      borderRadius: BorderRadius.vertical(
+                        top: Radius.circular(28),
+                      ),
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: <Widget>[
+                        Center(
+                          child: Container(
+                            width: 42,
+                            height: 4,
+                            decoration: BoxDecoration(
+                              color: Colors.white24,
+                              borderRadius: BorderRadius.circular(999),
+                            ),
+                          ),
                         ),
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    const Text(
-                      'Worauf hast Du heute Lust?',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 22,
-                        fontWeight: FontWeight.w900,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    const Text(
-                      'Wähle einen oder mehrere Bereiche. Bei mehreren Übungen sorgt RIZE automatisch für Abwechslung.',
-                      style: TextStyle(
-                        color: Colors.white60,
-                        height: 1.4,
-                        fontSize: 12,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Flexible(
-                      child: SingleChildScrollView(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: <Widget>[
-                            const Text(
-                              'MUSKELGRUPPEN EINSCHLIESSEN',
-                              style: TextStyle(
-                                color: Color(0xFF9DDEF9),
-                                fontSize: 10,
-                                letterSpacing: 0.8,
-                                fontWeight: FontWeight.w900,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Wrap(
-                              spacing: 8,
-                              runSpacing: 8,
+                        const SizedBox(height: 20),
+                        const Text(
+                          'Worauf hast Du heute Lust?',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 22,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        const Text(
+                          'Wähle einen oder mehrere Bereiche. Bei mehreren Übungen sorgt RIZE automatisch für Abwechslung.',
+                          style: TextStyle(
+                            color: Colors.white60,
+                            height: 1.4,
+                            fontSize: 12,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        Flexible(
+                          child: SingleChildScrollView(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: <Widget>[
-                                DragSafeFilterChip(
-                                  key: const ValueKey<String>(
-                                    'include-all-muscles',
-                                  ),
-                                  label: const Text('Alles offen'),
-                                  avatar: const Icon(
-                                    Icons.auto_awesome_rounded,
-                                    size: 17,
-                                  ),
-                                  selected: includedDraft.isEmpty,
-                                  onSelected: (_) {
-                                    setModalState(
-                                      () => includedDraft = <String>{},
-                                    );
-                                  },
-                                ),
-                                ...groups.map(
-                                  (String group) => DragSafeFilterChip(
-                                    key: ValueKey<String>('include-$group'),
-                                    label: Text(muscleGroupLabel(group)),
-                                    selected: includedDraft.contains(group),
-                                    onSelected: (bool selected) {
-                                      setModalState(() {
-                                        includedDraft = Set<String>.of(
-                                          includedDraft,
-                                        );
-                                        selected
-                                            ? includedDraft.add(group)
-                                            : includedDraft.remove(group);
-                                      });
-                                    },
+                                const Text(
+                                  'MUSKELGRUPPEN EINSCHLIESSEN',
+                                  style: TextStyle(
+                                    color: Color(0xFF9DDEF9),
+                                    fontSize: 10,
+                                    letterSpacing: 0.8,
+                                    fontWeight: FontWeight.w900,
                                   ),
                                 ),
-                              ],
-                            ),
-                            if (tags.isNotEmpty) ...<Widget>[
-                              const SizedBox(height: 18),
-                              const Text(
-                                'BEREICHE AUSSCHLIESSEN',
-                                style: TextStyle(
-                                  color: Color(0xFFFF9AA3),
-                                  fontSize: 10,
-                                  letterSpacing: 0.8,
-                                  fontWeight: FontWeight.w900,
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              Wrap(
-                                spacing: 8,
-                                runSpacing: 8,
-                                children: <Widget>[
-                                  DragSafeFilterChip(
-                                    key: const ValueKey<String>(
-                                      'exclude-no-tags',
-                                    ),
-                                    label: const Text('Nichts ausschließen'),
-                                    avatar: const Icon(
-                                      Icons.check_circle_outline_rounded,
-                                      size: 17,
-                                    ),
-                                    selected: excludedDraft.isEmpty,
-                                    selectedColor: const Color(
-                                      0xFFFF6B78,
-                                    ).withOpacity(0.28),
-                                    onSelected: (_) {
-                                      setModalState(
-                                        () => excludedDraft = <String>{},
-                                      );
-                                    },
-                                  ),
-                                  ...tags.map(
-                                    (String tag) => DragSafeFilterChip(
-                                      key: ValueKey<String>('exclude-$tag'),
-                                      label: Text(muscleGroupLabel(tag)),
-                                      selected: excludedDraft.contains(tag),
-                                      selectedColor: const Color(
-                                        0xFFFF6B78,
-                                      ).withOpacity(0.28),
-                                      checkmarkColor: const Color(0xFFFFB3BA),
-                                      side: BorderSide(
-                                        color: excludedDraft.contains(tag)
-                                            ? const Color(0xFFFF7E89)
-                                            : Colors.white24,
+                                const SizedBox(height: 8),
+                                Wrap(
+                                  spacing: 8,
+                                  runSpacing: 8,
+                                  children: <Widget>[
+                                    DragSafeFilterChip(
+                                      key: const ValueKey<String>(
+                                        'include-all-muscles',
                                       ),
-                                      onSelected: (bool selected) {
-                                        setModalState(() {
-                                          excludedDraft = Set<String>.of(
-                                            excludedDraft,
-                                          );
-                                          selected
-                                              ? excludedDraft.add(tag)
-                                              : excludedDraft.remove(tag);
-                                        });
+                                      label: const Text('Alles offen'),
+                                      avatar: const Icon(
+                                        Icons.auto_awesome_rounded,
+                                        size: 17,
+                                      ),
+                                      selected: includedDraft.isEmpty,
+                                      onSelected: (_) {
+                                        setModalState(
+                                          () => includedDraft = <String>{},
+                                        );
                                       },
                                     ),
+                                    ...groups.map(
+                                      (String group) => DragSafeFilterChip(
+                                        key: ValueKey<String>('include-$group'),
+                                        label: Text(muscleGroupLabel(group)),
+                                        selected: includedDraft.contains(group),
+                                        onSelected: (bool selected) {
+                                          setModalState(() {
+                                            includedDraft = Set<String>.of(
+                                              includedDraft,
+                                            );
+                                            selected
+                                                ? includedDraft.add(group)
+                                                : includedDraft.remove(group);
+                                          });
+                                        },
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                if (tags.isNotEmpty) ...<Widget>[
+                                  const SizedBox(height: 18),
+                                  const Text(
+                                    'BEREICHE AUSSCHLIESSEN',
+                                    style: TextStyle(
+                                      color: Color(0xFFFF9AA3),
+                                      fontSize: 10,
+                                      letterSpacing: 0.8,
+                                      fontWeight: FontWeight.w900,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Wrap(
+                                    spacing: 8,
+                                    runSpacing: 8,
+                                    children: <Widget>[
+                                      DragSafeFilterChip(
+                                        key: const ValueKey<String>(
+                                          'exclude-no-tags',
+                                        ),
+                                        label: const Text(
+                                          'Nichts ausschließen',
+                                        ),
+                                        avatar: const Icon(
+                                          Icons.check_circle_outline_rounded,
+                                          size: 17,
+                                        ),
+                                        selected: excludedDraft.isEmpty,
+                                        selectedColor: const Color(
+                                          0xFFFF6B78,
+                                        ).withOpacity(0.28),
+                                        onSelected: (_) {
+                                          setModalState(
+                                            () => excludedDraft = <String>{},
+                                          );
+                                        },
+                                      ),
+                                      ...tags.map(
+                                        (String tag) => DragSafeFilterChip(
+                                          key: ValueKey<String>('exclude-$tag'),
+                                          label: Text(muscleGroupLabel(tag)),
+                                          selected: excludedDraft.contains(tag),
+                                          selectedColor: const Color(
+                                            0xFFFF6B78,
+                                          ).withOpacity(0.28),
+                                          checkmarkColor: const Color(
+                                            0xFFFFB3BA,
+                                          ),
+                                          side: BorderSide(
+                                            color: excludedDraft.contains(tag)
+                                                ? const Color(0xFFFF7E89)
+                                                : Colors.white24,
+                                          ),
+                                          onSelected: (bool selected) {
+                                            setModalState(() {
+                                              excludedDraft = Set<String>.of(
+                                                excludedDraft,
+                                              );
+                                              selected
+                                                  ? excludedDraft.add(tag)
+                                                  : excludedDraft.remove(tag);
+                                            });
+                                          },
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ],
-                              ),
-                            ],
-                          ],
+                              ],
+                            ),
+                          ),
                         ),
-                      ),
-                    ),
-                    const SizedBox(height: 18),
-                    FilledButton(
-                      onPressed: matchingCount == 0
-                          ? null
-                          : () => Navigator.pop(context, (
-                              included: includedDraft,
-                              excluded: excludedDraft,
-                            )),
-                      style: FilledButton.styleFrom(
-                        minimumSize: const Size.fromHeight(52),
-                        backgroundColor: Colors.white,
-                        foregroundColor: const Color(0xFF125EB4),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
+                        const SizedBox(height: 18),
+                        FilledButton(
+                          onPressed: matchingCount == 0
+                              ? null
+                              : () => Navigator.pop(context, (
+                                  included: includedDraft,
+                                  excluded: excludedDraft,
+                                )),
+                          style: FilledButton.styleFrom(
+                            minimumSize: const Size.fromHeight(52),
+                            backgroundColor: Colors.white,
+                            foregroundColor: const Color(0xFF125EB4),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                          ),
+                          child: Text(
+                            includedDraft.isEmpty && excludedDraft.isEmpty
+                                ? 'ALLE MUSKELGRUPPEN · $matchingCount ÜBUNGEN'
+                                : 'FILTER ÜBERNEHMEN · $matchingCount ÜBUNGEN',
+                            style: const TextStyle(fontWeight: FontWeight.w900),
+                          ),
                         ),
-                      ),
-                      child: Text(
-                        includedDraft.isEmpty && excludedDraft.isEmpty
-                            ? 'ALLE MUSKELGRUPPEN · $matchingCount ÜBUNGEN'
-                            : 'FILTER ÜBERNEHMEN · $matchingCount ÜBUNGEN',
-                        style: const TextStyle(fontWeight: FontWeight.w900),
-                      ),
+                      ],
                     ),
-                  ],
-                ),
-              ),
+                  ),
+                );
+              },
             );
           },
         );
-      },
-    );
     if (result != null) onMuscleFiltersChanged(result);
   }
 }

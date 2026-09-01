@@ -203,3 +203,63 @@ List<Workout> selectDiverseWorkouts({
   }
   return List<Workout>.unmodifiable(result);
 }
+
+/// Keeps random tie-breaking from the input order, but moves exercises and
+/// muscle groups trained during the previous days towards the end.
+List<Workout> prioritizeWorkoutsForRecentVariety({
+  required Iterable<Workout> workouts,
+  required Iterable<ScheduledWorkout> history,
+  DateTime? now,
+  int lookbackDays = 2,
+}) {
+  final List<Workout> result = workouts.toList();
+  if (result.length < 2 || lookbackDays <= 0) {
+    return List<Workout>.unmodifiable(result);
+  }
+
+  final DateTime reference = now ?? DateTime.now();
+  final DateTime today = DateTime(
+    reference.year,
+    reference.month,
+    reference.day,
+  );
+  final List<ScheduledWorkout> recent = history
+      .where((workout) {
+        final DateTime? scheduledDay = workout.scheduledDay;
+        if (scheduledDay == null) return false;
+        final DateTime day = DateTime(
+          scheduledDay.year,
+          scheduledDay.month,
+          scheduledDay.day,
+        );
+        final int age = today.difference(day).inDays;
+        return age >= 1 && age <= lookbackDays;
+      })
+      .toList(growable: false);
+
+  int penalty(Workout candidate) {
+    int value = 0;
+    for (final ScheduledWorkout previous in recent) {
+      final DateTime day = DateTime(
+        previous.scheduledDay!.year,
+        previous.scheduledDay!.month,
+        previous.scheduledDay!.day,
+      );
+      final int age = today.difference(day).inDays;
+      final int weight = lookbackDays - age + 1;
+      if (candidate.id == previous.id) value += 1000 * weight;
+      value +=
+          candidate.usedMuscleGroups
+              .where(previous.usedMuscleGroups.contains)
+              .length *
+          100 *
+          weight;
+    }
+    return value;
+  }
+
+  result.sort((Workout first, Workout second) {
+    return penalty(first).compareTo(penalty(second));
+  });
+  return List<Workout>.unmodifiable(result);
+}

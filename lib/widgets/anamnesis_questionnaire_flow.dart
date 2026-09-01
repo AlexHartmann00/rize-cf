@@ -21,11 +21,13 @@ class _AnamnesisQuestionnaireFlowState
     extends State<AnamnesisQuestionnaireFlow> {
   int _index = 0;
   bool _saving = false;
+  bool _showWelcome = true;
 
   QuestionnaireEntry get _question => widget.questionnaire.items[_index];
   int get _selectedIndex =>
       _question.responseOptions.indexWhere((option) => option.isSelected);
   bool get _isLast => _index == widget.questionnaire.items.length - 1;
+  bool get _canContinue => _question.isAnswered && !_saving;
 
   void _select(int index) {
     HapticFeedback.selectionClick();
@@ -36,8 +38,17 @@ class _AnamnesisQuestionnaireFlowState
     });
   }
 
+  void _setNumber(String value) {
+    final int? parsed = int.tryParse(value.trim());
+    setState(() {
+      _question.numberAnswer = parsed != null && parsed > 0 && parsed <= 120
+          ? parsed
+          : null;
+    });
+  }
+
   Future<void> _continue() async {
-    if (_selectedIndex < 0 || _saving) return;
+    if (!_canContinue) return;
     if (!_isLast) {
       setState(() => _index++);
       return;
@@ -66,11 +77,31 @@ class _AnamnesisQuestionnaireFlowState
 
   @override
   Widget build(BuildContext context) {
+    if (_showWelcome) {
+      return PopScope<Object?>(
+        key: const ValueKey<String>('onboarding-pop-scope'),
+        canPop: false,
+        child: RizeScaffold(
+          appBar: null,
+          bottomNavigationBar: null,
+          body: SafeArea(
+            child: _WelcomeIntro(
+              onStart: () {
+                HapticFeedback.lightImpact();
+                setState(() => _showWelcome = false);
+              },
+            ),
+          ),
+        ),
+      );
+    }
+
     final int total = widget.questionnaire.items.length;
     final double progress = (_index + 1) / total;
 
-    return PopScope(
-      canPop: _index == 0 && !_saving,
+    return PopScope<Object?>(
+      key: const ValueKey<String>('onboarding-pop-scope'),
+      canPop: false,
       onPopInvokedWithResult: (bool didPop, Object? result) {
         if (!didPop && _index > 0 && !_saving) setState(() => _index--);
       },
@@ -112,7 +143,7 @@ class _AnamnesisQuestionnaireFlowState
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: <Widget>[
                           Text(
-                            'Dein RIZE Startpunkt',
+                            'Willkommen bei RIZE',
                             style: TextStyle(
                               color: Colors.white,
                               fontSize: 18,
@@ -120,7 +151,7 @@ class _AnamnesisQuestionnaireFlowState
                             ),
                           ),
                           Text(
-                            'Kurz einschätzen. Passender trainieren.',
+                            'Vier kurze Fragen für dein Training.',
                             style: TextStyle(
                               color: Colors.white54,
                               fontSize: 11,
@@ -210,26 +241,81 @@ class _AnamnesisQuestionnaireFlowState
                               ),
                             ),
                             const SizedBox(height: 9),
-                            const Text(
-                              'Wähle die Antwort, die heute am besten zu Dir passt.',
+                            Text(
+                              _question.expectsNumber
+                                  ? 'Gib dein Alter in Jahren an.'
+                                  : 'Wähle die Antwort, die heute am besten zu dir passt.',
                               textAlign: TextAlign.center,
-                              style: TextStyle(
+                              style: const TextStyle(
                                 color: Colors.white54,
                                 fontSize: 12,
                               ),
                             ),
                             const SizedBox(height: 24),
-                            ..._question.responseOptions.indexed.map(
-                              ((int, QuestionnaireResponseOption) entry) =>
-                                  Padding(
-                                    padding: const EdgeInsets.only(bottom: 10),
-                                    child: _AnswerCard(
-                                      label: entry.$2.optionText,
-                                      selected: entry.$1 == _selectedIndex,
-                                      onTap: () => _select(entry.$1),
+                            if (_question.expectsNumber)
+                              TextFormField(
+                                initialValue: _question.numberAnswer
+                                    ?.toString(),
+                                autofocus: true,
+                                keyboardType: TextInputType.number,
+                                textInputAction: TextInputAction.done,
+                                inputFormatters: <TextInputFormatter>[
+                                  FilteringTextInputFormatter.digitsOnly,
+                                  LengthLimitingTextInputFormatter(3),
+                                ],
+                                onChanged: _setNumber,
+                                onFieldSubmitted: (_) {
+                                  if (_canContinue) _continue();
+                                },
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 28,
+                                  fontWeight: FontWeight.w900,
+                                ),
+                                decoration: InputDecoration(
+                                  hintText: 'Alter',
+                                  hintStyle: const TextStyle(
+                                    color: Colors.white38,
+                                  ),
+                                  suffixText: 'Jahre',
+                                  suffixStyle: const TextStyle(
+                                    color: Colors.white60,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                  filled: true,
+                                  fillColor: Colors.white.withOpacity(0.075),
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 20,
+                                    vertical: 20,
+                                  ),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(18),
+                                    borderSide: BorderSide.none,
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(18),
+                                    borderSide: const BorderSide(
+                                      color: rizeCyan,
+                                      width: 1.5,
                                     ),
                                   ),
-                            ),
+                                ),
+                              )
+                            else
+                              ..._question.responseOptions.indexed.map(
+                                ((int, QuestionnaireResponseOption) entry) =>
+                                    Padding(
+                                      padding: const EdgeInsets.only(
+                                        bottom: 10,
+                                      ),
+                                      child: _AnswerCard(
+                                        label: entry.$2.optionText,
+                                        selected: entry.$1 == _selectedIndex,
+                                        onTap: () => _select(entry.$1),
+                                      ),
+                                    ),
+                              ),
                           ],
                         ),
                       ),
@@ -240,7 +326,7 @@ class _AnamnesisQuestionnaireFlowState
               Padding(
                 padding: const EdgeInsets.fromLTRB(18, 8, 18, 14),
                 child: FilledButton.icon(
-                  onPressed: _selectedIndex < 0 || _saving ? null : _continue,
+                  onPressed: _canContinue ? _continue : null,
                   style: FilledButton.styleFrom(
                     minimumSize: const Size.fromHeight(56),
                     backgroundColor: Colors.white,
@@ -279,6 +365,162 @@ class _AnamnesisQuestionnaireFlowState
           ),
         ),
       ),
+    );
+  }
+}
+
+class _WelcomeIntro extends StatelessWidget {
+  const _WelcomeIntro({required this.onStart});
+
+  final VoidCallback onStart;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (BuildContext context, BoxConstraints constraints) {
+        return SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(28, 32, 28, 24),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                minHeight: (constraints.maxHeight - 56).clamp(
+                  0,
+                  double.infinity,
+                ),
+                maxWidth: 520,
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: <Widget>[
+                  TweenAnimationBuilder<double>(
+                    duration: const Duration(milliseconds: 900),
+                    curve: Curves.easeOutBack,
+                    tween: Tween<double>(begin: 0, end: 1),
+                    builder:
+                        (BuildContext context, double value, Widget? child) {
+                          return Opacity(
+                            opacity: value.clamp(0, 1),
+                            child: Transform.translate(
+                              offset: Offset((1 - value) * -34, 0),
+                              child: Transform.scale(
+                                scale: 0.94 + (value * 0.06),
+                                child: child,
+                              ),
+                            ),
+                          );
+                        },
+                    child: Container(
+                      key: const ValueKey<String>('coach-flo-welcome'),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(30),
+                        border: Border.all(
+                          color: rizeCyan.withValues(alpha: 0.22),
+                        ),
+                        boxShadow: <BoxShadow>[
+                          BoxShadow(
+                            color: rizeCyan.withValues(alpha: 0.16),
+                            blurRadius: 30,
+                            spreadRadius: 2,
+                          ),
+                        ],
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(29),
+                        child: AspectRatio(
+                          aspectRatio: 1.46,
+                          child: Image.asset(
+                            'assets/onboarding/coach_flo_welcome.png',
+                            fit: BoxFit.cover,
+                            alignment: Alignment.center,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 34),
+                  const Text(
+                    'Willkommen bei RIZE',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 31,
+                      height: 1.1,
+                      letterSpacing: -0.7,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  const Text(
+                    'Schön, dass du da bist! Ich freue mich darauf, dich bei deinem Training zu begleiten.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: Colors.white70,
+                      fontSize: 14,
+                      height: 1.5,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  const Text(
+                    'Beantworte kurz vier Fragen, damit dein Start genau zu dir passt. Viel Spaß und viel Erfolg!',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: Colors.white70,
+                      fontSize: 14,
+                      height: 1.5,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  const Text(
+                    '„Das Geheimnis des Erfolgs ist anzufangen.“',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: rizeCyan,
+                      fontSize: 14,
+                      height: 1.5,
+                      fontStyle: FontStyle.italic,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    '– Coach Flo',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 13,
+                      fontStyle: FontStyle.italic,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 28),
+                  FilledButton.icon(
+                    key: const ValueKey<String>('start-onboarding'),
+                    onPressed: onStart,
+                    style: FilledButton.styleFrom(
+                      minimumSize: const Size.fromHeight(58),
+                      backgroundColor: Colors.white,
+                      foregroundColor: const Color(0xFF10539E),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(18),
+                      ),
+                    ),
+                    icon: const Icon(Icons.arrow_forward_rounded),
+                    label: const Text(
+                      "LOS GEHT'S",
+                      style: TextStyle(
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }

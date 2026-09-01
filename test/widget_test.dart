@@ -14,6 +14,7 @@ import 'package:rize/widgets/milestone_widgets.dart';
 import 'package:rize/widgets/muscle_visualizer.dart';
 import 'package:rize/base_widgets.dart';
 import 'package:rize/widgets/drag_safe_filter_chip.dart';
+import 'package:rize/utils.dart' show computeCurrentStreakFromHistoryAt;
 
 Workout workout(
   String id,
@@ -50,6 +51,53 @@ void main() {
     expect(
       visualizer.groupToAsset('Shoulder', false),
       'assets/muscle_graphics/back/shoulders.png',
+    );
+  });
+
+  test('muscle masks use the corrected side and aliases', () {
+    expect(
+      muscleAssetPath('Hamstrings', false),
+      'assets/muscle_graphics/back/hamstring.png',
+    );
+    expect(
+      muscleAssetPath('LowerBack', false),
+      'assets/muscle_graphics/back/lower back.png',
+    );
+    expect(muscleAssetPath('Calves', true), isNull);
+    expect(
+      muscleAssetPath('Calves', false),
+      'assets/muscle_graphics/back/calves.png',
+    );
+  });
+
+  testWidgets('asymmetric masks are corrected while rendering', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: MuscleVisualization(
+            workout: workout('visual', const <String>[
+              'Upper Back',
+              'Triceps',
+              'Lower Back',
+            ]),
+          ),
+        ),
+      ),
+    );
+
+    expect(
+      find.byKey(const ValueKey<String>('symmetric-upper back-back')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey<String>('symmetric-triceps-back')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey<String>('central-lower-back')),
+      findsOneWidget,
     );
   });
 
@@ -228,6 +276,54 @@ void main() {
     expect(plan.isCompleted, isFalse);
   });
 
+  test('home streak ignores an unfinished workout planned for today', () {
+    ScheduledWorkout entry(DateTime day, int completed) {
+      return ScheduledWorkout.fromBaseWorkout(
+        workout('entry-$day-$completed', const <String>['chest']),
+        <WorkoutStep>[
+          WorkoutStep(
+            timeOfDay: TimeOfDay.any,
+            plannedUnits: 1,
+            completedUnits: completed,
+          ),
+        ],
+        1,
+      )..scheduledDay = day;
+    }
+
+    final DateTime today = DateTime(2026, 8, 28, 14);
+    final List<ScheduledWorkout> history = <ScheduledWorkout>[
+      entry(today, 0),
+      entry(DateTime(2026, 8, 27, 20), 1),
+      entry(DateTime(2026, 8, 26, 8), 1),
+    ];
+
+    expect(computeCurrentStreakFromHistoryAt(history, today), 2);
+  });
+
+  test('daily plan position survives persistence', () {
+    final ScheduledWorkout original =
+        ScheduledWorkout.fromBaseWorkout(
+            workout('ordered', const <String>['chest']),
+            <WorkoutStep>[
+              WorkoutStep(
+                timeOfDay: TimeOfDay.any,
+                plannedUnits: 1,
+                completedUnits: 0,
+              ),
+            ],
+            1,
+          )
+          ..planId = 'plan'
+          ..planPosition = 1;
+
+    final ScheduledWorkout restored = ScheduledWorkout.fromJson(
+      original.toJson(),
+    );
+    expect(restored.planId, 'plan');
+    expect(restored.planPosition, 1);
+  });
+
   test('planned workouts keep completion state independent', () {
     final List<WorkoutStep> sharedSchedule = <WorkoutStep>[
       WorkoutStep(timeOfDay: TimeOfDay.any, plannedUnits: 1, completedUnits: 0),
@@ -290,6 +386,32 @@ void main() {
     );
 
     expect(selection.map((Workout item) => item.id), <String>['chest', 'legs']);
+  });
+
+  test('daily spin deprioritizes recently trained muscles', () {
+    final DateTime today = DateTime(2026, 8, 30);
+    final ScheduledWorkout recentChest = ScheduledWorkout.fromBaseWorkout(
+      workout('recent-chest', const <String>['chest']),
+      <WorkoutStep>[
+        WorkoutStep(
+          timeOfDay: TimeOfDay.any,
+          plannedUnits: 1,
+          completedUnits: 1,
+        ),
+      ],
+      1,
+    )..scheduledDay = DateTime(2026, 8, 29);
+
+    final List<Workout> prioritized = prioritizeWorkoutsForRecentVariety(
+      workouts: <Workout>[
+        workout('chest-again', const <String>['chest']),
+        workout('legs', const <String>['quadriceps']),
+      ],
+      history: <ScheduledWorkout>[recentChest],
+      now: today,
+    );
+
+    expect(prioritized.first.id, 'legs');
   });
 
   test('muscle filter is respected by diverse spin selection', () {
@@ -370,6 +492,37 @@ void main() {
           .firstWhere((state) => state.definition.id == 'week_days_3')
           .current,
       1,
+    );
+  });
+
+  test('new and pending milestones are always returned for celebration', () {
+    final ScheduledWorkout completed = ScheduledWorkout.fromBaseWorkout(
+      workout('celebration', const <String>['chest']),
+      <WorkoutStep>[
+        WorkoutStep(
+          timeOfDay: TimeOfDay.any,
+          plannedUnits: 1,
+          completedUnits: 1,
+          actualValue: 100,
+        ),
+      ],
+      1,
+    )..scheduledDay = DateTime.now();
+    final List<MilestoneState> reached = buildMilestoneStates(
+      <ScheduledWorkout>[completed],
+    ).where((MilestoneState state) => state.reached).toList();
+
+    expect(
+      milestonesRequiringCelebration(reached, const <String, bool>{}),
+      reached,
+    );
+    expect(
+      milestonesRequiringCelebration(reached, <String, bool>{
+        reached.first.storageId: true,
+        for (final MilestoneState state in reached.skip(1))
+          state.storageId: false,
+      }),
+      <MilestoneState>[reached.first],
     );
   });
 
@@ -464,6 +617,37 @@ void main() {
         home: AnamnesisQuestionnaireFlow(questionnaire: questionnaire),
       ),
     );
+    expect(find.text('Willkommen bei RIZE'), findsOneWidget);
+    expect(find.text("LOS GEHT'S"), findsOneWidget);
+    expect(find.textContaining('Ich freue mich darauf'), findsOneWidget);
+    expect(find.text('– Coach Flo'), findsOneWidget);
+    expect(
+      find.text('„Das Geheimnis des Erfolgs ist anzufangen.“'),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey<String>('coach-flo-welcome')),
+      findsOneWidget,
+    );
+    expect(
+      tester
+          .widget<PopScope<Object?>>(
+            find.byKey(const ValueKey<String>('onboarding-pop-scope')),
+          )
+          .canPop,
+      isFalse,
+    );
+    expect(find.text('Wie aktiv bist Du?'), findsNothing);
+    await tester.tap(find.text("LOS GEHT'S"));
+    await tester.pumpAndSettle();
+    expect(
+      tester
+          .widget<PopScope<Object?>>(
+            find.byKey(const ValueKey<String>('onboarding-pop-scope')),
+          )
+          .canPop,
+      isFalse,
+    );
     expect(find.text('Wie aktiv bist Du?'), findsOneWidget);
     expect(find.text('Wie fühlst Du Dich?'), findsNothing);
     await tester.tap(find.text('Sehr aktiv'));
@@ -471,6 +655,110 @@ void main() {
     await tester.tap(find.text('WEITER'));
     await tester.pumpAndSettle();
     expect(find.text('Wie fühlst Du Dich?'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  test('onboarding score applies weights, pause multiplier and age cap', () {
+    QuestionnaireResponseOption option(double value, {double? multiplier}) =>
+        QuestionnaireResponseOption(
+          optionText: 'Antwort',
+          optionValue: value,
+          multiplier: multiplier,
+        )..isSelected = true;
+
+    final AnamnesisQuestionnaire questionnaire = AnamnesisQuestionnaire(
+      entries: <QuestionnaireEntry>[
+        QuestionnaireEntry(
+          id: 'F1_age',
+          role: 'safety_cap',
+          input: 'number',
+          questionTitle: 'Alter',
+          questionText: 'Wie alt bist du?',
+          responseOptions: <QuestionnaireResponseOption>[],
+        )..numberAnswer = 65,
+        QuestionnaireEntry(
+          id: 'F2_capacity',
+          role: 'score_primary',
+          weightInScore: 0.55,
+          questionTitle: 'Belastbarkeit',
+          questionText: 'Wie belastbar bist du?',
+          responseOptions: <QuestionnaireResponseOption>[option(0.88)],
+        ),
+        QuestionnaireEntry(
+          id: 'F3_activity',
+          role: 'score_secondary',
+          weightInScore: 0.45,
+          questionTitle: 'Aktivität',
+          questionText: 'Wie aktiv bist du?',
+          responseOptions: <QuestionnaireResponseOption>[option(0.80)],
+        ),
+        QuestionnaireEntry(
+          id: 'F4_returnToActivity',
+          role: 'safety_multiplier',
+          questionTitle: 'Pause',
+          questionText: 'Kommst du aus einer Pause?',
+          responseOptions: <QuestionnaireResponseOption>[
+            option(1, multiplier: 1),
+          ],
+        ),
+      ],
+    );
+
+    expect(questionnaire.totalScore, 0.65);
+  });
+
+  testWidgets('onboarding accepts age as a number before select questions', (
+    WidgetTester tester,
+  ) async {
+    final AnamnesisQuestionnaire questionnaire = AnamnesisQuestionnaire(
+      entries: <QuestionnaireEntry>[
+        QuestionnaireEntry(
+          id: 'F1_age',
+          order: 1,
+          role: 'safety_cap',
+          input: 'number',
+          questionTitle: 'Alter',
+          questionText: 'Wie alt bist du?',
+          responseOptions: <QuestionnaireResponseOption>[],
+        ),
+        QuestionnaireEntry(
+          id: 'F2_capacity',
+          order: 2,
+          role: 'score_primary',
+          weightInScore: 0.55,
+          questionTitle: 'Belastbarkeit',
+          questionText: 'Wie belastbar bist du?',
+          responseOptions: <QuestionnaireResponseOption>[
+            QuestionnaireResponseOption(
+              optionText: 'Gut belastbar',
+              optionValue: 0.62,
+            ),
+          ],
+        ),
+      ],
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: AnamnesisQuestionnaireFlow(questionnaire: questionnaire),
+      ),
+    );
+    await tester.ensureVisible(
+      find.byKey(const ValueKey<String>('start-onboarding')),
+    );
+    await tester.tap(find.text("LOS GEHT'S"));
+    await tester.pumpAndSettle();
+    expect(find.text('Wie alt bist du?'), findsOneWidget);
+    expect(find.byType(TextFormField), findsOneWidget);
+    expect(find.text('WEITER'), findsOneWidget);
+
+    await tester.enterText(find.byType(TextFormField), '42');
+    await tester.pump();
+    await tester.tap(find.text('WEITER'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Wie belastbar bist du?'), findsOneWidget);
+    expect(questionnaire.entries.first.numberAnswer, 42);
     expect(tester.takeException(), isNull);
   });
 

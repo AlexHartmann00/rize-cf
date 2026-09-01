@@ -362,11 +362,22 @@ Future<List<MilestoneState>> evaluateAndClaimMilestones() async {
       .doc(userId)
       .collection('milestones');
   final QuerySnapshot<Map<String, dynamic>> snapshot = await collection.get();
-  final Set<String> claimed = snapshot.docs.map((doc) => doc.id).toSet();
-  final List<MilestoneState> unlocked = states
-      .where((state) => state.reached && !claimed.contains(state.storageId))
+  final Map<String, Map<String, dynamic>> claimed =
+      <String, Map<String, dynamic>>{
+        for (final QueryDocumentSnapshot<Map<String, dynamic>> doc
+            in snapshot.docs)
+          doc.id: doc.data(),
+      };
+  final List<MilestoneState> celebrations =
+      milestonesRequiringCelebration(states, <String, bool>{
+        for (final MapEntry<String, Map<String, dynamic>> entry
+            in claimed.entries)
+          entry.key: entry.value['celebrationPending'] == true,
+      });
+  final List<MilestoneState> unlocked = celebrations
+      .where((state) => !claimed.containsKey(state.storageId))
       .toList(growable: false);
-  if (unlocked.isEmpty) return unlocked;
+  if (unlocked.isEmpty) return celebrations;
 
   final WriteBatch batch = FirebaseFirestore.instance.batch();
   for (final MilestoneState state in unlocked) {
@@ -378,14 +389,47 @@ Future<List<MilestoneState>> evaluateAndClaimMilestones() async {
       'target': state.definition.target,
       'periodLabel': state.periodLabel,
       'achievedAt': FieldValue.serverTimestamp(),
+      'celebrationPending': true,
     });
   }
   await batch.commit();
-  // Existing users may already satisfy many milestones when this feature is
-  // introduced. Claim all of them, but keep the celebration focused.
-  return unlocked.length <= 3
-      ? unlocked
-      : unlocked.sublist(unlocked.length - 3);
+  return celebrations;
+}
+
+Future<void> markMilestoneCelebrationsShown(
+  Iterable<MilestoneState> milestones,
+) async {
+  final List<MilestoneState> shown = milestones.toList(growable: false);
+  final String userId = authServiceNotifier.value.currentUser?.uid ?? '';
+  if (userId.isEmpty || shown.isEmpty) return;
+
+  final CollectionReference<Map<String, dynamic>> collection = FirebaseFirestore
+      .instance
+      .collection('users')
+      .doc(userId)
+      .collection('milestones');
+  final WriteBatch batch = FirebaseFirestore.instance.batch();
+  for (final MilestoneState milestone in shown) {
+    batch.set(collection.doc(milestone.storageId), <String, dynamic>{
+      'celebrationPending': false,
+      'celebratedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+  }
+  await batch.commit();
+}
+
+List<MilestoneState> milestonesRequiringCelebration(
+  Iterable<MilestoneState> states,
+  Map<String, bool> claimedMilestones,
+) {
+  return states
+      .where(
+        (MilestoneState state) =>
+            state.reached &&
+            (!claimedMilestones.containsKey(state.storageId) ||
+                claimedMilestones[state.storageId] == true),
+      )
+      .toList(growable: false);
 }
 
 List<MilestoneState> buildMilestoneStates(List<ScheduledWorkout> history) {

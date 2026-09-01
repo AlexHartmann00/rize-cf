@@ -43,6 +43,10 @@ Future<AnamnesisQuestionnaire> loadAnamnesisQuestionnaire() async {
     if (doc.data().isEmpty) continue;
     entries.add(QuestionnaireEntry.fromJson(doc.data()));
   }
+  entries.sort(
+    (QuestionnaireEntry first, QuestionnaireEntry second) =>
+        first.order.compareTo(second.order),
+  );
 
   return AnamnesisQuestionnaire(entries: entries);
 }
@@ -56,14 +60,16 @@ Future<void> saveAnamnesisResponse(AnamnesisQuestionnaire questionnaire) async {
   await collection.add({
     'completionTime': FieldValue.serverTimestamp(),
     'responses': questionnaire.entries.map((entry) {
-      return {
+      final QuestionnaireResponseOption? selected = entry.selectedOption;
+      return <String, dynamic>{
+        'questionId': entry.id,
+        'role': entry.role,
+        'answerType': entry.input,
         'questionText': entry.questionText,
-        'chosenResponseText': entry.responseOptions
-            .firstWhere((option) => option.isSelected)
-            .optionText,
-        'questionScore': entry.responseOptions
-            .firstWhere((option) => option.isSelected)
-            .optionValue,
+        'chosenResponseText': selected?.optionText,
+        'chosenNumber': entry.numberAnswer,
+        'questionScore': selected?.optionValue,
+        'multiplier': selected?.multiplier,
       };
     }).toList(),
     'totalScore': questionnaire.totalScore,
@@ -212,6 +218,7 @@ Future<DailyWorkoutPlan?> loadDailyWorkoutPlan() async {
     workout.scheduledDay ??= DateTime.now();
     workouts.add(workout);
   }
+  workouts.sort(_compareDailyPlanWorkouts);
   // Read the old date-keyed document during the migration period.
   if (workouts.isEmpty) {
     final legacy = await FirebaseFirestore.instance
@@ -230,6 +237,20 @@ Future<DailyWorkoutPlan?> loadDailyWorkoutPlan() async {
   if (workouts.isEmpty) return null;
   final String planId = workouts.first.planId ?? 'legacy-$dayKey';
   return DailyWorkoutPlan(id: planId, workouts: workouts);
+}
+
+int _compareDailyPlanWorkouts(ScheduledWorkout first, ScheduledWorkout second) {
+  final int? firstPosition = first.planPosition;
+  final int? secondPosition = second.planPosition;
+  if (firstPosition != null && secondPosition != null) {
+    final int positionComparison = firstPosition.compareTo(secondPosition);
+    if (positionComparison != 0) return positionComparison;
+  } else if (firstPosition != null) {
+    return -1;
+  } else if (secondPosition != null) {
+    return 1;
+  }
+  return (first.historyId ?? '').compareTo(second.historyId ?? '');
 }
 
 Future<void> deleteDailyWorkoutPlan() async {

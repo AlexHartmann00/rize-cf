@@ -6,13 +6,13 @@ import 'package:rize/base_widgets.dart';
 import 'package:rize/firestore.dart';
 import 'package:rize/helpers/rize_style_helpers.dart';
 import 'package:rize/helpers/workout_execution_helpers.dart';
+import 'package:rize/helpers/screen_awake_service.dart';
 import 'package:rize/types/workout.dart';
 import 'package:rize/widgets/rize_card.dart';
 import 'package:rize/widgets/workout_execution_widgets.dart';
 import 'package:rize/helpers/milestone_service.dart';
 import 'package:rize/widgets/milestone_widgets.dart';
 import 'package:rize/youtube.dart';
-import 'package:wakelock_plus/wakelock_plus.dart';
 
 class WorkoutExecutionPage extends StatefulWidget {
   const WorkoutExecutionPage({
@@ -37,6 +37,7 @@ class _WorkoutExecutionPageState extends State<WorkoutExecutionPage> {
   int _currentValue = 0;
   int _remainingSeconds = 0;
   bool _saving = false;
+  final ScreenAwakeHandle _screenAwake = ScreenAwakeHandle();
 
   int get _target => workoutTargetValue(widget.workout);
 
@@ -53,7 +54,7 @@ class _WorkoutExecutionPageState extends State<WorkoutExecutionPage> {
   @override
   void dispose() {
     _timer?.cancel();
-    WakelockPlus.disable();
+    _screenAwake.dispose();
     super.dispose();
   }
 
@@ -63,7 +64,7 @@ class _WorkoutExecutionPageState extends State<WorkoutExecutionPage> {
       return;
     }
 
-    await WakelockPlus.enable();
+    await _screenAwake.setActive(true);
     await HapticFeedback.mediumImpact();
 
     setState(() {
@@ -232,7 +233,7 @@ class _WorkoutExecutionPageState extends State<WorkoutExecutionPage> {
 
     if (confirm == true && mounted) {
       _timer?.cancel();
-      await WakelockPlus.disable();
+      await _screenAwake.setActive(false);
       if (mounted) Navigator.of(context).pop(false);
     }
   }
@@ -241,7 +242,7 @@ class _WorkoutExecutionPageState extends State<WorkoutExecutionPage> {
     if (_phase == WorkoutExecutionPhase.ready ||
         _phase == WorkoutExecutionPhase.completed ||
         _phase == WorkoutExecutionPhase.error) {
-      await WakelockPlus.disable();
+      await _screenAwake.setActive(false);
       if (mounted) Navigator.of(context).pop(false);
       return;
     }
@@ -273,10 +274,15 @@ class _WorkoutExecutionPageState extends State<WorkoutExecutionPage> {
       } catch (error) {
         debugPrint('Milestone evaluation failed: $error');
       }
-      await WakelockPlus.disable();
+      await _screenAwake.setActive(false);
 
       if (!mounted) return;
       await showMilestoneCelebration(context, milestones);
+      try {
+        await markMilestoneCelebrationsShown(milestones);
+      } catch (error) {
+        debugPrint('Milestone celebration acknowledgement failed: $error');
+      }
       if (!mounted) return;
       Navigator.of(context).pop(true);
     } catch (_) {
