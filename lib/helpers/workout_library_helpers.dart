@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:rize/types/workout.dart';
 
 /// Converts text into a normalized search representation.
@@ -202,6 +204,36 @@ List<Workout> selectDiverseWorkouts({
     remaining.remove(best);
   }
   return List<Workout>.unmodifiable(result);
+}
+
+/// Draws workouts randomly and without replacement from the eligible pool.
+List<Workout> selectWorkoutsForSpin({
+  required Iterable<Workout> workouts,
+  required int count,
+  required Random random,
+  Set<String> muscleFilter = const <String>{},
+  Set<String> excludedTags = const <String>{},
+}) {
+  if (count <= 0) return const <Workout>[];
+
+  final List<Workout> candidates = workouts
+      .where(
+        (Workout workout) => workoutMatchesMuscleFilters(
+          workout,
+          includedMuscleGroups: muscleFilter,
+          excludedTags: excludedTags,
+        ),
+      )
+      .toList();
+  if (candidates.isEmpty) return const <Workout>[];
+
+  final List<Workout> selected = <Workout>[];
+  final int selectionCount = count.clamp(0, candidates.length);
+  while (selected.length < selectionCount) {
+    final int randomIndex = random.nextInt(candidates.length);
+    selected.add(candidates.removeAt(randomIndex));
+  }
+  return List<Workout>.unmodifiable(selected);
 }
 
 /// Keeps random tie-breaking from the input order, but moves exercises and

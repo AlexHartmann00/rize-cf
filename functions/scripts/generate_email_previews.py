@@ -25,7 +25,7 @@ from invoice_pdf import build_invoice_pdf
 
 PREVIEW_DIR = REPO_DIR / "output" / "email-previews"
 PDF_DIR = REPO_DIR / "output" / "pdf" / "email-examples"
-SENDER = "RIZE · Coach Flo <rechnung@coach-flo.de>"
+SENDER = "RIZE · Coach Flo <rechnung@mail.coach-flo.de>"
 RECIPIENT = "Andrea Hartmann <andrea@example.com>"
 
 

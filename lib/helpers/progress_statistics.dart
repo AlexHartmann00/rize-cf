@@ -190,3 +190,12 @@ List<ProgressPoint> scorePointsForPeriod(
     return ProgressPoint(index: index, date: date, value: scoreByDay[date]);
   });
 }
+
+double? latestScoreFromHistory(Map<DateTime, double> scoreByDay) {
+  if (scoreByDay.isEmpty) return null;
+
+  final DateTime latestDay = scoreByDay.keys.reduce(
+    (DateTime first, DateTime second) => first.isAfter(second) ? first : second,
+  );
+  return scoreByDay[latestDay];
+}

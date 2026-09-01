@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:rize/base_widgets.dart';
 import 'package:rize/firestore.dart';
-import 'package:rize/globals.dart' as globals;
 import 'package:rize/helpers/rize_style_helpers.dart';
 import 'package:rize/types/anamnesis.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -60,10 +59,7 @@ class _AnamnesisQuestionnaireFlowState
       final SharedPreferences preferences =
           await SharedPreferences.getInstance();
       await preferences.setBool('anamnesisDone', true);
-      if (globals.userData != null) {
-        globals.userData!.intensityScore = widget.questionnaire.totalScore;
-      }
-      if (mounted) Navigator.pop(context);
+      if (mounted) Navigator.pop(context, true);
     } catch (_) {
       if (!mounted) return;
       setState(() => _saving = false);

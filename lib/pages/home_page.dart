@@ -36,6 +36,7 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   bool _loadingUser = true;
   Object? _userLoadError;
+  int _dataRevision = 0;
 
   @override
   void initState() {
@@ -43,7 +44,7 @@ class _MyHomePageState extends State<MyHomePage> {
     _initializeUser();
   }
 
-  Future<void> _initializeUser() async {
+  Future<void> _initializeUser({bool reloadAppData = false}) async {
     if (mounted) {
       setState(() {
         _loadingUser = true;
@@ -60,6 +61,14 @@ class _MyHomePageState extends State<MyHomePage> {
       final userData = await loadUserData(user.uid);
       final List<IntensityLevel> levels = await loadIntensityLevels();
 
+      if (reloadAppData) {
+        final List<Object?> refreshed = await Future.wait<Object?>(
+          <Future<Object?>>[loadWorkoutCollection(), loadDailyWorkoutPlan()],
+        );
+        globals.workoutLibrary = refreshed[0]! as List<Workout>;
+        globals.dailyWorkoutPlan = refreshed[1] as DailyWorkoutPlan?;
+      }
+
       userData.intensityLevel = levels.firstWhere(
         (IntensityLevel level) =>
             userData.intensityScore >= level.minScore &&
@@ -68,6 +77,8 @@ class _MyHomePageState extends State<MyHomePage> {
       );
 
       globals.userData = userData;
+      globals.intensityLevels = levels;
+      if (reloadAppData) _dataRevision++;
     } catch (error) {
       _userLoadError = error;
     } finally {
@@ -132,12 +143,20 @@ class _MyHomePageState extends State<MyHomePage> {
       );
     }
 
-    return const HomePageSlotMachineWidget();
+    return HomePageSlotMachineWidget(
+      key: ValueKey<int>(_dataRevision),
+      onQuestionnaireCompleted: () => _initializeUser(reloadAppData: true),
+    );
   }
 }
 
 class HomePageSlotMachineWidget extends StatefulWidget {
-  const HomePageSlotMachineWidget({super.key});
+  const HomePageSlotMachineWidget({
+    super.key,
+    required this.onQuestionnaireCompleted,
+  });
+
+  final Future<void> Function() onQuestionnaireCompleted;
 
   @override
   State<HomePageSlotMachineWidget> createState() =>
@@ -222,12 +241,15 @@ class _HomePageSlotMachineWidgetState extends State<HomePageSlotMachineWidget> {
     final questionnaire = await loadAnamnesisQuestionnaire();
     if (!mounted) return;
 
-    await Navigator.of(context).push(
-      MaterialPageRoute<void>(
+    final bool? completed = await Navigator.of(context).push<bool>(
+      MaterialPageRoute<bool>(
         builder: (_) =>
             AnamnesisQuestionnaireFlow(questionnaire: questionnaire),
       ),
     );
+    if (completed == true) {
+      await widget.onQuestionnaireCompleted();
+    }
   }
 
   @override
@@ -468,13 +490,11 @@ class _HomePageSlotMachineWidgetState extends State<HomePageSlotMachineWidget> {
       intensityScore: globals.userData?.intensityScore ?? 0,
       isPro: isPro,
     );
-    final List<Workout> workouts = isPro
-        ? workoutsForUserIntensity(
-            workouts: entitledWorkouts,
-            intensityScore: globals.userData?.intensityScore,
-            tolerance: globals.intensityScoreTolerance,
-          )
-        : entitledWorkouts;
+    final List<Workout> workouts = workoutsForUserIntensity(
+      workouts: entitledWorkouts,
+      intensityScore: globals.userData?.intensityScore,
+      tolerance: globals.intensityScoreTolerance,
+    );
 
     final List<int> intensities = buildIntensityFactors(level);
     final List<List<WorkoutStep>> schedules = buildScheduleOptions(level);
@@ -495,33 +515,20 @@ class _HomePageSlotMachineWidgetState extends State<HomePageSlotMachineWidget> {
               .toList(growable: false)
         : workouts;
     final Random random = Random();
-    List<ScheduledWorkout> history = const <ScheduledWorkout>[];
-    try {
-      history = await _historyFuture;
-    } on Object {
-      // The spin still works if the optional variety history is unavailable.
-    }
-    final List<Workout> shuffledPool = List<Workout>.of(eligibleWorkouts)
-      ..shuffle(random);
-    final List<Workout> pool = prioritizeWorkoutsForRecentVariety(
-      workouts: shuffledPool,
-      history: history,
+    final List<Workout> randomSelection = selectWorkoutsForSpin(
+      workouts: eligibleWorkouts,
+      count: requestedCount,
+      random: random,
+      muscleFilter: isPro ? _selectedMuscleGroups : const <String>{},
+      excludedTags: isPro ? _excludedMuscleTags : const <String>{},
     );
-    final List<Workout> diverseSelection = isPro
-        ? selectDiverseWorkouts(
-            workouts: pool,
-            count: requestedCount,
-            muscleFilter: _selectedMuscleGroups,
-            excludedTags: _excludedMuscleTags,
-          )
-        : <Workout>[pool.first];
 
-    if (diverseSelection.length < requestedCount) {
+    if (randomSelection.length < requestedCount) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              'Für diese Filter sind nur ${diverseSelection.length} unterschiedliche Übungen verfügbar. Passe Muskelgruppen, Ausschlüsse oder die Übungsanzahl an.',
+              'Für diese Filter sind nur ${randomSelection.length} unterschiedliche Übungen verfügbar. Passe Muskelgruppen, Ausschlüsse oder die Übungsanzahl an.',
             ),
           ),
         );
@@ -538,7 +545,7 @@ class _HomePageSlotMachineWidgetState extends State<HomePageSlotMachineWidget> {
       final List<ScheduledWorkout> spunWorkouts =
           List<ScheduledWorkout>.generate(requestedCount, (int index) {
             final ScheduledWorkout item = ScheduledWorkout.fromBaseWorkout(
-              diverseSelection[index],
+              randomSelection[index],
               schedules[index == 0
                   ? scheduleIndex
                   : random.nextInt(schedules.length)],
@@ -673,13 +680,11 @@ class _DailySpinPanel extends StatelessWidget {
       intensityScore: globals.userData?.intensityScore ?? 0,
       isPro: isPro,
     );
-    final List<Workout> workouts = isPro
-        ? workoutsForUserIntensity(
-            workouts: entitledWorkouts,
-            intensityScore: globals.userData?.intensityScore,
-            tolerance: globals.intensityScoreTolerance,
-          )
-        : entitledWorkouts;
+    final List<Workout> workouts = workoutsForUserIntensity(
+      workouts: entitledWorkouts,
+      intensityScore: globals.userData?.intensityScore,
+      tolerance: globals.intensityScoreTolerance,
+    );
 
     final List<Workout> visibleSpinPool = isPro
         ? workouts

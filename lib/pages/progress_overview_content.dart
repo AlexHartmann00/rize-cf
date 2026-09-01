@@ -9,6 +9,7 @@ import 'package:rize/widgets/progress_overview_widgets.dart';
 import 'package:rize/widgets/milestone_widgets.dart';
 import 'package:rize/widgets/pro_upgrade_cta.dart';
 import 'package:rize/types/workout.dart';
+import 'package:rize/types/config.dart';
 
 class ProgressOverviewContent extends StatelessWidget {
   const ProgressOverviewContent({super.key, required this.userId});
@@ -84,6 +85,7 @@ class ProgressOverviewContent extends StatelessWidget {
                           today,
                         ),
                         scorePoints: scorePointsForPeriod(scores, today),
+                        currentScore: latestScoreFromHistory(scores),
                         history: entries
                             .map((WorkoutDayEntry entry) => entry.workout)
                             .toList(growable: false),
@@ -102,6 +104,7 @@ class _ProgressDashboard extends StatelessWidget {
     required this.statistics,
     required this.impactPoints,
     required this.scorePoints,
+    required this.currentScore,
     required this.history,
   });
 
@@ -109,6 +112,7 @@ class _ProgressDashboard extends StatelessWidget {
   final ProgressStatistics statistics;
   final List<ProgressPoint> impactPoints;
   final List<ProgressPoint> scorePoints;
+  final double? currentScore;
   final List<ScheduledWorkout> history;
 
   @override
@@ -117,17 +121,17 @@ class _ProgressDashboard extends StatelessWidget {
     final int best = bestStreak(statistics.activeDays);
     final dynamic userData = globals.userData;
     final bool isPro = userData?.isPro == true;
-    final String level = userData?.intensityLevel.label ?? 'Start';
-    final double levelProgress = userData == null
-        ? 0
-        : (userData.intensityLevel.progressToNextLevel(userData.intensityScore)
-                  as num)
-              .toDouble();
-
-    final double? currentScore = scorePoints
-        .where((ProgressPoint point) => point.value != null)
-        .map((ProgressPoint point) => point.value)
-        .lastOrNull;
+    final double effectiveScore = currentScore ?? userData?.intensityScore ?? 0;
+    final IntensityLevel intensityLevel = globals.intensityLevels.firstWhere(
+      (IntensityLevel candidate) =>
+          effectiveScore >= candidate.minScore &&
+          effectiveScore <= candidate.maxScore,
+      orElse: () => userData?.intensityLevel ?? IntensityLevel.unknown(),
+    );
+    final String level = intensityLevel.label;
+    final double levelProgress = intensityLevel.progressToNextLevel(
+      effectiveScore,
+    );
 
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(18, 20, 18, 34),
@@ -220,10 +224,6 @@ class _ProgressDashboard extends StatelessWidget {
       ),
     );
   }
-}
-
-extension<T> on Iterable<T> {
-  T? get lastOrNull => isEmpty ? null : last;
 }
 
 Map<int, CalendarDaySummary> _calendarSummaries(

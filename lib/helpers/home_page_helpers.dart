@@ -18,11 +18,7 @@ List<Workout> workoutsForUserIntensity({
       })
       .toList(growable: false);
 
-  // Never leave the spin without options because the configured tolerance is
-  // temporarily too narrow.
-  return matches.isEmpty
-      ? List<Workout>.unmodifiable(workouts)
-      : List<Workout>.unmodifiable(matches);
+  return List<Workout>.unmodifiable(matches);
 }
 
 List<int> buildIntensityFactors(IntensityLevel level) {

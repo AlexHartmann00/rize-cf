@@ -1,8 +1,11 @@
+import 'dart:math';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter/material.dart' hide TimeOfDay;
 import 'package:rize/helpers/workout_library_helpers.dart';
 import 'package:rize/helpers/muscle_group_labels.dart';
 import 'package:rize/helpers/home_page_helpers.dart';
+import 'package:rize/helpers/progress_statistics.dart';
 import 'package:rize/types/workout.dart';
 import 'package:rize/widgets/workout_rounds_list.dart';
 import 'package:rize/pages/settings_page.dart';
@@ -20,6 +23,7 @@ Workout workout(
   String id,
   List<String> muscles, {
   List<String> tags = const <String>[],
+  double impactScore = 0.5,
 }) => Workout(
   id: id,
   name: id,
@@ -28,11 +32,22 @@ Workout workout(
   usedMuscleGroups: muscles,
   tags: tags,
   workoutType: WorkoutType.dynamic,
-  impactScore: 0.5,
+  impactScore: impactScore,
   baseReps: 10,
 );
 
 void main() {
+  test('current progress score comes from the newest history day', () {
+    final Map<DateTime, double> scores = <DateTime, double>{
+      DateTime(2026, 8, 31): 0.61,
+      DateTime(2026, 8, 29): 0.82,
+      DateTime(2026, 9, 1): 0.66,
+    };
+
+    expect(latestScoreFromHistory(scores), 0.66);
+    expect(latestScoreFromHistory(<DateTime, double>{}), isNull);
+  });
+
   test('shoulder muscle aliases resolve to the matching view assets', () {
     final MuscleVisualizer visualizer = MuscleVisualizer();
 
@@ -386,6 +401,50 @@ void main() {
     );
 
     expect(selection.map((Workout item) => item.id), <String>['chest', 'legs']);
+  });
+
+  test(
+    'single exercise spin draws a random candidate instead of the first',
+    () {
+      final Workout chest = workout('chest-many-muscles', const <String>[
+        'chest',
+        'triceps',
+        'front shoulders',
+        'abs',
+      ]);
+      final Workout calves = workout('calves-only', const <String>['calves']);
+
+      final Set<String> drawnIds = <String>{
+        for (int seed = 0; seed < 30; seed++)
+          selectWorkoutsForSpin(
+            workouts: <Workout>[chest, calves],
+            count: 1,
+            random: Random(seed),
+          ).single.id,
+      };
+
+      expect(drawnIds, <String>{'chest-many-muscles', 'calves-only'});
+    },
+  );
+
+  test('spin candidates stay strictly inside the score tolerance', () {
+    final List<Workout> matches = workoutsForUserIntensity(
+      workouts: <Workout>[
+        workout('too-easy', const <String>['chest'], impactScore: 0.2),
+        workout('lower-match', const <String>['glutes'], impactScore: 0.4),
+        workout('exact-match', const <String>['back'], impactScore: 0.5),
+        workout('upper-match', const <String>['calves'], impactScore: 0.6),
+        workout('too-hard', const <String>['abs'], impactScore: 0.8),
+      ],
+      intensityScore: 0.5,
+      tolerance: 0.15,
+    );
+
+    expect(matches.map((Workout item) => item.id), <String>[
+      'lower-match',
+      'exact-match',
+      'upper-match',
+    ]);
   });
 
   test('daily spin deprioritizes recently trained muscles', () {

@@ -779,7 +779,7 @@ def _mollie_headers(*, idempotency_key: str | None = None):
 def _resend_sender() -> str:
     return os.environ.get(
         "RESEND_FROM_EMAIL",
-        "RIZE · Coach Flo <rechnung@coach-flo.de>",
+        "RIZE · Coach Flo <rechnung@mail.coach-flo.de>",
     )
 
 

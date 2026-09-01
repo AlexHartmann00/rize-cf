@@ -20,7 +20,7 @@ Before enabling invoice email, verify a domain in Resend (SPF and DKIM) and
 configure the non-secret runtime values for the Functions environment:
 
 ```sh
-RESEND_FROM_EMAIL="RIZE · Coach Flo <rechnung@coach-flo.de>"
+RESEND_FROM_EMAIL="RIZE · Coach Flo <rechnung@mail.coach-flo.de>"
 BILLING_REPLY_TO="info@coach-flo.de"
 PUBLIC_FUNCTIONS_BASE_URL="https://europe-west1-rize-11838.cloudfunctions.net"
 APP_RETURN_URL="https://rize-11838.web.app/payment-complete"
