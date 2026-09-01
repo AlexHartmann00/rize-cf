@@ -57,6 +57,7 @@ PRO_PLANS = {
         "months": 12,
     },
 }
+BILLING_REQUIRED_FIELDS = ("fullName", "street", "postalCode", "city", "country")
 
 
 # -------------------------------------------------------------------
@@ -69,6 +70,39 @@ def clamp_0_1(x: float) -> float:
     if x > 1.0:
         return 1.0
     return x
+
+
+def is_access_date_active(value: Any) -> bool:
+    if not value:
+        return False
+    try:
+        return (
+            datetime.fromisoformat(str(value).replace("Z", "+00:00")).date()
+            >= datetime.now(TZ).date()
+        )
+    except (TypeError, ValueError):
+        return False
+
+
+def terminal_subscription_state(
+    status: str, access_until: Any
+) -> tuple[bool, str] | None:
+    if status not in ("canceled", "suspended", "completed"):
+        return None
+    access_active = is_access_date_active(access_until)
+    return access_active, "canceled" if access_active else "ended"
+
+
+def response_json_or_empty(response: requests.Response) -> dict[str, Any]:
+    return response.json() if response.content else {}
+
+
+def missing_billing_fields(profile: Mapping[str, Any]) -> list[str]:
+    return [
+        field
+        for field in BILLING_REQUIRED_FIELDS
+        if not str(profile.get(field) or "").strip()
+    ]
 
 
 def is_schedule_completed(schedule: Any) -> bool:
@@ -1023,6 +1057,16 @@ def create_pro_checkout(req: https_fn.Request) -> https_fn.Response:
             return https_fn.Response("Invalid plan", status=400)
         user_ref = get_db().collection("users").document(user_id)
         user = user_ref.get().to_dict() or {}
+        billing_profile = user.get("billingProfile") or {}
+        missing_fields = missing_billing_fields(billing_profile)
+        if missing_fields:
+            return _json_response(
+                {
+                    "error": "billing_profile_required",
+                    "missingFields": missing_fields,
+                },
+                status=428,
+            )
         customer_id = user.get("mollieCustomerId")
         if not customer_id:
             customer_response = requests.post(
@@ -1098,7 +1142,30 @@ def cancel_pro_subscription(req: https_fn.Request) -> https_fn.Response:
             timeout=12,
         )
         current_response.raise_for_status()
-        access_until = current_response.json().get("nextPaymentDate")
+        current_subscription = current_response.json()
+        access_until = current_subscription.get("nextPaymentDate")
+        current_status = str(current_subscription.get("status") or "")
+
+        terminal_state = terminal_subscription_state(current_status, access_until)
+        if terminal_state is not None:
+            access_active, normalized_status = terminal_state
+            user_ref.set(
+                {
+                    "isPro": access_active,
+                    "subscriptionStatus": normalized_status,
+                    "proAccessUntil": access_until,
+                    "mollieSubscriptionStatus": current_status,
+                    "subscriptionReconciledAt": firestore.SERVER_TIMESTAMP,
+                },
+                merge=True,
+            )
+            return https_fn.Response(
+                json.dumps(
+                    {"status": normalized_status, "accessUntil": access_until}
+                ),
+                status=200,
+                headers={"Content-Type": "application/json"},
+            )
 
         response = requests.delete(
             subscription_url,
@@ -1106,10 +1173,11 @@ def cancel_pro_subscription(req: https_fn.Request) -> https_fn.Response:
             timeout=12,
         )
         response.raise_for_status()
-        subscription = response.json()
+        subscription = response_json_or_empty(response)
+        access_active = is_access_date_active(access_until)
         user_ref.set(
             {
-                "isPro": bool(access_until),
+                "isPro": access_active,
                 "subscriptionStatus": "canceled",
                 "proAccessUntil": access_until,
                 "subscriptionCanceledAt": firestore.SERVER_TIMESTAMP,
@@ -1275,12 +1343,10 @@ def update_billing_profile(req: https_fn.Request) -> https_fn.Response:
     data = req.get_json(silent=True) or {}
     allowed = {
         "fullName": 120,
-        "company": 120,
         "street": 160,
         "postalCode": 20,
         "city": 100,
         "country": 80,
-        "vatId": 40,
     }
     profile: dict[str, str] = {}
     for key, max_length in allowed.items():
@@ -1288,10 +1354,14 @@ def update_billing_profile(req: https_fn.Request) -> https_fn.Response:
         if len(value) > max_length:
             return _json_response({"error": f"{key} is too long"}, status=400)
         profile[key] = value
-    if not profile["fullName"]:
-        return _json_response({"error": "fullName is required"}, status=400)
     if not profile["country"]:
         profile["country"] = "Deutschland"
+    missing = missing_billing_fields(profile)
+    if missing:
+        return _json_response(
+            {"error": "billing_profile_incomplete", "missingFields": missing},
+            status=400,
+        )
     get_db().collection("users").document(decoded["uid"]).set(
         {
             "billingProfile": profile,
@@ -1520,12 +1590,7 @@ def reconcile_mollie_subscriptions(
             if mollie_status not in ("canceled", "suspended", "completed"):
                 continue
             access_until = subscription.get("nextPaymentDate")
-            access_active = False
-            if access_until:
-                try:
-                    access_active = datetime.fromisoformat(str(access_until)).date() >= datetime.now(TZ).date()
-                except ValueError:
-                    access_active = False
+            access_active = is_access_date_active(access_until)
             user_ref.set(
                 {
                     "isPro": access_active,

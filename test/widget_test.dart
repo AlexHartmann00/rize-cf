@@ -7,11 +7,13 @@ import 'package:rize/helpers/muscle_group_labels.dart';
 import 'package:rize/helpers/home_page_helpers.dart';
 import 'package:rize/helpers/progress_statistics.dart';
 import 'package:rize/types/workout.dart';
+import 'package:rize/types/user.dart';
 import 'package:rize/widgets/workout_rounds_list.dart';
 import 'package:rize/pages/settings_page.dart';
 import 'package:rize/types/anamnesis.dart';
 import 'package:rize/widgets/anamnesis_questionnaire_flow.dart';
 import 'package:rize/widgets/pro_upgrade_cta.dart';
+import 'package:rize/helpers/pro_checkout_service.dart';
 import 'package:rize/helpers/milestone_service.dart';
 import 'package:rize/widgets/milestone_widgets.dart';
 import 'package:rize/widgets/muscle_visualizer.dart';
@@ -37,6 +39,43 @@ Workout workout(
 );
 
 void main() {
+  test('private billing profile contains no company fields', () {
+    const BillingProfile profile = BillingProfile(
+      fullName: 'Alex Hartmann',
+      street: 'Musterstraße 1',
+      postalCode: '12345',
+      city: 'Berlin',
+    );
+
+    expect(profile.toJson(), <String, String>{
+      'fullName': 'Alex Hartmann',
+      'street': 'Musterstraße 1',
+      'postalCode': '12345',
+      'city': 'Berlin',
+      'country': 'Deutschland',
+    });
+  });
+
+  test('expired subscription cannot stay Pro through a stale flag', () {
+    final UserData user = UserData.fromJson(<String, dynamic>{
+      'isPro': true,
+      'subscriptionStatus': 'expired',
+      'proAccessUntil': '2026-07-20',
+    });
+
+    expect(user.isPro, isFalse);
+  });
+
+  test('canceled subscription keeps Pro during its paid period', () {
+    final UserData user = UserData.fromJson(<String, dynamic>{
+      'isPro': false,
+      'subscriptionStatus': 'canceled',
+      'proAccessUntil': '2099-07-20',
+    });
+
+    expect(user.isPro, isTrue);
+  });
+
   test('current progress score comes from the newest history day', () {
     final Map<DateTime, double> scores = <DateTime, double>{
       DateTime(2026, 8, 31): 0.61,
@@ -857,6 +896,26 @@ void main() {
 
     await tester.tap(find.text('Abo öffnen'));
     await tester.pumpAndSettle();
+    final SegmentedButton<ProBillingPeriod> billingSelector = tester.widget(
+      find.byType(SegmentedButton<ProBillingPeriod>),
+    );
+    expect(
+      billingSelector.style?.foregroundColor?.resolve(<WidgetState>{}),
+      Colors.white,
+    );
+    expect(
+      billingSelector.style?.foregroundColor?.resolve(<WidgetState>{
+        WidgetState.selected,
+      }),
+      const Color(0xFF102F55),
+    );
+    final Container sheetBackground = tester.widget<Container>(
+      find.byKey(const ValueKey<String>('pro-upgrade-sheet-background')),
+    );
+    expect(
+      (sheetBackground.decoration! as BoxDecoration).color,
+      const Color(0xFF102F55),
+    );
     expect(find.text('RIZE PRO · 3,99 € / MONAT'), findsOneWidget);
     expect(
       find.text('Monatliche Verlängerung, wenn nicht gekündigt.'),

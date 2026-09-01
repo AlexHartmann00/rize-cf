@@ -14,6 +14,7 @@ import 'package:rize/globals.dart' as globals;
 import 'package:rize/helpers/home_page_helpers.dart';
 import 'package:rize/helpers/workout_library_helpers.dart';
 import 'package:rize/helpers/muscle_group_labels.dart';
+import 'package:rize/helpers/pro_checkout_service.dart';
 import 'package:rize/pages/progress_overview_content.dart';
 import 'package:rize/pages/workout_library_page.dart';
 import 'package:rize/types/workout.dart';
@@ -33,7 +34,7 @@ class MyHomePage extends StatefulWidget {
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   bool _loadingUser = true;
   Object? _userLoadError;
   int _dataRevision = 0;
@@ -41,7 +42,47 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _initializeUser();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state != AppLifecycleState.resumed) return;
+    if (proCheckoutAwaitingReturn) {
+      _refreshAfterCheckout();
+    } else {
+      _initializeUser();
+    }
+  }
+
+  Future<void> _refreshAfterCheckout() async {
+    const List<Duration> retryDelays = <Duration>[
+      Duration.zero,
+      Duration(seconds: 1),
+      Duration(seconds: 2),
+      Duration(seconds: 4),
+      Duration(seconds: 6),
+    ];
+
+    for (final Duration delay in retryDelays) {
+      if (delay != Duration.zero) await Future<void>.delayed(delay);
+      if (!mounted) return;
+      await _initializeUser();
+      final String? status = globals.userData?.subscriptionStatus;
+      if (globals.userData?.isPro == true || status != 'pending') {
+        proCheckoutAwaitingReturn = false;
+        await _initializeUser(reloadAppData: true);
+        return;
+      }
+    }
+    proCheckoutAwaitingReturn = false;
   }
 
   Future<void> _initializeUser({bool reloadAppData = false}) async {

@@ -19,19 +19,27 @@ class UserData {
   });
 
   factory UserData.fromJson(Map<String, dynamic> json) {
+    final String? subscriptionStatus = json['subscriptionStatus'] as String?;
     final DateTime? accessUntil = json['proAccessUntil'] is String
         ? DateTime.tryParse(json['proAccessUntil'] as String)
         : null;
     final bool paidPeriodIsActive =
         accessUntil != null && !accessUntil.isBefore(DateTime.now());
+    final bool hasTerminalStatus = <String>{
+      'canceled',
+      'completed',
+      'ended',
+      'expired',
+      'suspended',
+    }.contains(subscriptionStatus);
     return UserData(
       intensityScore: json['intensityScore']?.toDouble() ?? 0.0,
       spinReminderTime: Time.parse(json['spinReminderTime'] ?? ''),
       isPro:
-          json['isPro'] == true ||
-          json['subscriptionStatus'] == 'active' ||
+          subscriptionStatus == 'active' ||
+          (json['isPro'] == true && !hasTerminalStatus) ||
           paidPeriodIsActive,
-      subscriptionStatus: json['subscriptionStatus'] as String?,
+      subscriptionStatus: subscriptionStatus,
       proAccessUntil: accessUntil,
     );
   }
