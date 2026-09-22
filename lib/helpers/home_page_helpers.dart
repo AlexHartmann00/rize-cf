@@ -74,12 +74,7 @@ int scheduledScheduleUnits(ScheduledWorkout workout) {
   );
 }
 
-double dailyWorkoutProgress(ScheduledWorkout workout) {
-  final int scheduled = scheduledScheduleUnits(workout);
-  if (scheduled <= 0) return 0;
-
-  return (completedScheduleUnits(workout) / scheduled).clamp(0.0, 1.0);
-}
+double dailyWorkoutProgress(ScheduledWorkout workout) => workout.progress;
 
 String homeGreeting(String? displayName, DateTime now) {
   final String name = _firstName(displayName) ?? 'Sportler';

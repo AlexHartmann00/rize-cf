@@ -1,3 +1,4 @@
+import 'package:rize/helpers/workout_execution_helpers.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:rize/globals.dart' as globals;
@@ -78,6 +79,14 @@ class ProgressOverviewContent extends StatelessWidget {
                       );
 
                       return _ProgressDashboard(
+                        scoreDeltas: <String, double>{
+                          for (final doc in scoreSnapshot.data!.docs)
+                            if (doc.data()['type'] == 'workout_completed' &&
+                                doc.data()['workoutId'] is String &&
+                                doc.data()['delta'] is num)
+                              doc.data()['workoutId']! as String:
+                                  (doc.data()['delta']! as num).toDouble(),
+                        },
                         today: today,
                         statistics: statistics,
                         impactPoints: impactPointsForPeriod(
@@ -106,6 +115,7 @@ class _ProgressDashboard extends StatelessWidget {
     required this.scorePoints,
     required this.currentScore,
     required this.history,
+    required this.scoreDeltas,
   });
 
   final DateTime today;
@@ -114,6 +124,7 @@ class _ProgressDashboard extends StatelessWidget {
   final List<ProgressPoint> scorePoints;
   final double? currentScore;
   final List<ScheduledWorkout> history;
+  final Map<String, double> scoreDeltas;
 
   @override
   Widget build(BuildContext context) {
@@ -193,10 +204,10 @@ class _ProgressDashboard extends StatelessWidget {
                   ),
                 ],
               ),
-              const SizedBox(height: 16),
-              MilestoneOverviewCard(history: history),
-              const SizedBox(height: 16),
               if (isPro) ...<Widget>[
+                const SizedBox(height: 16),
+                MilestoneOverviewCard(history: history),
+                const SizedBox(height: 16),
                 ProgressChartCard(
                   impactPoints: impactPoints,
                   scorePoints: scorePoints,
@@ -206,16 +217,19 @@ class _ProgressDashboard extends StatelessWidget {
                 const SizedBox(height: 16),
                 ActivityCalendarCard(
                   month: today,
-                  daySummaries: _calendarSummaries(history, today),
+                  daySummaries: _calendarSummaries(history, today, scoreDeltas),
                 ),
               ] else
-                ProFeatureLock(
-                  title: 'Mehr Fortschritt mit RIZE Pro',
-                  description:
-                      'Entdecke Deine Verlaufskurven und alle Details im Aktivitätskalender.',
-                  onTap: () => showProUpgradeSheet(
-                    context,
-                    source: 'progress_after_milestones',
+                Padding(
+                  padding: const EdgeInsets.only(top: 16),
+                  child: ProFeatureLock(
+                    title: 'Mehr Fortschritt mit RIZE Pro',
+                    description:
+                        'Entdecke Meilensteine, Deine Verlaufskurven und alle Details im Aktivitätskalender.',
+                    onTap: () => showProUpgradeSheet(
+                      context,
+                      source: 'progress_free_lock',
+                    ),
                   ),
                 ),
             ],
@@ -229,6 +243,7 @@ class _ProgressDashboard extends StatelessWidget {
 Map<int, CalendarDaySummary> _calendarSummaries(
   List<ScheduledWorkout> history,
   DateTime month,
+  Map<String, double> scoreDeltas,
 ) {
   final Map<int, List<ScheduledWorkout>> byDay =
       <int, List<ScheduledWorkout>>{};
@@ -242,17 +257,17 @@ Map<int, CalendarDaySummary> _calendarSummaries(
 
   return byDay.map((int day, List<ScheduledWorkout> workouts) {
     int planned = 0;
-    int completed = 0;
+    double completed = 0;
     double impactScore = 0;
     ImpactLevel level = ImpactLevel.low;
     for (final ScheduledWorkout workout in workouts) {
-      impactScore = (impactScore + workout.impactScore).clamp(0, 1);
-      level = workout.impactLevel.index > level.index
-          ? workout.impactLevel
+      impactScore = (impactScore + workout.effectiveImpactScore).clamp(0, 1);
+      level = workout.effectiveImpactLevel.index > level.index
+          ? workout.effectiveImpactLevel
           : level;
       for (final WorkoutStep step in workout.schedule) {
         planned += step.plannedUnits;
-        completed += step.completedUnits.clamp(0, step.plannedUnits);
+        completed += workout.achievedUnits(step);
       }
     }
     return MapEntry<int, CalendarDaySummary>(
@@ -275,8 +290,28 @@ Map<int, CalendarDaySummary> _calendarSummaries(
               );
               return CalendarWorkoutSummary(
                 name: workout.name,
+                scoreDelta: scoreDeltas[workout.historyId],
                 completedRounds: workoutCompleted,
                 plannedRounds: workoutPlanned,
+                completion: workout.progress,
+                impactScore: workout.effectiveImpactScore,
+                actualValue: workout.schedule.fold<int>(
+                  0,
+                  (sum, step) =>
+                      sum +
+                      (step.actualValue ??
+                          (workoutTargetValue(workout) * step.completedUnits)),
+                ),
+                targetValue: workout.schedule.fold<int>(
+                  0,
+                  (sum, step) =>
+                      sum +
+                      (step.targetValue ?? workoutTargetValue(workout)) *
+                          step.plannedUnits,
+                ),
+                unit: workout.workoutType == WorkoutType.dynamic
+                    ? 'Wiederholungen'
+                    : 'Sekunden',
               );
             })
             .toList(growable: false),

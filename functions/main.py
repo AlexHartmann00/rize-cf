@@ -3,6 +3,7 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 from typing import Any, Mapping, Tuple
 from zoneinfo import ZoneInfo
+from workout_progress import workout_completion_ratio, scaled_completion_delta
 
 import os
 import json
@@ -196,13 +197,7 @@ def compute_completion_delta(
       delta = 0.004 + 0.1 * (impactScore - currentScore)
       if impactScore > currentScore, otherwise 0.004.
     """
-    base = 0.004
-    bonus = 0.0
-
-    if impact_score > current_score:
-        bonus = 0.1 * (impact_score - current_score)
-
-    return base + bonus
+    return scaled_completion_delta(current_score, impact_score, 1.0)
 
 
 # -------------------------------------------------------------------
@@ -368,7 +363,10 @@ def on_workout_written(
         return
 
     number_of_units = len(schedule_after)
+    completion_ratio = workout_completion_ratio(after)
     impact_delta_factor = number_of_units / 1.2
+    if completion_ratio <= 0:
+        return
 
     impact_score = after.get("impactScore")
     if impact_score is None:
@@ -379,9 +377,12 @@ def on_workout_written(
         return
 
     user_ref = get_db().collection("users").document(user_id)
+    history_ref = user_ref.collection("scoreHistory").document(f"workout-{workout_id}")
 
     @firestore.transactional
     def txn_update(transaction: firestore.Transaction):
+        if history_ref.get(transaction=transaction).exists:
+            return
         user_snap = user_ref.get(transaction=transaction)
         user_data = user_snap.to_dict() if user_snap.exists else {}
 
@@ -400,10 +401,11 @@ def on_workout_written(
             return
 
         delta = (
-            compute_completion_delta(current, impact)
+            scaled_completion_delta(current, impact, completion_ratio)
             * impact_delta_factor
         )
         new_score = clamp_0_1(current + delta)
+        delta = new_score - current
 
         if new_score == current:
             return
@@ -413,21 +415,22 @@ def on_workout_written(
             {
                 "intensityScore": new_score,
                 "intensityScoreLastDelta": delta,
-                "intensityScoreLastImpactScore": impact,
+                "intensityScoreLastImpactScore": impact * completion_ratio,
                 "intensityScoreSourceWorkoutId": workout_id,
                 "intensityScoreUpdatedAt": firestore.SERVER_TIMESTAMP,
             },
             merge=True,
         )
 
-        history_ref = user_ref.collection("scoreHistory").document()
         transaction.set(
             history_ref,
             {
                 "ts": firestore.SERVER_TIMESTAMP,
                 "type": "workout_completed",
                 "workoutId": workout_id,
-                "impactScore": impact,
+                "impactScore": impact * completion_ratio,
+                "baseImpactScore": impact,
+                "completionRatio": completion_ratio,
                 "previousScore": current,
                 "delta": delta,
                 "newScore": new_score,

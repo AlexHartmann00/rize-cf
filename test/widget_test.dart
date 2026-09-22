@@ -142,16 +142,12 @@ void main() {
     );
 
     expect(
-      find.byKey(const ValueKey<String>('symmetric-upper back-back')),
-      findsOneWidget,
-    );
-    expect(
-      find.byKey(const ValueKey<String>('symmetric-triceps-back')),
+      find.byKey(const ValueKey<String>('symmetric-back-body')),
       findsOneWidget,
     );
     expect(
       find.byKey(const ValueKey<String>('central-lower-back')),
-      findsOneWidget,
+      findsNWidgets(2),
     );
   });
 
@@ -409,9 +405,23 @@ void main() {
         workout('legs', const <String>['legs']),
       ],
       0.5,
-      minimumWorkoutCount: 1,
+      workoutCount: 1,
     );
     expect(selection.map((Workout item) => item.id), <String>['combined']);
+  });
+
+  test('free selection contains exactly twelve workouts', () {
+    final List<Workout> catalogue = List<Workout>.generate(
+      100,
+      (int index) => workout('workout-$index', <String>[
+        'muscle-$index',
+      ], impactScore: index / 100),
+    );
+
+    final List<Workout> selection = freeWorkoutSelection(catalogue, 0.5);
+
+    expect(selection, hasLength(12));
+    expect(selection.toSet(), hasLength(12));
   });
 
   test('Pro entitlement returns the full workout catalogue', () {

@@ -178,15 +178,6 @@ class _BodyStack extends StatelessWidget {
     final Color color = entry.$1 == 0 ? primaryColor : secondaryColor;
 
     if (!isFront &&
-        (normalizedGroup == 'upper back' || normalizedGroup == 'triceps')) {
-      return _SymmetricMuscleMask(
-        key: ValueKey<String>('symmetric-$normalizedGroup-back'),
-        assetPath: assetPath,
-        color: color,
-        height: height,
-      );
-    }
-    if (!isFront &&
         (normalizedGroup == 'lower back' || normalizedGroup == 'lowerback')) {
       return _CentralMuscleMask(
         key: const ValueKey<String>('central-lower-back'),
@@ -201,7 +192,8 @@ class _BodyStack extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final String side = isFront ? 'front' : 'back';
-    return Stack(
+    Widget body() => Stack(
+      fit: StackFit.passthrough,
       children: <Widget>[
         ...groups.indexed.map(_muscleOverlay),
         Image.asset(
@@ -211,6 +203,27 @@ class _BodyStack extends StatelessWidget {
           colorBlendMode: BlendMode.srcIn,
         ),
       ],
+    );
+    if (isFront) return body();
+
+    // Mirror the complete composition so secondary muscles cannot cover the
+    // upper back differently on each side. All layers share the same axis.
+    return RepaintBoundary(
+      key: const ValueKey<String>('symmetric-back-body'),
+      child: SizedBox(
+        width: height * 129 / 400,
+        height: height,
+        child: Stack(
+          fit: StackFit.expand,
+          children: <Widget>[
+            ClipRect(clipper: const _HalfClipper(right: true), child: body()),
+            ClipRect(
+              clipper: const _HalfClipper(right: false),
+              child: Transform.flip(flipX: true, child: body()),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -229,47 +242,6 @@ Widget _muscleImage({
     fit: fit,
     errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),
   );
-}
-
-class _SymmetricMuscleMask extends StatelessWidget {
-  const _SymmetricMuscleMask({
-    super.key,
-    required this.assetPath,
-    required this.color,
-    required this.height,
-  });
-
-  final String assetPath;
-  final Color color;
-  final double height;
-
-  @override
-  Widget build(BuildContext context) {
-    final double width = height * 129 / 400;
-    Widget image() => _muscleImage(
-      assetPath: assetPath,
-      color: color,
-      height: height,
-      fit: BoxFit.fill,
-    );
-
-    // The right-hand half is the canonical mask. Mirroring it removes the
-    // one-sided subdivisions from the source artwork without shifting it.
-    return SizedBox(
-      width: width,
-      height: height,
-      child: Stack(
-        fit: StackFit.expand,
-        children: <Widget>[
-          ClipRect(clipper: const _HalfClipper(right: true), child: image()),
-          ClipRect(
-            clipper: const _HalfClipper(right: false),
-            child: Transform.flip(flipX: true, child: image()),
-          ),
-        ],
-      ),
-    );
-  }
 }
 
 class _CentralMuscleMask extends StatelessWidget {

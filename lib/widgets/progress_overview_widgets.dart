@@ -801,12 +801,35 @@ class ActivityCalendarCard extends StatelessWidget {
                         ),
                         const SizedBox(width: 10),
                         Expanded(
-                          child: Text(
-                            workout.name,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w800,
-                            ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: <Widget>[
+                              Text(
+                                workout.name,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                              const SizedBox(height: 5),
+                              Text(
+                                '${workout.actualValue} / ${workout.targetValue} ${workout.unit} · ${(workout.completion * 100).round()} % geschafft',
+                                style: const TextStyle(
+                                  color: Colors.white70,
+                                  fontSize: 12,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                'Impact ${workout.impactScore.toStringAsFixed(2)}'
+                                '${workout.scoreDelta == null ? "" : " · Fitnessscore +${(workout.scoreDelta! * 100).toStringAsFixed(2)}"}',
+                                style: const TextStyle(
+                                  color: rizeCyan,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                         const SizedBox(width: 10),
@@ -856,13 +879,25 @@ class CalendarWorkoutSummary {
     required this.name,
     required this.completedRounds,
     required this.plannedRounds,
+    required this.completion,
+    required this.impactScore,
+    required this.actualValue,
+    required this.targetValue,
+    required this.unit,
+    this.scoreDelta,
   });
 
   final String name;
   final int completedRounds;
   final int plannedRounds;
+  final double completion;
+  final double impactScore;
+  final int actualValue;
+  final int targetValue;
+  final String unit;
+  final double? scoreDelta;
 
-  bool get completed => plannedRounds > 0 && completedRounds >= plannedRounds;
+  bool get completed => completion >= 1;
 }
 
 class _CalendarDayTile extends StatelessWidget {

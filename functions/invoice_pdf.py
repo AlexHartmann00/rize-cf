@@ -168,7 +168,7 @@ def build_invoice_pdf(invoice: Mapping[str, Any]) -> bytes:
         for part in (
             _text(business.get("brand"), "RIZE"),
             _text(business.get("legalName"), "Florian Ströhla"),
-            _text(business.get("street"), "Goppelstr. 2"),
+            _text(business.get("street"), "Goppelsstraße 2"),
             _text(business.get("postalCity"), "95236 Stammbach"),
         )
         if part
@@ -351,7 +351,7 @@ def build_invoice_pdf(invoice: Mapping[str, Any]) -> bytes:
     canvas.setFont(FONT, 7.6)
     left_footer = [
         _text(business.get("legalName"), "Florian Ströhla"),
-        _text(business.get("street"), "Goppelstr. 2"),
+        _text(business.get("street"), "Goppelsstraße 2"),
         _text(business.get("postalCity"), "95236 Stammbach"),
     ]
     center_footer = [

@@ -1,6 +1,8 @@
 import unittest
 from pathlib import Path
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
+from types import SimpleNamespace
+import inspect
 
 from firebase_admin import delete_app, get_app
 from flask import request
@@ -86,6 +88,40 @@ class HttpFunctionStartupTest(unittest.TestCase):
             self.main.missing_billing_fields({**complete, "street": ""}),
             ["street"],
         )
+
+    def test_partial_workout_reward_and_history_are_scaled_once(self):
+        for kind in ("reps", "time"):
+            with self.subTest(kind=kind):
+                data = {"type": kind, "baseReps": 10, "baseSeconds": 10,
+                        "intensityFactor": 1, "impactScore": .6,
+                        "schedule": [{"plannedUnits": 1, "completedUnits": 1, "actualValue": 5}]}
+                before = Mock(exists=False)
+                after = Mock(exists=True)
+                after.to_dict.return_value = data
+                event = SimpleNamespace(params={"userId": "user", "workoutId": "workout"},
+                                        data=SimpleNamespace(before=before, after=after))
+                db = Mock()
+                user_ref = db.collection.return_value.document.return_value
+                user_ref.get.return_value = Mock(exists=True)
+                user_ref.get.return_value.to_dict.return_value = {"intensityScore": .3}
+                history_ref = user_ref.collection.return_value.document.return_value
+                history_ref.get.return_value = Mock(exists=False)
+                transaction = db.transaction.return_value
+                with patch.object(self.main, "get_db", return_value=db), patch.object(
+                    self.main.firestore, "transactional", side_effect=lambda fn: fn
+                ):
+                    inspect.unwrap(self.main.on_workout_written)(event)
+                    writes = transaction.set.call_args_list
+                    self.assertEqual(len(writes), 2)
+                    reward = .034 * .5 / 1.2
+                    self.assertAlmostEqual(writes[0].args[1]["intensityScore"], .3 + reward)
+                    self.assertAlmostEqual(writes[1].args[1]["delta"], reward)
+                    self.assertEqual(writes[1].args[1]["impactScore"], .3)
+                    self.assertEqual(writes[1].args[1]["completionRatio"], .5)
+                    transaction.reset_mock()
+                    history_ref.get.return_value = Mock(exists=True)
+                    inspect.unwrap(self.main.on_workout_written)(event)
+                    transaction.set.assert_not_called()
 
 
 if __name__ == "__main__":

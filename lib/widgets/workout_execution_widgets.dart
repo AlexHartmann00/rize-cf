@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:numberpicker/numberpicker.dart';
 import 'package:rize/helpers/rize_style_helpers.dart';
@@ -273,68 +275,67 @@ class DynamicRepControl extends StatelessWidget {
                 ),
               ],
             ),
-            child: Stack(
+            child: Column(
               children: <Widget>[
-                Positioned.fill(
-                  child: CustomPaint(
-                    painter: _ProgressArcPainter(
-                      progress: progress,
-                      color: rizeCyan,
-                    ),
-                  ),
-                ),
-                Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: <Widget>[
-                      NumberPicker(
-                        value: current,
-                        minValue: 0,
-                        maxValue: (target * 2).clamp(target + 10, 999),
-                        itemHeight: 88,
-                        itemWidth: 180,
-                        axis: Axis.vertical,
-                        textStyle: TextStyle(
-                          color: Colors.white.withOpacity(0.25),
-                          fontSize: 42,
-                          fontWeight: FontWeight.w700,
+                Expanded(
+                  child: Center(
+                    child: AspectRatio(
+                      aspectRatio: 1,
+                      child: CustomPaint(
+                        key: const ValueKey<String>('repetition-progress-ring'),
+                        painter: _ProgressArcPainter(
+                          progress: progress,
+                          color: rizeCyan,
                         ),
-                        selectedTextStyle: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 88,
-                          fontWeight: FontWeight.w900,
-                        ),
-                        onChanged: onChanged,
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        'von $target Wiederholungen',
-                        style: TextStyle(
-                          color: Colors.white.withOpacity(0.62),
-                          fontSize: 16,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 15,
-                          vertical: 9,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.08),
-                          borderRadius: BorderRadius.circular(999),
-                        ),
-                        child: Text(
-                          'Am Rad drehen · Ziel flexibel über- oder unterschreiten',
-                          style: TextStyle(
-                            color: Colors.white.withOpacity(0.68),
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
+                        child: Padding(
+                          padding: const EdgeInsets.all(40),
+                          child: Center(
+                            child: FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: NumberPicker(
+                                value: current,
+                                minValue: 0,
+                                maxValue: (target * 2).clamp(target + 10, 999),
+                                itemHeight: 88,
+                                itemWidth: 180,
+                                axis: Axis.vertical,
+                                textStyle: TextStyle(
+                                  color: Colors.white.withOpacity(0.25),
+                                  fontSize: 42,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                                selectedTextStyle: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 88,
+                                  fontWeight: FontWeight.w900,
+                                ),
+                                onChanged: onChanged,
+                              ),
+                            ),
                           ),
                         ),
                       ),
-                    ],
+                    ),
+                  ),
+                ),
+                Text(
+                  'von $target Wiederholungen',
+                  style: TextStyle(
+                    color: Colors.white.withOpacity(0.62),
+                    fontSize: 16,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Text(
+                    'Am Rad drehen · Ziel flexibel über- oder unterschreiten',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: Colors.white.withOpacity(0.68),
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ),
               ],
@@ -540,14 +541,25 @@ class WorkoutCompletionView extends StatelessWidget {
     required this.workout,
     required this.onConfirm,
     required this.saving,
+    this.actualValue,
+    this.targetValue,
   });
 
+  final int? actualValue;
+  final int? targetValue;
   final ScheduledWorkout workout;
   final VoidCallback onConfirm;
   final bool saving;
 
   @override
   Widget build(BuildContext context) {
+    final int target = targetValue ?? workoutTargetValue(workout);
+    final double completion = actualValue == null
+        ? 1
+        : workoutExecutionProgress(current: actualValue!, target: target);
+    final String unit = workout.workoutType == WorkoutType.dynamic
+        ? 'Wiederholungen'
+        : 'Sekunden';
     return Center(
       child: RizeCard(
         accentColor: rizeGreen,
@@ -587,7 +599,9 @@ class WorkoutCompletionView extends StatelessWidget {
             ),
             const SizedBox(height: 22),
             Text(
-              completionHeadline(workout),
+              actualValue != null && actualValue! < target
+                  ? 'Runde beendet!'
+                  : completionHeadline(workout),
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                 color: Colors.white,
@@ -597,7 +611,10 @@ class WorkoutCompletionView extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              completionMessage(workout),
+              actualValue == null
+                  ? completionMessage(workout)
+                  : '$actualValue von $target $unit · '
+                        '${(completion * 100).round()} % geschafft',
               textAlign: TextAlign.center,
               style: TextStyle(
                 color: Colors.white.withOpacity(0.62),
@@ -618,7 +635,7 @@ class WorkoutCompletionView extends StatelessWidget {
                   const Icon(Icons.bolt_rounded, color: rizeCyan, size: 19),
                   const SizedBox(width: 7),
                   Text(
-                    'Impact ${workout.impactScore.toStringAsFixed(2)}',
+                    'Impact ${(workout.impactScore * completion).toStringAsFixed(2)}',
                     style: const TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.w900,
@@ -717,7 +734,12 @@ class _ProgressArcPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final Rect rect = Rect.fromLTWH(22, 22, size.width - 44, size.height - 44);
+    final double diameter = math.max(0, math.min(size.width, size.height) - 44);
+    final Rect rect = Rect.fromCenter(
+      center: size.center(Offset.zero),
+      width: diameter,
+      height: diameter,
+    );
 
     final Paint background = Paint()
       ..style = PaintingStyle.stroke

@@ -65,17 +65,21 @@ List<Workout> filterWorkoutLibrary(
   );
 }
 
-/// Smallest practical free catalogue: greedily covers every muscle group with
-/// workouts close to the questionnaire result.
+/// Selects up to [workoutCount] free workouts while covering as many muscle
+/// groups and workout types as possible.
+///
+/// When the catalogue is large enough, the result always contains exactly
+/// [workoutCount] workouts.
 List<Workout> freeWorkoutSelection(
   Iterable<Workout> workouts,
   double intensityScore, {
-  int minimumWorkoutCount = 6,
+  int workoutCount = 12,
 }) {
   final List<Workout> all = workouts.toList(growable: false);
   if (all.isEmpty) return const <Workout>[];
 
   final double score = intensityScore.clamp(0, 1);
+  final int desiredCount = workoutCount.clamp(1, all.length);
   final Set<String> uncoveredMuscles = all
       .expand((Workout workout) => workout.usedMuscleGroups)
       .toSet();
@@ -85,7 +89,8 @@ List<Workout> freeWorkoutSelection(
   final List<Workout> remaining = List<Workout>.of(all);
   final List<Workout> selected = <Workout>[];
 
-  while ((uncoveredMuscles.isNotEmpty || uncoveredTypes.isNotEmpty) &&
+  while (selected.length < desiredCount &&
+      (uncoveredMuscles.isNotEmpty || uncoveredTypes.isNotEmpty) &&
       remaining.isNotEmpty) {
     remaining.sort((Workout a, Workout b) {
       double value(Workout workout) {
@@ -114,7 +119,6 @@ List<Workout> freeWorkoutSelection(
     );
     return comparison != 0 ? comparison : a.id.compareTo(b.id);
   });
-  final int desiredCount = minimumWorkoutCount.clamp(1, all.length);
   for (final Workout workout in remaining) {
     if (selected.length >= desiredCount) break;
     selected.add(workout);

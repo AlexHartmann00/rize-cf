@@ -31,7 +31,7 @@ invoice = {
     "business": {
         "brand": "RIZE",
         "legalName": "Florian Ströhla",
-        "street": "Goppelstr. 2",
+        "street": "Goppelsstraße 2",
         "postalCity": "95236 Stammbach",
         "phone": "0155 63125361",
         "email": "info@coach-flo.de",

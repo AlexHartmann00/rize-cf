@@ -34,7 +34,8 @@ import 'package:flutter/material.dart' hide TimeOfDay;
 import 'dart:convert';
 import 'dart:math';
 import 'package:fl_chart/fl_chart.dart';
-import 'package:flutter/services.dart' show rootBundle;
+import 'package:flutter/services.dart'
+    show DeviceOrientation, SystemChrome, rootBundle;
 import 'package:shared_preferences/shared_preferences.dart';
 
 //TODO: Daily workout in shared preferences
@@ -43,6 +44,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await SystemChrome.setPreferredOrientations(const <DeviceOrientation>[
+    DeviceOrientation.portraitUp,
+  ]);
   await Firebase.initializeApp();
   authServiceNotifier.value.authStateChanges.listen((user) {
     if (user != null) {

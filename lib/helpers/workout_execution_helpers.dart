@@ -78,11 +78,16 @@ String completionMessage(ScheduledWorkout workout) {
       : 'Du bist bis zum Ende drangeblieben.';
 }
 
-WorkoutStep completedWorkoutStep(WorkoutStep currentStep, {int? actualValue}) {
+WorkoutStep completedWorkoutStep(
+  WorkoutStep currentStep, {
+  int? actualValue,
+  int? targetValue,
+}) {
   return WorkoutStep(
     timeOfDay: currentStep.timeOfDay,
     plannedUnits: currentStep.plannedUnits,
     completedUnits: currentStep.plannedUnits,
     actualValue: actualValue,
+    targetValue: targetValue,
   );
 }

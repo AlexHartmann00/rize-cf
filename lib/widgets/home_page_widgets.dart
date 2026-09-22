@@ -447,10 +447,12 @@ class CompletedWorkoutHero extends StatelessWidget {
     required this.workout,
     required this.streak,
     required this.nextWorkoutIn,
+    required this.progress,
   });
 
   final ScheduledWorkout workout;
   final int streak;
+  final double progress;
   final String nextWorkoutIn;
 
   @override
@@ -471,7 +473,7 @@ class CompletedWorkoutHero extends StatelessWidget {
           ),
           const SizedBox(height: 18),
           Text(
-            'Für heute geschafft!',
+            progress >= 1 ? 'Für heute geschafft!' : 'Training beendet!',
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.headlineSmall?.copyWith(
               color: Colors.white,
@@ -488,6 +490,11 @@ class CompletedWorkoutHero extends StatelessWidget {
               fontSize: 15,
             ),
           ),
+          const SizedBox(height: 8),
+          Text(
+            '${(progress * 100).round()} % des Tagesziels geschafft',
+            style: const TextStyle(color: Colors.white70),
+          ),
           const SizedBox(height: 22),
           Row(
             children: <Widget>[
@@ -503,7 +510,7 @@ class CompletedWorkoutHero extends StatelessWidget {
               Expanded(
                 child: _CompletedMetric(
                   icon: Icons.bolt_rounded,
-                  value: workout.impactScore.toStringAsFixed(2),
+                  value: workout.effectiveImpactScore.toStringAsFixed(2),
                   label: 'Impact',
                   color: rizeCyan,
                 ),

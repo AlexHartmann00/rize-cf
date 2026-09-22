@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:rize/base_widgets.dart';
 import 'package:rize/firestore.dart';
+import 'package:rize/globals.dart' as globals;
 import 'package:rize/helpers/rize_style_helpers.dart';
 import 'package:rize/helpers/workout_execution_helpers.dart';
 import 'package:rize/helpers/screen_awake_service.dart';
@@ -36,6 +37,14 @@ class _WorkoutExecutionPageState extends State<WorkoutExecutionPage> {
   int _countdownValue = 3;
   int _currentValue = 0;
   int _remainingSeconds = 0;
+  int _firstSideValue = 0;
+
+  int get _actualValue =>
+      _firstSideValue +
+      (_isDynamic
+          ? _currentValue
+          : (_target - _remainingSeconds).clamp(0, _target));
+  int get _totalTarget => _target * (_isUnilateral ? 2 : 1);
   bool _saving = false;
   final ScreenAwakeHandle _screenAwake = ScreenAwakeHandle();
 
@@ -146,6 +155,9 @@ class _WorkoutExecutionPageState extends State<WorkoutExecutionPage> {
 
   Future<void> _startSecondSide() async {
     setState(() {
+      _firstSideValue = _isDynamic
+          ? _currentValue
+          : _target - _remainingSeconds;
       _currentSide = WorkoutExecutionSide.right;
       _currentValue = 0;
       _remainingSeconds = _target;
@@ -170,6 +182,10 @@ class _WorkoutExecutionPageState extends State<WorkoutExecutionPage> {
   }
 
   Future<void> _requestFinishEarly() async {
+    final previousPhase = _phase;
+    if (_phase == WorkoutExecutionPhase.active) {
+      setState(() => _phase = WorkoutExecutionPhase.paused);
+    }
     final bool? confirm = await showModalBottomSheet<bool>(
       context: context,
       backgroundColor: const Color(0xFF15375F),
@@ -197,9 +213,7 @@ class _WorkoutExecutionPageState extends State<WorkoutExecutionPage> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  _isUnilateral
-                      ? 'Die Runde zählt nur, wenn beide Seiten vollständig abgeschlossen wurden.'
-                      : 'Nur vollständig absolvierte Runden werden als abgeschlossen gewertet.',
+                  'Deine bisher erreichten Wiederholungen oder Sekunden werden anteilig gewertet.',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     color: Colors.white.withOpacity(0.58),
@@ -234,7 +248,15 @@ class _WorkoutExecutionPageState extends State<WorkoutExecutionPage> {
     if (confirm == true && mounted) {
       _timer?.cancel();
       await _screenAwake.setActive(false);
-      if (mounted) Navigator.of(context).pop(false);
+      if (mounted) {
+        if (_actualValue > 0) {
+          setState(() => _phase = WorkoutExecutionPhase.completed);
+        } else {
+          Navigator.of(context).pop(false);
+        }
+      }
+    } else if (mounted) {
+      setState(() => _phase = previousPhase);
     }
   }
 
@@ -264,7 +286,8 @@ class _WorkoutExecutionPageState extends State<WorkoutExecutionPage> {
 
       widget.workout.schedule[widget.scheduleEntryIndex] = completedWorkoutStep(
         currentStep,
-        actualValue: _isDynamic ? _currentValue : _target,
+        actualValue: _actualValue,
+        targetValue: _totalTarget,
       );
 
       await uploadWorkoutToServer(widget.workout);
@@ -277,7 +300,9 @@ class _WorkoutExecutionPageState extends State<WorkoutExecutionPage> {
       await _screenAwake.setActive(false);
 
       if (!mounted) return;
-      await showMilestoneCelebration(context, milestones);
+      if (globals.userData?.isPro == true) {
+        await showMilestoneCelebration(context, milestones);
+      }
       try {
         await markMilestoneCelebrationsShown(milestones);
       } catch (error) {
@@ -410,6 +435,8 @@ class _WorkoutExecutionPageState extends State<WorkoutExecutionPage> {
         return WorkoutCompletionView(
           workout: widget.workout,
           saving: _saving,
+          actualValue: _actualValue,
+          targetValue: _totalTarget,
           onConfirm: _saveCompletedRound,
         );
 

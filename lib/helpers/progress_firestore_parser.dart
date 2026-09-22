@@ -24,7 +24,9 @@ List<WorkoutDayEntry> parseWorkoutHistory(
       entries.add(
         WorkoutDayEntry(
           date: date,
-          workout: ScheduledWorkout.fromJson(toDynamicMap(data)),
+          workout: ScheduledWorkout.fromJson(toDynamicMap(data))
+            ..historyId = document.id
+            ..scheduledDay = date,
         ),
       );
     } on Object {

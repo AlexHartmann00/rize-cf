@@ -244,6 +244,44 @@ class ScheduledWorkout extends Workout {
       ? '${(baseSeconds ?? 0) * intensityFactor} Sek.'
       : '${(baseReps ?? 0) * intensityFactor} Wdh.';
 
+  /// Goal attainment is separate from whether a round has been submitted.
+  /// Old history entries without actual values retain their round-based credit.
+  double achievedUnits(WorkoutStep step) {
+    final int target =
+        step.targetValue ??
+        (workoutType == WorkoutType.dynamic
+            ? (baseReps ?? 0) * intensityFactor
+            : (baseSeconds ?? 0) * intensityFactor);
+    if (step.plannedUnits <= 0) return 0;
+    if (step.actualValue == null || target <= 0) {
+      return step.completedUnits.clamp(0, step.plannedUnits).toDouble();
+    }
+    return (step.actualValue! / target).clamp(
+      0.0,
+      step.plannedUnits.toDouble(),
+    );
+  }
+
+  double get progress {
+    final int planned = schedule.fold<int>(
+      0,
+      (sum, step) => sum + step.plannedUnits,
+    );
+    final double achieved = schedule.fold<double>(
+      0,
+      (sum, step) => sum + achievedUnits(step),
+    );
+    return planned <= 0 ? 0 : (achieved / planned).clamp(0.0, 1.0);
+  }
+
+  double get effectiveImpactScore => impactScore * progress;
+
+  ImpactLevel get effectiveImpactLevel => effectiveImpactScore < 0.33
+      ? ImpactLevel.low
+      : effectiveImpactScore < 0.67
+      ? ImpactLevel.medium
+      : ImpactLevel.high;
+
   bool get isCompleted {
     for (var entry in schedule) {
       if (entry.completedUnits < entry.plannedUnits) {
@@ -294,6 +332,7 @@ class ScheduledWorkout extends Workout {
             plannedUnits: plannedUnits,
             completedUnits: completed,
             actualValue: entry['actualValue'] as int?,
+            targetValue: entry['targetValue'] as int?,
           ),
         );
       }
@@ -325,9 +364,12 @@ class ScheduledWorkout extends Workout {
               'plannedUnits': entry.plannedUnits,
               'completedUnits': entry.completedUnits,
               'actualValue': entry.actualValue,
+              'targetValue': entry.targetValue,
             },
           )
           .toList(),
+      'completionRatio': progress,
+      'effectiveImpactScore': effectiveImpactScore,
       'intensityFactor': intensityFactor,
       'planId': planId,
       'planPosition': planPosition,
@@ -371,13 +413,13 @@ class DailyWorkoutPlan {
             (int sum, WorkoutStep step) => sum + step.plannedUnits,
           ),
     );
-    final int completed = workouts.fold<int>(
+    final double completed = workouts.fold<double>(
       0,
-      (int total, ScheduledWorkout workout) =>
+      (double total, ScheduledWorkout workout) =>
           total +
-          workout.schedule.fold<int>(
+          workout.schedule.fold<double>(
             0,
-            (int sum, WorkoutStep step) => sum + step.completedUnits,
+            (double sum, WorkoutStep step) => sum + workout.achievedUnits(step),
           ),
     );
     return planned == 0 ? 0 : (completed / planned).clamp(0, 1);
@@ -401,19 +443,22 @@ class WorkoutStep {
   int plannedUnits;
   int completedUnits;
   int? actualValue;
+  int? targetValue;
 
   WorkoutStep({
     required this.timeOfDay,
     required this.plannedUnits,
     required this.completedUnits,
     this.actualValue,
+    this.targetValue,
   });
 
   WorkoutStep.copy(WorkoutStep other)
     : timeOfDay = other.timeOfDay,
       plannedUnits = other.plannedUnits,
       completedUnits = other.completedUnits,
-      actualValue = other.actualValue;
+      actualValue = other.actualValue,
+      targetValue = other.targetValue;
 
   factory WorkoutStep.fromTuple((TimeOfDay, int, int) input) {
     return WorkoutStep(
