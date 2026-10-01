@@ -96,8 +96,6 @@ class MuscleVisualization extends StatelessWidget {
                 const SizedBox(height: 6),
                 Text(
                   workout.usedMuscleGroups.map(muscleGroupLabel).join(' · '),
-                  maxLines: 3,
-                  overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 13,
@@ -186,7 +184,17 @@ class _BodyStack extends StatelessWidget {
         height: height,
       );
     }
-    return _muscleImage(assetPath: assetPath, color: color, height: height);
+    final Widget overlay = _muscleImage(
+      assetPath: assetPath,
+      color: color,
+      height: height,
+    );
+    if (!isFront && normalizedGroup == 'upper back') {
+      // The source asset includes rear deltoids. Keep those exclusive to the
+      // shoulder overlay so an upper-back exercise cannot highlight them.
+      return ClipPath(clipper: const _UpperBackClipper(), child: overlay);
+    }
+    return overlay;
   }
 
   @override
@@ -297,4 +305,43 @@ class _CenterClipper extends CustomClipper<Rect> {
 
   @override
   bool shouldReclip(_CenterClipper oldClipper) => false;
+}
+
+class _UpperBackClipper extends CustomClipper<Path> {
+  const _UpperBackClipper();
+
+  @override
+  Path getClip(Size size) {
+    // Follow the inner deltoid boundary in the 129 x 400 source image.
+    // The back composition mirrors its right half after clipping.
+    final Path path = Path()
+      ..moveTo(0, 0)
+      ..lineTo(129, 0)
+      ..lineTo(129, 64)
+      ..lineTo(86, 64)
+      ..lineTo(90, 66)
+      ..lineTo(89, 68)
+      ..lineTo(83, 70)
+      ..lineTo(76, 72)
+      ..lineTo(69, 74)
+      ..lineTo(75, 76)
+      ..lineTo(83, 78)
+      ..lineTo(88, 80)
+      ..lineTo(92, 82)
+      ..lineTo(96, 84)
+      ..lineTo(104, 92)
+      ..lineTo(111, 100)
+      ..lineTo(119, 108)
+      ..lineTo(124, 114)
+      ..lineTo(129, 114)
+      ..lineTo(129, 400)
+      ..lineTo(0, 400)
+      ..close();
+    return path.transform(
+      Matrix4.diagonal3Values(size.width / 129, size.height / 400, 1).storage,
+    );
+  }
+
+  @override
+  bool shouldReclip(_UpperBackClipper oldClipper) => false;
 }

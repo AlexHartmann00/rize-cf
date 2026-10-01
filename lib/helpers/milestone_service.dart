@@ -372,7 +372,8 @@ Future<List<MilestoneState>> evaluateAndClaimMilestones() async {
       milestonesRequiringCelebration(states, <String, bool>{
         for (final MapEntry<String, Map<String, dynamic>> entry
             in claimed.entries)
-          entry.key: entry.value['celebrationPending'] == true,
+          entry.key: entry.value['celebrationPending'] == true ||
+              entry.value['celebratedAt'] == null,
       });
   final List<MilestoneState> unlocked = celebrations
       .where((state) => !claimed.containsKey(state.storageId))

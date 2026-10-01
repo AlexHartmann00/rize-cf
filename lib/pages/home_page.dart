@@ -20,6 +20,7 @@ import 'package:rize/pages/workout_library_page.dart';
 import 'package:rize/types/workout.dart';
 import 'package:rize/widgets/home_page_widgets.dart';
 import 'package:rize/widgets/muscle_visualizer.dart';
+import 'package:rize/widgets/milestone_widgets.dart';
 import 'package:rize/widgets/workout_rounds_list.dart';
 import 'package:rize/widgets/pro_upgrade_cta.dart';
 import 'package:rize/widgets/anamnesis_questionnaire_flow.dart';
@@ -125,6 +126,13 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
     } finally {
       if (mounted) {
         setState(() => _loadingUser = false);
+        if (_userLoadError == null) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted && ModalRoute.of(context)?.isCurrent == true) {
+              celebrateReachedMilestones(context);
+            }
+          });
+        }
       }
     }
   }

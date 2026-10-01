@@ -463,6 +463,7 @@ class ProgressChartCard extends StatelessWidget {
                             showTitles: true,
                             reservedSize: 28,
                             interval: 9,
+                            maxIncluded: false,
                             getTitlesWidget: (double value, TitleMeta meta) {
                               final int index = value.round();
                               if (index < 0 || index >= impactPoints.length) {
@@ -581,10 +582,14 @@ class ActivityCalendarCard extends StatelessWidget {
     super.key,
     required this.month,
     required this.daySummaries,
+    this.onPreviousMonth,
+    this.onNextMonth,
   });
 
   final DateTime month;
   final Map<int, CalendarDaySummary> daySummaries;
+  final VoidCallback? onPreviousMonth;
+  final VoidCallback? onNextMonth;
 
   static const List<String> _weekdays = <String>[
     'Mo',
@@ -653,6 +658,23 @@ class ActivityCalendarCard extends StatelessWidget {
               ),
             ],
           ),
+          if (onPreviousMonth != null || onNextMonth != null)
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: <Widget>[
+                IconButton(
+                  tooltip: 'Vorheriger Monat',
+                  onPressed: onPreviousMonth,
+                  icon: const Icon(Icons.chevron_left_rounded),
+                ),
+                Text('${month.year}', style: const TextStyle(color: Colors.white)),
+                IconButton(
+                  tooltip: 'Nächster Monat',
+                  onPressed: onNextMonth,
+                  icon: const Icon(Icons.chevron_right_rounded),
+                ),
+              ],
+            ),
           const SizedBox(height: 20),
           Row(
             children: _weekdays
@@ -727,7 +749,7 @@ class ActivityCalendarCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
               Text(
-                '$day. ${_monthLabel(month)}',
+                '$day. ${_monthLabel(month)} ${month.year}',
                 style: const TextStyle(
                   color: Colors.white,
                   fontSize: 23,

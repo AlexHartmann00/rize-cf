@@ -13,12 +13,17 @@ List<WorkoutDayEntry> parseWorkoutHistory(
       in documents) {
     final Map<String, Object?> data = document.data();
     final Object? scheduledAt = data['scheduledAt'];
-    final DateTime? date = scheduledAt is Timestamp
-        ? normalizeDate(scheduledAt.toDate())
-        : (data['dayKey'] is String
-              ? tryParseDateKey(data['dayKey']! as String)
-              : tryParseDateKey(document.id));
+    DateTime? date = scheduledAt is Timestamp
+        ? scheduledAt.toDate()
+        : scheduledAt is String
+        ? DateTime.tryParse(scheduledAt)
+        : null;
+    date ??= data['dayKey'] is String
+        ? tryParseDateKey(data['dayKey']! as String)
+        : null;
+    date ??= tryParseDateKey(document.id);
     if (date == null) continue;
+    date = normalizeDate(date.toLocal());
 
     try {
       entries.add(

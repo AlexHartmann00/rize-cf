@@ -11,7 +11,6 @@ import 'package:rize/helpers/screen_awake_service.dart';
 import 'package:rize/types/workout.dart';
 import 'package:rize/widgets/rize_card.dart';
 import 'package:rize/widgets/workout_execution_widgets.dart';
-import 'package:rize/helpers/milestone_service.dart';
 import 'package:rize/widgets/milestone_widgets.dart';
 import 'package:rize/youtube.dart';
 
@@ -291,23 +290,9 @@ class _WorkoutExecutionPageState extends State<WorkoutExecutionPage> {
       );
 
       await uploadWorkoutToServer(widget.workout);
-      List<MilestoneState> milestones = const <MilestoneState>[];
-      try {
-        milestones = await evaluateAndClaimMilestones();
-      } catch (error) {
-        debugPrint('Milestone evaluation failed: $error');
-      }
       await _screenAwake.setActive(false);
-
       if (!mounted) return;
-      if (globals.userData?.isPro == true) {
-        await showMilestoneCelebration(context, milestones);
-      }
-      try {
-        await markMilestoneCelebrationsShown(milestones);
-      } catch (error) {
-        debugPrint('Milestone celebration acknowledgement failed: $error');
-      }
+      await celebrateReachedMilestones(context);
       if (!mounted) return;
       Navigator.of(context).pop(true);
     } catch (_) {

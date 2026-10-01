@@ -1,14 +1,33 @@
 import 'package:flutter/material.dart';
+import 'package:rize/globals.dart' as globals;
 import 'package:rize/helpers/milestone_service.dart';
 import 'package:rize/helpers/rize_style_helpers.dart';
 import 'package:rize/types/workout.dart';
 
-Future<void> showMilestoneCelebration(
+bool _celebrationInProgress = false;
+
+Future<void> celebrateReachedMilestones(BuildContext context) async {
+  if (_celebrationInProgress || globals.userData?.isPro != true) return;
+  _celebrationInProgress = true;
+  try {
+    final milestones = await evaluateAndClaimMilestones();
+    if (!context.mounted || ModalRoute.of(context)?.isCurrent != true) return;
+    final bool shown = await showMilestoneCelebration(context, milestones);
+    if (shown) await markMilestoneCelebrationsShown(milestones);
+  } catch (error) {
+    // Keep pending celebrations for the next visit instead of losing them.
+    debugPrint('Milestone celebration failed: $error');
+  } finally {
+    _celebrationInProgress = false;
+  }
+}
+
+Future<bool> showMilestoneCelebration(
   BuildContext context,
   List<MilestoneState> milestones,
 ) async {
-  if (milestones.isEmpty) return;
-  await showModalBottomSheet<void>(
+  if (milestones.isEmpty) return false;
+  final bool? shown = await showModalBottomSheet<bool>(
     context: context,
     isScrollControlled: true,
     isDismissible: false,
@@ -16,6 +35,7 @@ Future<void> showMilestoneCelebration(
     backgroundColor: Colors.transparent,
     builder: (_) => _MilestoneCelebrationSheet(milestones: milestones),
   );
+  return shown == true;
 }
 
 class _MilestoneCelebrationSheet extends StatefulWidget {
@@ -108,7 +128,7 @@ class _MilestoneCelebrationSheetState
             FilledButton(
               onPressed: () {
                 if (last) {
-                  Navigator.pop(context);
+                  Navigator.pop(context, true);
                 } else {
                   setState(() => _index++);
                 }

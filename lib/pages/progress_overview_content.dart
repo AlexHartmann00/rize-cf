@@ -34,7 +34,7 @@ class ProgressOverviewContent extends StatelessWidget {
     return SafeArea(
       bottom: false,
       child: StreamBuilder<QuerySnapshot<Map<String, Object?>>>(
-        stream: _workoutHistory.limit(500).snapshots(),
+        stream: _workoutHistory.snapshots(),
         builder:
             (
               BuildContext context,
@@ -57,7 +57,7 @@ class ProgressOverviewContent extends StatelessWidget {
                   ProgressStatistics.fromEntries(entries);
 
               return StreamBuilder<QuerySnapshot<Map<String, Object?>>>(
-                stream: _scoreHistory.limit(500).snapshots(),
+                stream: _scoreHistory.snapshots(),
                 builder:
                     (
                       BuildContext context,
@@ -215,9 +215,10 @@ class _ProgressDashboard extends StatelessWidget {
                   lastImpact: statistics.lastImpact,
                 ),
                 const SizedBox(height: 16),
-                ActivityCalendarCard(
-                  month: today,
-                  daySummaries: _calendarSummaries(history, today, scoreDeltas),
+                WorkoutHistoryCalendar(
+                  today: today,
+                  history: history,
+                  scoreDeltas: scoreDeltas,
                 ),
               ] else
                 Padding(
@@ -318,4 +319,39 @@ Map<int, CalendarDaySummary> _calendarSummaries(
       ),
     );
   });
+}
+
+class WorkoutHistoryCalendar extends StatefulWidget {
+  const WorkoutHistoryCalendar({
+    super.key,
+    required this.today,
+    required this.history,
+    required this.scoreDeltas,
+  });
+
+  final DateTime today;
+  final List<ScheduledWorkout> history;
+  final Map<String, double> scoreDeltas;
+
+  @override
+  State<WorkoutHistoryCalendar> createState() => _WorkoutHistoryCalendarState();
+}
+
+class _WorkoutHistoryCalendarState extends State<WorkoutHistoryCalendar> {
+  late DateTime _month = DateTime(widget.today.year, widget.today.month);
+
+  void _changeMonth(int offset) {
+    setState(() => _month = DateTime(_month.year, _month.month + offset));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final DateTime currentMonth = DateTime(widget.today.year, widget.today.month);
+    return ActivityCalendarCard(
+      month: _month,
+      daySummaries: _calendarSummaries(widget.history, _month, widget.scoreDeltas),
+      onPreviousMonth: () => _changeMonth(-1),
+      onNextMonth: _month.isBefore(currentMonth) ? () => _changeMonth(1) : null,
+    );
+  }
 }

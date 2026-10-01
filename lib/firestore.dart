@@ -4,6 +4,7 @@ import 'dart:convert';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:rize/helpers/auth_service.dart';
+import 'package:rize/helpers/progress_firestore_parser.dart';
 import 'package:rize/types/anamnesis.dart';
 import 'package:rize/types/config.dart' show IntensityLevel;
 import 'package:rize/types/user.dart';
@@ -169,17 +170,11 @@ Future<List<ScheduledWorkout>> loadWorkoutHistoryFromServer() async {
       .collection('workoutHistory')
       .get();
 
-  List<ScheduledWorkout> workouts = [];
-
-  for (QueryDocumentSnapshot<Map<String, dynamic>> doc in snapshot.docs) {
-    if (doc.data().isEmpty) continue;
-    ScheduledWorkout workout = ScheduledWorkout.fromJson(doc.data());
-    workout.historyId = doc.id;
-    workout.scheduledDay ??= DateTime.tryParse(doc.id);
-    workouts.add(workout);
-  }
-
-  return workouts;
+  // Share date fallbacks and malformed-record handling with the progress page.
+  // A single legacy record must not suppress every milestone celebration.
+  return parseWorkoutHistory(snapshot.docs)
+      .map((entry) => entry.workout)
+      .toList(growable: false);
 }
 
 Future<List<IntensityLevel>> loadIntensityLevels() async {

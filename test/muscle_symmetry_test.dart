@@ -9,6 +9,7 @@ import 'package:rize/widgets/muscle_visualizer.dart';
 
 void main() {
   for (final groups in <List<String>>[
+    ['Upper Back'],
     ['Upper Back', 'Rear Shoulders'],
     ['Rear Shoulders', 'Upper Back'],
   ]) {
@@ -86,6 +87,14 @@ void main() {
           () => image.toByteData(format: ui.ImageByteFormat.png),
         );
         File(path).writeAsBytesSync(png!.buffer.asUint8List());
+      }
+      if (groups.length == 1) {
+        // Interior rear-deltoid pixels must stay transparent when only the
+        // upper back is listed. This catches overlap in the source artwork.
+        final int x = (image.width * 115 / 129).floor();
+        final int y = (image.height * 94 / 400).floor();
+        final int pixel = (y * image.width + x) * 4;
+        expect(data.getUint8(pixel + 3), 0);
       }
       image.dispose();
     });
