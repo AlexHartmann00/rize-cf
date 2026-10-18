@@ -1,5 +1,5 @@
 """Goal attainment from persisted repetitions/seconds, including legacy rounds."""
-from math import isfinite
+from math import isfinite, sqrt
 from typing import Any, Mapping
 
 
@@ -39,3 +39,10 @@ def workout_completion_ratio(workout: Mapping[str, Any]) -> float:
 def scaled_completion_delta(current_score: float, impact_score: float, ratio: float) -> float:
     """Scale the entire normal reward, including its minimum increment."""
     return (0.004 + 0.1 * max(0.0, impact_score - current_score)) * max(0.0, min(1.0, ratio))
+
+
+def exercise_completion_delta(current_score: float, impact_score: float, ratio: float,
+                              schedule_entries: int, exercise_count: int) -> float:
+    """Sum of N exercise credits = mean credit * sqrt(N), before score caps."""
+    return (scaled_completion_delta(current_score, impact_score, ratio)
+            * schedule_entries / 1.2 / sqrt(max(1, exercise_count)))

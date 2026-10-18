@@ -5,7 +5,8 @@ import 'package:rize/utils.dart';
 List<Workout> workoutsForUserIntensity({
   required Iterable<Workout> workouts,
   required double? intensityScore,
-  required double tolerance,
+  double lowerTolerance = 0.30,
+  double upperTolerance = 0.15,
 }) {
   if (intensityScore == null) {
     return List<Workout>.unmodifiable(workouts);
@@ -13,8 +14,8 @@ List<Workout> workoutsForUserIntensity({
 
   final List<Workout> matches = workouts
       .where((Workout workout) {
-        return workout.impactScore >= intensityScore - tolerance &&
-            workout.impactScore <= intensityScore + tolerance;
+        return workout.impactScore >= intensityScore - lowerTolerance &&
+            workout.impactScore <= intensityScore + upperTolerance;
       })
       .toList(growable: false);
 

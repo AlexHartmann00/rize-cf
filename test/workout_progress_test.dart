@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:rize/helpers/home_page_helpers.dart';
 import 'package:rize/helpers/workout_execution_helpers.dart';
 import 'package:rize/types/workout.dart';
+import 'package:rize/types/config.dart';
 import 'package:rize/widgets/workout_execution_widgets.dart';
 import 'package:rize/widgets/home_page_widgets.dart';
 import 'package:rize/helpers/progress_statistics.dart';
@@ -125,7 +126,7 @@ void main() {
       MaterialApp(
         home: Scaffold(
           body: CompletedWorkoutHero(
-            workout: session(actual: 1),
+            workouts: [session(actual: 1)],
             progress: 0.1,
             streak: 1,
             nextWorkoutIn: '1 Std.',
@@ -137,6 +138,41 @@ void main() {
     expect(find.text('Training beendet!'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
+  testWidgets('completed plan shows every exercise and combined impact', (
+    tester,
+  ) async {
+    final workouts = List.generate(
+      5,
+      (index) => session(actual: 2)..name = 'Übung ${index + 1}',
+    );
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SingleChildScrollView(
+            child: CompletedWorkoutHero(
+              workouts: workouts,
+              progress: .2,
+              streak: 1,
+              nextWorkoutIn: '1 Std.',
+            ),
+          ),
+        ),
+      ),
+    );
+    for (var index = 1; index <= 5; index++) {
+      expect(find.textContaining('Übung $index'), findsOneWidget);
+    }
+    expect(find.text('5 Übungen abgeschlossen'), findsOneWidget);
+    expect(find.text('0.50'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  test('plan size survives storage for score normalization', () {
+    final workout = session()..planExerciseCount = 5;
+    final adjusted = IntensityLevel.unknown().applyToWorkout(workout);
+    expect(ScheduledWorkout.fromJson(adjusted.toJson()).planExerciseCount, 5);
+  });
+
   test('partial impact persists and feeds statistics for reps and seconds', () {
     for (final type in WorkoutType.values) {
       final workout = session(actual: 5)

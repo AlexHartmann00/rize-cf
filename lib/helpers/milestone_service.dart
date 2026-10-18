@@ -351,7 +351,7 @@ const List<MilestoneDefinition> milestoneDefinitions = <MilestoneDefinition>[
   ),
 ];
 
-Future<List<MilestoneState>> evaluateAndClaimMilestones() async {
+Future<List<MilestoneState>> evaluateMilestonesForCelebration() async {
   final String userId = authServiceNotifier.value.currentUser?.uid ?? '';
   if (userId.isEmpty) return const <MilestoneState>[];
   final List<ScheduledWorkout> history = await loadWorkoutHistoryFromServer();
@@ -372,28 +372,12 @@ Future<List<MilestoneState>> evaluateAndClaimMilestones() async {
       milestonesRequiringCelebration(states, <String, bool>{
         for (final MapEntry<String, Map<String, dynamic>> entry
             in claimed.entries)
-          entry.key: entry.value['celebrationPending'] == true ||
+          entry.key:
+              entry.value['celebrationPending'] == true ||
               entry.value['celebratedAt'] == null,
       });
-  final List<MilestoneState> unlocked = celebrations
-      .where((state) => !claimed.containsKey(state.storageId))
-      .toList(growable: false);
-  if (unlocked.isEmpty) return celebrations;
-
-  final WriteBatch batch = FirebaseFirestore.instance.batch();
-  for (final MilestoneState state in unlocked) {
-    batch.set(collection.doc(state.storageId), <String, dynamic>{
-      'milestoneId': state.definition.id,
-      'category': state.definition.category.name,
-      'title': state.definition.title,
-      'current': state.current,
-      'target': state.definition.target,
-      'periodLabel': state.periodLabel,
-      'achievedAt': FieldValue.serverTimestamp(),
-      'celebrationPending': true,
-    });
-  }
-  await batch.commit();
+  // A failed write must not suppress the popup. Persist the achievement only
+  // after acknowledgement; workout history remains the source of truth.
   return celebrations;
 }
 
@@ -412,6 +396,13 @@ Future<void> markMilestoneCelebrationsShown(
   final WriteBatch batch = FirebaseFirestore.instance.batch();
   for (final MilestoneState milestone in shown) {
     batch.set(collection.doc(milestone.storageId), <String, dynamic>{
+      'milestoneId': milestone.definition.id,
+      'category': milestone.definition.category.name,
+      'title': milestone.definition.title,
+      'current': milestone.current,
+      'target': milestone.definition.target,
+      'periodLabel': milestone.periodLabel,
+      'achievedAt': FieldValue.serverTimestamp(),
       'celebrationPending': false,
       'celebratedAt': FieldValue.serverTimestamp(),
     }, SetOptions(merge: true));

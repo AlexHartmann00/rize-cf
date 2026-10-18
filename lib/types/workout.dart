@@ -213,6 +213,7 @@ class ScheduledWorkout extends Workout {
   String? historyId;
   String? planId;
   int? planPosition;
+  int? planExerciseCount;
 
   ScheduledWorkout({
     // super fields
@@ -347,6 +348,7 @@ class ScheduledWorkout extends Workout {
     result.historyId = json['historyId'] as String?;
     result.planId = json['planId'] as String?;
     result.planPosition = (json['planPosition'] as num?)?.toInt();
+    result.planExerciseCount = (json['planExerciseCount'] as num?)?.toInt();
     final scheduledAt = json['scheduledAt'];
     if (scheduledAt is Timestamp) result.scheduledDay = scheduledAt.toDate();
     if (scheduledAt is String)
@@ -373,6 +375,7 @@ class ScheduledWorkout extends Workout {
       'intensityFactor': intensityFactor,
       'planId': planId,
       'planPosition': planPosition,
+      'planExerciseCount': planExerciseCount,
     });
     return baseJson;
   }

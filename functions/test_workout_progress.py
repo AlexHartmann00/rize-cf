@@ -1,5 +1,6 @@
 import unittest
-from workout_progress import workout_completion_ratio, scaled_completion_delta
+from math import sqrt
+from workout_progress import workout_completion_ratio, scaled_completion_delta, exercise_completion_delta
 
 
 class WorkoutProgressTest(unittest.TestCase):
@@ -19,6 +20,15 @@ class WorkoutProgressTest(unittest.TestCase):
     def test_minimum_reward_is_also_scaled(self):
         self.assertEqual(scaled_completion_delta(.8, .2, .1), .0004)
         self.assertEqual(scaled_completion_delta(.8, .2, 0), 0)
+
+    def test_five_exercises_have_square_root_growth(self):
+        # Equal/easier impacts keep the base reward constant between exercises.
+        single = exercise_completion_delta(.5, .4, 1, 3, 1)
+        five = sum(exercise_completion_delta(.5, .4, 1, 3, 5) for _ in range(5))
+        self.assertAlmostEqual(five, single * sqrt(5))
+        self.assertLess(five, single * 5)
+        self.assertAlmostEqual(exercise_completion_delta(.5, .4, .5, 3, 5),
+                               single * .5 / sqrt(5))
 
     def test_legacy_completed_and_pending(self):
         self.assertEqual(workout_completion_ratio(self.workout()), 1)

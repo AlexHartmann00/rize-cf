@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 from typing import Any, Mapping, Tuple
 from zoneinfo import ZoneInfo
-from workout_progress import workout_completion_ratio, scaled_completion_delta
+from workout_progress import workout_completion_ratio, scaled_completion_delta, exercise_completion_delta
 
 import os
 import json
@@ -364,7 +364,6 @@ def on_workout_written(
 
     number_of_units = len(schedule_after)
     completion_ratio = workout_completion_ratio(after)
-    impact_delta_factor = number_of_units / 1.2
     if completion_ratio <= 0:
         return
 
@@ -378,6 +377,14 @@ def on_workout_written(
 
     user_ref = get_db().collection("users").document(user_id)
     history_ref = user_ref.collection("scoreHistory").document(f"workout-{workout_id}")
+    # New plans persist their size before any exercise can be completed.
+    # Existing plans are resolved from their shared planId for compatibility.
+    exercise_count = after.get("planExerciseCount")
+    if not isinstance(exercise_count, int) or exercise_count < 1:
+        plan_id = after.get("planId")
+        exercise_count = max(1, len(list(
+            user_ref.collection("workoutHistory").where("planId", "==", plan_id).stream()
+        ))) if plan_id else 1
 
     @firestore.transactional
     def txn_update(transaction: firestore.Transaction):
@@ -401,8 +408,8 @@ def on_workout_written(
             return
 
         delta = (
-            scaled_completion_delta(current, impact, completion_ratio)
-            * impact_delta_factor
+            exercise_completion_delta(current, impact, completion_ratio,
+                                      number_of_units, exercise_count)
         )
         new_score = clamp_0_1(current + delta)
         delta = new_score - current
@@ -430,6 +437,7 @@ def on_workout_written(
                 "workoutId": workout_id,
                 "impactScore": impact * completion_ratio,
                 "baseImpactScore": impact,
+                "planExerciseCount": exercise_count,
                 "completionRatio": completion_ratio,
                 "previousScore": current,
                 "delta": delta,
@@ -1029,9 +1037,12 @@ def _send_subscription_message(
     )
 
 
-def _subscription_start_date(months: int) -> str:
+def _subscription_start_date(months: int, paid_at: Any = None) -> str:
     """Return the same calendar day after the already-paid billing period."""
-    today = datetime.now(TZ).date()
+    today = (
+        datetime.fromisoformat(str(paid_at).replace("Z", "+00:00")).date()
+        if paid_at else datetime.now(TZ).date()
+    )
     month_index = today.month - 1 + months
     year = today.year + month_index // 12
     month = month_index % 12 + 1
@@ -1042,6 +1053,25 @@ def _subscription_start_date(months: int) -> str:
         datetime(next_month_year, next_month, 1).date() - timedelta(days=1)
     ).day
     return today.replace(year=year, month=month, day=min(today.day, last_day)).isoformat()
+
+
+def subscription_access_until(user: Mapping[str, Any], next_payment_date: Any = None) -> str | None:
+    """Keep the paid period even when Mollie removes its next collection date."""
+    candidates = [user.get("proAccessUntil"), next_payment_date]
+    if user.get("mollieLastPaidAt"):
+        plan = PRO_PLANS.get(user.get("subscriptionPlan"), PRO_PLANS["rize_pro_monthly"])
+        try:
+            candidates.append(_subscription_start_date(plan["months"], user["mollieLastPaidAt"]))
+        except (TypeError, ValueError):
+            pass
+    dates = []
+    for value in candidates:
+        if value:
+            try:
+                dates.append(datetime.fromisoformat(str(value).replace("Z", "+00:00")).date())
+            except (TypeError, ValueError):
+                pass
+    return max(dates).isoformat() if dates else None
 
 
 @https_fn.on_request(region="europe-west1", secrets=[MOLLIE_API_KEY])
@@ -1146,7 +1176,7 @@ def cancel_pro_subscription(req: https_fn.Request) -> https_fn.Response:
         )
         current_response.raise_for_status()
         current_subscription = current_response.json()
-        access_until = current_subscription.get("nextPaymentDate")
+        access_until = subscription_access_until(user, current_subscription.get("nextPaymentDate"))
         current_status = str(current_subscription.get("status") or "")
 
         terminal_state = terminal_subscription_state(current_status, access_until)
@@ -1242,7 +1272,7 @@ def mollie_webhook(req: https_fn.Request) -> https_fn.Response:
         payment_status = str(payment.get("status") or "")
         if payment_status == "paid":
             plan_id = metadata.get("plan") or user.get(
-                "pendingSubscriptionPlan", "rize_pro_monthly"
+                "subscriptionPlan", user.get("pendingSubscriptionPlan", "rize_pro_monthly")
             )
             plan = PRO_PLANS.get(plan_id, PRO_PLANS["rize_pro_monthly"])
             updates = {
@@ -1253,6 +1283,7 @@ def mollie_webhook(req: https_fn.Request) -> https_fn.Response:
                 "mollieLastPaymentStatus": "paid",
                 "mollieLastPaidAt": payment.get("paidAt"),
             }
+            updates["proAccessUntil"] = subscription_access_until({**user, **updates})
             if (
                 not user.get("mollieSubscriptionId")
                 and payment.get("sequenceType") == "first"
@@ -1265,7 +1296,7 @@ def mollie_webhook(req: https_fn.Request) -> https_fn.Response:
                     json={
                         "amount": {"currency": "EUR", "value": plan["amount"]},
                         "interval": plan["interval"],
-                        "startDate": _subscription_start_date(plan["months"]),
+                        "startDate": _subscription_start_date(plan["months"], payment.get("paidAt")),
                         "description": plan["description"],
                         "webhookUrl": f"{_public_functions_base()}/mollie_webhook",
                         "metadata": {"userId": user_id, "plan": plan_id},
@@ -1287,6 +1318,16 @@ def mollie_webhook(req: https_fn.Request) -> https_fn.Response:
             is_recurring = payment.get("sequenceType") == "recurring" or bool(
                 payment.get("subscriptionId")
             )
+            # Failed checkout attempts are not the state of an existing paid subscription.
+            if not is_recurring and (
+                user.get("mollieLastPaidAt")
+                or user.get("isPro")
+                or user.get("mollieSubscriptionId")
+                or (user.get("mollieInitialPaymentId") and user["mollieInitialPaymentId"] != payment_id)
+            ):
+                return https_fn.Response("OK", status=200)
+            if is_recurring and payment.get("subscriptionId") != user.get("mollieSubscriptionId"):
+                return https_fn.Response("OK", status=200)
             subscription_status = "payment_failed" if is_recurring else payment_status
             user_ref.set(
                 {
@@ -1561,7 +1602,7 @@ def reconcile_mollie_subscriptions(
 ) -> None:
     """Detect Mollie-side subscription termination, which has no classic webhook."""
     users = get_db().collection("users").where(
-        "subscriptionStatus", "in", ["active", "payment_failed"]
+        "subscriptionStatus", "in", ["active", "payment_failed", "canceled", "ended", "expired"]
     ).stream()
     for user_snap in users:
         user = user_snap.to_dict() or {}
@@ -1583,6 +1624,7 @@ def reconcile_mollie_subscriptions(
                 if user.get("subscriptionStatus") != "active":
                     user_ref.set(
                         {
+                            "isPro": True,
                             "subscriptionStatus": "active",
                             "mollieSubscriptionStatus": mollie_status,
                             "subscriptionPaymentIssueAt": firestore.DELETE_FIELD,
@@ -1592,7 +1634,7 @@ def reconcile_mollie_subscriptions(
                 continue
             if mollie_status not in ("canceled", "suspended", "completed"):
                 continue
-            access_until = subscription.get("nextPaymentDate")
+            access_until = subscription_access_until(user, subscription.get("nextPaymentDate"))
             access_active = is_access_date_active(access_until)
             user_ref.set(
                 {
@@ -1604,6 +1646,8 @@ def reconcile_mollie_subscriptions(
                 },
                 merge=True,
             )
+            if access_active:
+                continue
             customer_name, _ = _customer_identity(user_snap.id)
             _send_subscription_message(
                 user_id=user_snap.id,

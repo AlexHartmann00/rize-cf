@@ -476,20 +476,24 @@ void main() {
     },
   );
 
-  test('spin candidates stay strictly inside the score tolerance', () {
+  test('spin candidates include -0.30 and +0.15 boundaries', () {
     final List<Workout> matches = workoutsForUserIntensity(
       workouts: <Workout>[
-        workout('too-easy', const <String>['chest'], impactScore: 0.2),
+        workout('too-easy', const <String>['chest'], impactScore: 0.199),
+        workout('lower-boundary', const <String>['chest'], impactScore: 0.2),
+        workout('upper-boundary', const <String>['chest'], impactScore: 0.65),
+        workout('above-boundary', const <String>['chest'], impactScore: 0.651),
         workout('lower-match', const <String>['glutes'], impactScore: 0.4),
         workout('exact-match', const <String>['back'], impactScore: 0.5),
         workout('upper-match', const <String>['calves'], impactScore: 0.6),
         workout('too-hard', const <String>['abs'], impactScore: 0.8),
       ],
       intensityScore: 0.5,
-      tolerance: 0.15,
     );
 
     expect(matches.map((Workout item) => item.id), <String>[
+      'lower-boundary',
+      'upper-boundary',
       'lower-match',
       'exact-match',
       'upper-match',

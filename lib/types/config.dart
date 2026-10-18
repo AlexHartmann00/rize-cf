@@ -119,6 +119,7 @@ class IntensityLevel {
     adjusted.historyId = workout.historyId;
     adjusted.planId = workout.planId;
     adjusted.planPosition = workout.planPosition;
+    adjusted.planExerciseCount = workout.planExerciseCount;
     return adjusted;
   }
 

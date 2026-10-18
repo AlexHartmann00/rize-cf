@@ -444,13 +444,13 @@ class DailyWorkoutCard extends StatelessWidget {
 class CompletedWorkoutHero extends StatelessWidget {
   const CompletedWorkoutHero({
     super.key,
-    required this.workout,
+    required this.workouts,
     required this.streak,
     required this.nextWorkoutIn,
     required this.progress,
   });
 
-  final ScheduledWorkout workout;
+  final List<ScheduledWorkout> workouts;
   final int streak;
   final double progress;
   final String nextWorkoutIn;
@@ -482,13 +482,18 @@ class CompletedWorkoutHero extends StatelessWidget {
           ),
           const SizedBox(height: 7),
           Text(
-            workout.name,
+            workouts.map((workout) => workout.name).join(' · '),
             textAlign: TextAlign.center,
             style: TextStyle(
               color: Colors.white.withOpacity(0.66),
               fontWeight: FontWeight.w700,
               fontSize: 15,
             ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            '${workouts.length} ${workouts.length == 1 ? 'Übung' : 'Übungen'} abgeschlossen',
+            style: const TextStyle(color: Colors.white70),
           ),
           const SizedBox(height: 8),
           Text(
@@ -510,7 +515,13 @@ class CompletedWorkoutHero extends StatelessWidget {
               Expanded(
                 child: _CompletedMetric(
                   icon: Icons.bolt_rounded,
-                  value: workout.effectiveImpactScore.toStringAsFixed(2),
+                  value: workouts
+                      .fold<double>(
+                        0,
+                        (sum, workout) => sum + workout.effectiveImpactScore,
+                      )
+                      .clamp(0, 1)
+                      .toStringAsFixed(2),
                   label: 'Impact',
                   color: rizeCyan,
                 ),

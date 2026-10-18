@@ -4,21 +4,40 @@ import 'package:rize/helpers/milestone_service.dart';
 import 'package:rize/helpers/rize_style_helpers.dart';
 import 'package:rize/types/workout.dart';
 
-bool _celebrationInProgress = false;
+final _celebrations = MilestoneCelebrationCoordinator();
 
-Future<void> celebrateReachedMilestones(BuildContext context) async {
-  if (_celebrationInProgress || globals.userData?.isPro != true) return;
-  _celebrationInProgress = true;
-  try {
-    final milestones = await evaluateAndClaimMilestones();
-    if (!context.mounted || ModalRoute.of(context)?.isCurrent != true) return;
-    final bool shown = await showMilestoneCelebration(context, milestones);
-    if (shown) await markMilestoneCelebrationsShown(milestones);
-  } catch (error) {
-    // Keep pending celebrations for the next visit instead of losing them.
-    debugPrint('Milestone celebration failed: $error');
-  } finally {
-    _celebrationInProgress = false;
+Future<void> celebrateReachedMilestones(BuildContext context) {
+  if (globals.userData?.isPro != true) return Future<void>.value();
+  return _celebrations.celebrate(
+    context,
+    load: evaluateMilestonesForCelebration,
+    markShown: markMilestoneCelebrationsShown,
+  );
+}
+
+/// Serialize checks so a save arriving during an earlier check is not dropped.
+class MilestoneCelebrationCoordinator {
+  Future<void> _pending = Future<void>.value();
+
+  Future<void> celebrate(
+    BuildContext context, {
+    required Future<List<MilestoneState>> Function() load,
+    required Future<void> Function(Iterable<MilestoneState>) markShown,
+  }) {
+    _pending = _pending.then((_) async {
+      if (!context.mounted || ModalRoute.of(context)?.isCurrent != true) return;
+      try {
+        final milestones = await load();
+        if (!context.mounted || ModalRoute.of(context)?.isCurrent != true)
+          return;
+        final shown = await showMilestoneCelebration(context, milestones);
+        if (shown) await markShown(milestones);
+      } catch (error) {
+        // Keep unacknowledged celebrations available for the next check.
+        debugPrint('Milestone celebration failed: $error');
+      }
+    });
+    return _pending;
   }
 }
 

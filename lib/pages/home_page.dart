@@ -519,7 +519,7 @@ class _HomePageSlotMachineWidgetState extends State<HomePageSlotMachineWidget> {
           : 'Training beendet. Jede Wiederholung zählt.',
       children: <Widget>[
         CompletedWorkoutHero(
-          workout: plan.workouts.first,
+          workouts: plan.workouts,
           progress: plan.progress,
           streak: streak,
           nextWorkoutIn: compactDuration(remaining),
@@ -544,7 +544,6 @@ class _HomePageSlotMachineWidgetState extends State<HomePageSlotMachineWidget> {
     final List<Workout> workouts = workoutsForUserIntensity(
       workouts: entitledWorkouts,
       intensityScore: globals.userData?.intensityScore,
-      tolerance: globals.intensityScoreTolerance,
     );
 
     final List<int> intensities = buildIntensityFactors(level);
@@ -606,6 +605,7 @@ class _HomePageSlotMachineWidgetState extends State<HomePageSlotMachineWidget> {
             );
             item.planId = planId;
             item.planPosition = index;
+            item.planExerciseCount = requestedCount;
             return level.applyToWorkout(item);
           });
       final ScheduledWorkout workout = spunWorkouts.first;
@@ -662,6 +662,9 @@ class _HomePageSlotMachineWidgetState extends State<HomePageSlotMachineWidget> {
     });
 
     final List<ScheduledWorkout> history = await historyFuture;
+    if (!mounted) return;
+    await celebrateReachedMilestones(context);
+    if (!mounted) return;
     await _showProNudgeWhenEligible(history);
   }
 
@@ -734,7 +737,6 @@ class _DailySpinPanel extends StatelessWidget {
     final List<Workout> workouts = workoutsForUserIntensity(
       workouts: entitledWorkouts,
       intensityScore: globals.userData?.intensityScore,
-      tolerance: globals.intensityScoreTolerance,
     );
 
     final List<Workout> visibleSpinPool = isPro
