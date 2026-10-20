@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:rize/base_widgets.dart';
 import 'package:rize/firestore.dart';
 import 'package:rize/helpers/auth_service.dart';
+import 'package:rize/helpers/questionnaire_launch_guard.dart';
 import 'package:rize/pages/profile_page.dart';
 import 'package:rize/pages/workout_details_page.dart';
 import 'package:rize/widgets/slot_machine.dart';
@@ -39,6 +40,8 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   bool _loadingUser = true;
   Object? _userLoadError;
   int _dataRevision = 0;
+  final QuestionnaireLaunchGuard _questionnaireLaunchGuard =
+      QuestionnaireLaunchGuard();
 
   @override
   void initState() {
@@ -128,6 +131,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
         setState(() => _loadingUser = false);
         if (_userLoadError == null) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) _openQuestionnaireWhenRequired();
             if (mounted && ModalRoute.of(context)?.isCurrent == true) {
               celebrateReachedMilestones(context);
             }
@@ -136,6 +140,30 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
       }
     }
   }
+
+  Future<void> _openQuestionnaireWhenRequired() =>
+      _questionnaireLaunchGuard.run(() async {
+        if (!mounted) return;
+        final SharedPreferences preferences =
+            await SharedPreferences.getInstance();
+        final bool questionnaireSubmitted =
+            (preferences.getBool('anamnesisDone') ?? false) ||
+            (globals.userData?.intensityScore ?? 0) != 0;
+        if (questionnaireSubmitted || !mounted) return;
+
+        final questionnaire = await loadAnamnesisQuestionnaire();
+        if (!mounted || ModalRoute.of(context)?.isCurrent != true) return;
+
+        final bool? completed = await Navigator.of(context).push<bool>(
+          MaterialPageRoute<bool>(
+            builder: (_) =>
+                AnamnesisQuestionnaireFlow(questionnaire: questionnaire),
+          ),
+        );
+        if (completed == true && mounted) {
+          await _initializeUser(reloadAppData: true);
+        }
+      });
 
   @override
   Widget build(BuildContext context) {
@@ -192,20 +220,12 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
       );
     }
 
-    return HomePageSlotMachineWidget(
-      key: ValueKey<int>(_dataRevision),
-      onQuestionnaireCompleted: () => _initializeUser(reloadAppData: true),
-    );
+    return HomePageSlotMachineWidget(key: ValueKey<int>(_dataRevision));
   }
 }
 
 class HomePageSlotMachineWidget extends StatefulWidget {
-  const HomePageSlotMachineWidget({
-    super.key,
-    required this.onQuestionnaireCompleted,
-  });
-
-  final Future<void> Function() onQuestionnaireCompleted;
+  const HomePageSlotMachineWidget({super.key});
 
   @override
   State<HomePageSlotMachineWidget> createState() =>
@@ -226,7 +246,6 @@ class _HomePageSlotMachineWidgetState extends State<HomePageSlotMachineWidget> {
   Set<String> _excludedMuscleTags = <String>{};
   bool _showSpinExperience = false;
   bool _isSpinning = false;
-  bool _questionnaireChecked = false;
   bool _checkingProNudge = false;
 
   late Future<List<ScheduledWorkout>> _historyFuture;
@@ -236,10 +255,6 @@ class _HomePageSlotMachineWidgetState extends State<HomePageSlotMachineWidget> {
     super.initState();
     _historyFuture = loadWorkoutHistoryFromServer();
     _restoreMuscleFilters();
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _openQuestionnaireWhenRequired();
-    });
   }
 
   Future<void> _restoreMuscleFilters() async {
@@ -273,32 +288,6 @@ class _HomePageSlotMachineWidgetState extends State<HomePageSlotMachineWidget> {
         filters.excluded.toList(growable: false)..sort(),
       ),
     ]);
-  }
-
-  Future<void> _openQuestionnaireWhenRequired() async {
-    if (_questionnaireChecked || !mounted) return;
-    _questionnaireChecked = true;
-
-    final SharedPreferences preferences = await SharedPreferences.getInstance();
-
-    final bool questionnaireSubmitted =
-        (preferences.getBool('anamnesisDone') ?? false) ||
-        (globals.userData?.intensityScore ?? 0) != 0;
-
-    if (questionnaireSubmitted || !mounted) return;
-
-    final questionnaire = await loadAnamnesisQuestionnaire();
-    if (!mounted) return;
-
-    final bool? completed = await Navigator.of(context).push<bool>(
-      MaterialPageRoute<bool>(
-        builder: (_) =>
-            AnamnesisQuestionnaireFlow(questionnaire: questionnaire),
-      ),
-    );
-    if (completed == true) {
-      await widget.onQuestionnaireCompleted();
-    }
   }
 
   @override
