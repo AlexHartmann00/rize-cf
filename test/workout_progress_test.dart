@@ -32,6 +32,39 @@ ScheduledWorkout session({int? actual, int completed = 1, int intensity = 1}) =>
     );
 
 void main() {
+  test('three planned rounds require three separate submissions', () {
+    final workout = session(completed: 0);
+    workout.schedule.single.plannedUnits = 3;
+    for (int round = 1; round <= 3; round++) {
+      workout.schedule[0] = completedWorkoutStep(
+        workout.schedule.single,
+        actualValue: 10,
+        targetValue: 10,
+      );
+      final restored = ScheduledWorkout.fromJson(workout.toJson());
+      expect(restored.schedule.single.completedUnits, round);
+      expect(restored.schedule.single.actualValue, round * 10);
+      expect(restored.progress, closeTo(round / 3, .0001));
+      expect(restored.isCompleted, round == 3);
+      expect(
+        DailyWorkoutPlan(id: 'test', workouts: [restored]).isCompleted,
+        round == 3,
+      );
+    }
+  });
+
+  test('finishing a legacy round preserves previously completed units', () {
+    final step = WorkoutStep(
+      timeOfDay: TimeOfDay.any,
+      plannedUnits: 3,
+      completedUnits: 1,
+    );
+    final updated = completedWorkoutStep(step, actualValue: 5, targetValue: 10);
+    expect(updated.completedUnits, 2);
+    expect(updated.actualValue, 15);
+    expect(step.completedUnits, 1);
+  });
+
   test('submitted repetitions survive storage with proportional progress', () {
     final workout = session(completed: 0);
     workout.schedule[0] = completedWorkoutStep(
@@ -257,7 +290,8 @@ void main() {
     await tester.tap(find.text('22'));
     await tester.pumpAndSettle();
     expect(find.text('5 / 10 Sekunden · 50 % geschafft'), findsOneWidget);
-    expect(find.text('Impact 0.25 · Fitnessscore +0.20'), findsOneWidget);
+    expect(find.text('Impact 0.25'), findsOneWidget);
+    expect(find.textContaining('Fitnessscore +'), findsNothing);
     expect(tester.takeException(), isNull);
   });
 }

@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:rize/types/workout.dart';
+import 'package:rize/helpers/muscle_group_labels.dart';
 
 /// Converts text into a normalized search representation.
 ///
@@ -37,8 +38,17 @@ bool workoutMatchesSearch(final Workout workout, final String query) {
     return true;
   }
 
+  final Set<String> muscleWords = muscleGroupSearchTerms
+      .expand((term) => normalizeWorkoutSearchText(term).split(' '))
+      .toSet();
+  final bool muscleSearch = normalizedQuery
+      .split(' ')
+      .any(muscleWords.contains);
   final String searchableText = normalizeWorkoutSearchText(
-    workout.filterString,
+    muscleSearch
+        ? '${workout.name} ${workout.usedMuscleGroups.join(' ')} '
+              '${workout.usedMuscleGroups.map(muscleGroupLabel).join(' ')}'
+        : workout.filterString,
   );
 
   final List<String> queryTokens = normalizedQuery
@@ -80,13 +90,27 @@ List<Workout> freeWorkoutSelection(
 
   final double score = intensityScore.clamp(0, 1);
   final int desiredCount = workoutCount.clamp(1, all.length);
-  final Set<String> uncoveredMuscles = all
+  final List<Workout> nearest = List<Workout>.of(all)
+    ..sort((a, b) {
+      final comparison = (a.impactScore - score).abs().compareTo(
+        (b.impactScore - score).abs(),
+      );
+      return comparison != 0 ? comparison : a.id.compareTo(b.id);
+    });
+  // Keep the usual tolerance; fill missing slots with the nearest neighbours.
+  final int inRange = nearest
+      .where((workout) => (workout.impactScore - score).abs() <= 0.15 + 1e-9)
+      .length;
+  final List<Workout> candidates = nearest
+      .take(max(desiredCount, inRange))
+      .toList();
+  final Set<String> uncoveredMuscles = candidates
       .expand((Workout workout) => workout.usedMuscleGroups)
       .toSet();
-  final Set<WorkoutType> uncoveredTypes = all
+  final Set<WorkoutType> uncoveredTypes = candidates
       .map((Workout workout) => workout.workoutType)
       .toSet();
-  final List<Workout> remaining = List<Workout>.of(all);
+  final List<Workout> remaining = List<Workout>.of(candidates);
   final List<Workout> selected = <Workout>[];
 
   while (selected.length < desiredCount &&

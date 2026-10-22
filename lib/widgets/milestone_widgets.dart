@@ -6,11 +6,20 @@ import 'package:rize/types/workout.dart';
 
 final _celebrations = MilestoneCelebrationCoordinator();
 
-Future<void> celebrateReachedMilestones(BuildContext context) {
+Future<void> celebrateReachedMilestones(
+  BuildContext context, {
+  List<ScheduledWorkout>? history,
+  ScheduledWorkout? completedWorkout,
+  ScheduledWorkout? previousWorkout,
+}) {
   if (globals.userData?.isPro != true) return Future<void>.value();
   return _celebrations.celebrate(
     context,
-    load: evaluateMilestonesForCelebration,
+    load: () => evaluateMilestonesForCelebration(
+      history: history,
+      completedWorkout: completedWorkout,
+      previousWorkout: previousWorkout,
+    ),
     markShown: markMilestoneCelebrationsShown,
   );
 }

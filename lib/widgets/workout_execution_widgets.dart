@@ -143,6 +143,17 @@ class WorkoutReadyCard extends StatelessWidget {
                   fontWeight: FontWeight.w600,
                 ),
               ),
+              for (final hint in workout.countingHints) ...<Widget>[
+                const SizedBox(height: 12),
+                Text(
+                  hint,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: rizeCyan,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
               const SizedBox(height: 22),
               FilledButton.icon(
                 onPressed: onStart,

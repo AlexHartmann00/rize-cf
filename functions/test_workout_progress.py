@@ -30,6 +30,13 @@ class WorkoutProgressTest(unittest.TestCase):
         self.assertAlmostEqual(exercise_completion_delta(.5, .4, .5, 3, 5),
                                single * .5 / sqrt(5))
 
+    def test_square_root_growth_for_one_four_nine_and_sixteen_exercises(self):
+        single = exercise_completion_delta(.5, .4, 1, 1, 1)
+        for count in (1, 4, 9, 16):
+            total = sum(exercise_completion_delta(.5, .4, 1, 1, count)
+                        for _ in range(count))
+            self.assertAlmostEqual(total, single * sqrt(count))
+
     def test_legacy_completed_and_pending(self):
         self.assertEqual(workout_completion_ratio(self.workout()), 1)
         self.assertEqual(workout_completion_ratio(self.workout(completed=0)), 0)

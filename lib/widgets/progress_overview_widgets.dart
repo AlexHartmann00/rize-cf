@@ -667,7 +667,10 @@ class ActivityCalendarCard extends StatelessWidget {
                   onPressed: onPreviousMonth,
                   icon: const Icon(Icons.chevron_left_rounded),
                 ),
-                Text('${month.year}', style: const TextStyle(color: Colors.white)),
+                Text(
+                  '${month.year}',
+                  style: const TextStyle(color: Colors.white),
+                ),
                 IconButton(
                   tooltip: 'Nächster Monat',
                   onPressed: onNextMonth,
@@ -843,8 +846,7 @@ class ActivityCalendarCard extends StatelessWidget {
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                'Impact ${workout.impactScore.toStringAsFixed(2)}'
-                                '${workout.scoreDelta == null ? "" : " · Fitnessscore +${(workout.scoreDelta! * 100).toStringAsFixed(2)}"}',
+                                'Impact ${workout.impactScore.toStringAsFixed(2)}',
                                 style: const TextStyle(
                                   color: rizeCyan,
                                   fontSize: 12,

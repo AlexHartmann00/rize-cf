@@ -220,12 +220,12 @@ class HttpFunctionStartupTest(unittest.TestCase):
                     transaction.set.assert_not_called()
 
     def test_multi_exercise_reward_uses_plan_size_and_legacy_fallback(self):
-        for stored_count in (5, None):
-            with self.subTest(stored_count=stored_count):
+        for stored_count, rounds in ((5, 1), (None, 1), (5, 3)):
+            with self.subTest(stored_count=stored_count, rounds=rounds):
                 data = {"type": "reps", "baseReps": 10, "impactScore": .6,
                         "planId": "plan", "planExerciseCount": stored_count,
-                        "schedule": [{"plannedUnits": 1, "completedUnits": 1,
-                                      "actualValue": 10}]}
+                        "schedule": [{"plannedUnits": rounds, "completedUnits": rounds,
+                                      "actualValue": 10 * rounds}]}
                 after = Mock(exists=True)
                 after.to_dict.return_value = data
                 event = SimpleNamespace(params={"userId": "user", "workoutId": "exercise"},
@@ -243,7 +243,7 @@ class HttpFunctionStartupTest(unittest.TestCase):
                     inspect.unwrap(self.main.on_workout_written)(event)
                 writes = db.transaction.return_value.set.call_args_list
                 self.assertAlmostEqual(writes[0].args[1]["intensityScore"],
-                                       .5 + .014 / 1.2 / (5 ** .5))
+                                       .5 + .014 * rounds / 1.2 / (5 ** .5))
                 self.assertEqual(writes[1].args[1]["planExerciseCount"], 5)
                 if stored_count is None:
                     collection.where.assert_called_once_with("planId", "==", "plan")

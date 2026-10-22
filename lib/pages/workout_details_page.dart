@@ -45,6 +45,16 @@ class WorkoutDetailsPage extends StatelessWidget {
                         ),
                         const SizedBox(height: 14),
                       ],
+                      if (workout.countingHints.isNotEmpty) ...<Widget>[
+                        WorkoutDetailsSection(
+                          title: 'So zählst Du',
+                          icon: Icons.repeat_rounded,
+                          child: WorkoutDetailsBodyText(
+                            text: workout.countingHints.join('\n'),
+                          ),
+                        ),
+                        const SizedBox(height: 14),
+                      ],
                       WorkoutDetailsSection(
                         title: 'Darum geht es',
                         icon: Icons.info_outline_rounded,

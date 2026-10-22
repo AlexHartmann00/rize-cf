@@ -19,9 +19,14 @@ class WorkoutRoundsList extends StatefulWidget {
 class _WorkoutRoundsListState extends State<WorkoutRoundsList> {
   @override
   Widget build(BuildContext context) {
-    final int completedCount = widget.workout.schedule
-        .where((WorkoutStep step) => step.completedUnits >= step.plannedUnits)
-        .length;
+    final int completedCount = widget.workout.schedule.fold<int>(
+      0,
+      (total, step) => total + step.completedUnits,
+    );
+    final int plannedCount = widget.workout.schedule.fold<int>(
+      0,
+      (total, step) => total + step.plannedUnits,
+    );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -40,7 +45,7 @@ class _WorkoutRoundsListState extends State<WorkoutRoundsList> {
               ),
             ),
             Text(
-              '$completedCount / ${widget.workout.schedule.length}',
+              '$completedCount / $plannedCount',
               style: const TextStyle(
                 color: Colors.white70,
                 fontSize: 12,
@@ -212,8 +217,8 @@ class _RoundTile extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   step.timeOfDay == TimeOfDay.any
-                      ? target
-                      : '$target · ${_timeLabel(step.timeOfDay)}',
+                      ? '${step.plannedUnits > 1 ? '${step.completedUnits} / ${step.plannedUnits} Runden · ' : ''}$target'
+                      : '${step.plannedUnits > 1 ? '${step.completedUnits} / ${step.plannedUnits} Runden · ' : ''}$target · ${_timeLabel(step.timeOfDay)}',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(

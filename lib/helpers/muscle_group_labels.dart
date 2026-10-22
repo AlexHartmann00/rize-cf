@@ -26,3 +26,8 @@ const Map<String, String> _muscleGroupLabels = <String, String>{
 
 String muscleGroupLabel(String technicalName) =>
     _muscleGroupLabels[technicalName.trim().toLowerCase()] ?? technicalName;
+
+/// Anatomical names and translations, excluding joint/load exclusion tags.
+Iterable<String> get muscleGroupSearchTerms => _muscleGroupLabels.entries
+    .where((entry) => !const {'impact', 'knee', 'wrist'}.contains(entry.key))
+    .expand((entry) => [entry.key, entry.value]);

@@ -83,11 +83,18 @@ WorkoutStep completedWorkoutStep(
   int? actualValue,
   int? targetValue,
 }) {
+  if (currentStep.completedUnits >= currentStep.plannedUnits) {
+    return WorkoutStep.copy(currentStep);
+  }
+  final int? roundTarget = targetValue ?? currentStep.targetValue;
+  final int previousActual =
+      currentStep.actualValue ??
+      currentStep.completedUnits * (roundTarget ?? 0);
   return WorkoutStep(
     timeOfDay: currentStep.timeOfDay,
     plannedUnits: currentStep.plannedUnits,
-    completedUnits: currentStep.plannedUnits,
-    actualValue: actualValue,
-    targetValue: targetValue,
+    completedUnits: currentStep.completedUnits + 1,
+    actualValue: actualValue == null ? null : previousActual + actualValue,
+    targetValue: roundTarget,
   );
 }

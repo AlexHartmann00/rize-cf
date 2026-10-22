@@ -67,12 +67,9 @@ class WorkoutProperty {
   }
 
   factory WorkoutProperty.fromJSON(Map<String, dynamic> json) {
-    if (json['propertyType'] == null) {
-      return WorkoutProperty.nullProperty();
-    }
     return WorkoutProperty(
-      propertyType: json['propertyType'],
-      helpText: json['helpText'],
+      propertyType: json['propertyType'] as String? ?? '',
+      helpText: json['helpText'] as String? ?? '',
     );
   }
 
@@ -124,6 +121,13 @@ class Workout {
     }
     return null;
   }
+
+  List<String> get countingHints => (properties ?? <WorkoutProperty>[])
+      .where((property) => property.propertyType != 'unilateral')
+      .map((property) => property.helpText.trim())
+      .where((text) => text.isNotEmpty)
+      .toSet()
+      .toList(growable: false);
 
   String get youtubeVideoId => youtubeVideoIdFromUrl(videoExplanationUrl);
 

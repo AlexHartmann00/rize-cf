@@ -137,7 +137,7 @@ Future<void> updateUserFCMToken(String? fcmToken) async {
 Future<void> uploadWorkoutToServer(ScheduledWorkout workout) async {
   final String userId = authServiceNotifier.value.currentUser?.uid ?? '';
   if (userId.isEmpty) return;
-  final DateTime now = workout.scheduledDay ?? DateTime.now();
+  final DateTime now = workout.scheduledDay ??= DateTime.now();
   final Map<String, dynamic> jsonData = workout.toJson()
     ..addAll(<String, dynamic>{
       'scheduledAt': Timestamp.fromDate(now),
@@ -172,9 +172,9 @@ Future<List<ScheduledWorkout>> loadWorkoutHistoryFromServer() async {
 
   // Share date fallbacks and malformed-record handling with the progress page.
   // A single legacy record must not suppress every milestone celebration.
-  return parseWorkoutHistory(snapshot.docs)
-      .map((entry) => entry.workout)
-      .toList(growable: false);
+  return parseWorkoutHistory(
+    snapshot.docs,
+  ).map((entry) => entry.workout).toList(growable: false);
 }
 
 Future<List<IntensityLevel>> loadIntensityLevels() async {

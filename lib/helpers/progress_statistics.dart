@@ -96,7 +96,7 @@ class ProgressStatistics {
           impactByDay[day] ??
           const DayImpact(score: 0, impactLevel: ImpactLevel.low);
       final double combinedScore =
-          (previousImpact.score + workout.effectiveImpactScore).clamp(0, 1);
+          previousImpact.score + workout.effectiveImpactScore;
       final DayImpact impact = DayImpact(
         score: combinedScore,
         impactLevel: workout.effectiveImpactLevel,

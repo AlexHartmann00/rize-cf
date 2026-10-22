@@ -37,6 +37,8 @@ class _WorkoutExecutionPageState extends State<WorkoutExecutionPage> {
   int _currentValue = 0;
   int _remainingSeconds = 0;
   int _firstSideValue = 0;
+  late final WorkoutStep _originalStep;
+  late final ScheduledWorkout _workoutBeforeCompletion;
 
   int get _actualValue =>
       _firstSideValue +
@@ -57,6 +59,13 @@ class _WorkoutExecutionPageState extends State<WorkoutExecutionPage> {
   void initState() {
     super.initState();
     _remainingSeconds = _target;
+    _workoutBeforeCompletion =
+        ScheduledWorkout.fromJson(widget.workout.toJson())
+          ..historyId = widget.workout.historyId
+          ..scheduledDay = widget.workout.scheduledDay ?? DateTime.now();
+    _originalStep = WorkoutStep.copy(
+      widget.workout.schedule[widget.scheduleEntryIndex],
+    );
   }
 
   @override
@@ -280,11 +289,8 @@ class _WorkoutExecutionPageState extends State<WorkoutExecutionPage> {
     });
 
     try {
-      final WorkoutStep currentStep =
-          widget.workout.schedule[widget.scheduleEntryIndex];
-
       widget.workout.schedule[widget.scheduleEntryIndex] = completedWorkoutStep(
-        currentStep,
+        _originalStep,
         actualValue: _actualValue,
         targetValue: _totalTarget,
       );
@@ -292,7 +298,11 @@ class _WorkoutExecutionPageState extends State<WorkoutExecutionPage> {
       await uploadWorkoutToServer(widget.workout);
       await _screenAwake.setActive(false);
       if (!mounted) return;
-      await celebrateReachedMilestones(context);
+      await celebrateReachedMilestones(
+        context,
+        completedWorkout: widget.workout,
+        previousWorkout: _workoutBeforeCompletion,
+      );
       if (!mounted) return;
       Navigator.of(context).pop(true);
     } catch (_) {

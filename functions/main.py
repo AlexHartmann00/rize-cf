@@ -362,7 +362,7 @@ def on_workout_written(
     if is_schedule_completed(schedule_before):
         return
 
-    number_of_units = len(schedule_after)
+    _, number_of_units, _ = schedule_sums(schedule_after)
     completion_ratio = workout_completion_ratio(after)
     if completion_ratio <= 0:
         return

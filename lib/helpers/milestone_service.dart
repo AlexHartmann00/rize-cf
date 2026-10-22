@@ -1,4 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:rize/helpers/auth_service.dart';
 import 'package:rize/firestore.dart';
 import 'package:rize/types/workout.dart';
@@ -351,31 +353,47 @@ const List<MilestoneDefinition> milestoneDefinitions = <MilestoneDefinition>[
   ),
 ];
 
-Future<List<MilestoneState>> evaluateMilestonesForCelebration() async {
+Future<List<MilestoneState>> evaluateMilestonesForCelebration({
+  List<ScheduledWorkout>? history,
+  ScheduledWorkout? completedWorkout,
+  ScheduledWorkout? previousWorkout,
+}) async {
   final String userId = authServiceNotifier.value.currentUser?.uid ?? '';
   if (userId.isEmpty) return const <MilestoneState>[];
-  final List<ScheduledWorkout> history = await loadWorkoutHistoryFromServer();
-  final List<MilestoneState> states = buildMilestoneStates(history);
+  final loadedHistory = history ?? await loadWorkoutHistoryFromServer();
+  final List<MilestoneState> states =
+      completedWorkout != null && previousWorkout != null
+      ? milestonesReachedByCompletion(
+          loadedHistory,
+          previousWorkout,
+          completedWorkout,
+        )
+      : buildMilestoneStates(loadedHistory);
   final CollectionReference<Map<String, dynamic>> collection = FirebaseFirestore
       .instance
       .collection('users')
       .doc(userId)
       .collection('milestones');
-  final QuerySnapshot<Map<String, dynamic>> snapshot = await collection.get();
-  final Map<String, Map<String, dynamic>> claimed =
-      <String, Map<String, dynamic>>{
-        for (final QueryDocumentSnapshot<Map<String, dynamic>> doc
-            in snapshot.docs)
-          doc.id: doc.data(),
-      };
-  final List<MilestoneState> celebrations =
-      milestonesRequiringCelebration(states, <String, bool>{
-        for (final MapEntry<String, Map<String, dynamic>> entry
-            in claimed.entries)
-          entry.key:
-              entry.value['celebrationPending'] == true ||
-              entry.value['celebratedAt'] == null,
-      });
+  final preferences = await SharedPreferences.getInstance();
+  final locallyShown =
+      preferences.getStringList('milestones_shown_$userId') ?? [];
+  final claimed = <String, bool>{};
+  try {
+    final snapshot = await collection.get();
+    for (final doc in snapshot.docs) {
+      final data = doc.data();
+      claimed[doc.id] =
+          data['celebrationPending'] == true || data['celebratedAt'] == null;
+    }
+  } on FirebaseException catch (error) {
+    // A separate achievements permission/read failure must not hide a reached
+    // milestone. Local acknowledgements keep retries from repeating popups.
+    debugPrint('Milestone acknowledgements unavailable: ${error.code}');
+  }
+  for (final id in locallyShown) {
+    claimed[id] = false;
+  }
+  final celebrations = milestonesRequiringCelebration(states, claimed);
   // A failed write must not suppress the popup. Persist the achievement only
   // after acknowledgement; workout history remains the source of truth.
   return celebrations;
@@ -388,6 +406,13 @@ Future<void> markMilestoneCelebrationsShown(
   final String userId = authServiceNotifier.value.currentUser?.uid ?? '';
   if (userId.isEmpty || shown.isEmpty) return;
 
+  final preferences = await SharedPreferences.getInstance();
+  final key = 'milestones_shown_$userId';
+  final ids = {
+    ...?preferences.getStringList(key),
+    ...shown.map((state) => state.storageId),
+  };
+  await preferences.setStringList(key, ids.toList());
   final CollectionReference<Map<String, dynamic>> collection = FirebaseFirestore
       .instance
       .collection('users')
@@ -407,7 +432,34 @@ Future<void> markMilestoneCelebrationsShown(
       'celebratedAt': FieldValue.serverTimestamp(),
     }, SetOptions(merge: true));
   }
-  await batch.commit();
+  try {
+    await batch.commit();
+  } on FirebaseException catch (error) {
+    debugPrint('Milestone acknowledgement retained locally: ${error.code}');
+  }
+}
+
+/// Compare the same history with just this session replaced. The just-saved
+/// session is authoritative even if the history query still has an older copy.
+List<MilestoneState> milestonesReachedByCompletion(
+  List<ScheduledWorkout> history,
+  ScheduledWorkout previous,
+  ScheduledWorkout completed,
+) {
+  final others = history
+      .where(
+        (workout) => completed.historyId != null
+            ? workout.historyId != completed.historyId
+            : !identical(workout, completed),
+      )
+      .toList();
+  final before = {
+    for (final state in buildMilestoneStates([...others, previous]))
+      state.storageId: state.reached,
+  };
+  return buildMilestoneStates([...others, completed])
+      .where((state) => state.reached && before[state.storageId] != true)
+      .toList(growable: false);
 }
 
 List<MilestoneState> milestonesRequiringCelebration(
