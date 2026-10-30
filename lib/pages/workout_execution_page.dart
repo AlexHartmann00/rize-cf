@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:rize/base_widgets.dart';
 import 'package:rize/audio_player.dart';
+import 'package:rize/helpers/workout_countdown_sound.dart';
 import 'package:rize/firestore.dart';
 import 'package:rize/globals.dart' as globals;
 import 'package:rize/helpers/rize_style_helpers.dart';
@@ -32,6 +33,20 @@ class WorkoutExecutionPage extends StatefulWidget {
 class _WorkoutExecutionPageState extends State<WorkoutExecutionPage> {
   WorkoutExecutionPhase _phase = WorkoutExecutionPhase.ready;
   WorkoutExecutionSide _currentSide = WorkoutExecutionSide.left;
+
+  final _countdownSound = WorkoutCountdownSound(
+    play: (position) => playTimerSound(position: position),
+    stop: stopTimerSound,
+  );
+
+  void _syncTimerSound() {
+    unawaited(
+      _countdownSound.update(
+        remainingSeconds: _remainingSeconds,
+        active: !_isDynamic && _phase == WorkoutExecutionPhase.active,
+      ),
+    );
+  }
 
   Timer? _timer;
   int _countdownValue = 3;
@@ -72,6 +87,7 @@ class _WorkoutExecutionPageState extends State<WorkoutExecutionPage> {
   @override
   void dispose() {
     _timer?.cancel();
+    unawaited(_countdownSound.update(remainingSeconds: 0, active: false));
     _screenAwake.dispose();
     super.dispose();
   }
@@ -114,6 +130,7 @@ class _WorkoutExecutionPageState extends State<WorkoutExecutionPage> {
 
   void _startStaticTimer() {
     _timer?.cancel();
+    _syncTimerSound();
 
     _timer = Timer.periodic(const Duration(seconds: 1), (Timer timer) async {
       if (!mounted || _phase != WorkoutExecutionPhase.active) return;
@@ -121,12 +138,13 @@ class _WorkoutExecutionPageState extends State<WorkoutExecutionPage> {
       if (_remainingSeconds <= 1) {
         timer.cancel();
         setState(() => _remainingSeconds = 0);
-        unawaited(playTimerSound());
+        _syncTimerSound();
         await _completeCurrentSubStep();
         return;
       }
 
       setState(() => _remainingSeconds -= 1);
+      _syncTimerSound();
 
       if (_remainingSeconds <= 3) {
         await HapticFeedback.mediumImpact();
@@ -144,6 +162,7 @@ class _WorkoutExecutionPageState extends State<WorkoutExecutionPage> {
 
   Future<void> _completeCurrentSubStep() async {
     _timer?.cancel();
+    unawaited(_countdownSound.update(remainingSeconds: 0, active: false));
     if (!mounted) return;
 
     if (_isUnilateral && _currentSide == WorkoutExecutionSide.left) {
@@ -178,6 +197,8 @@ class _WorkoutExecutionPageState extends State<WorkoutExecutionPage> {
   Future<void> _togglePause() async {
     if (_phase == WorkoutExecutionPhase.active) {
       setState(() => _phase = WorkoutExecutionPhase.paused);
+      _timer?.cancel();
+      _syncTimerSound();
       await HapticFeedback.lightImpact();
       return;
     }
@@ -194,6 +215,8 @@ class _WorkoutExecutionPageState extends State<WorkoutExecutionPage> {
     final previousPhase = _phase;
     if (_phase == WorkoutExecutionPhase.active) {
       setState(() => _phase = WorkoutExecutionPhase.paused);
+      _timer?.cancel();
+      _syncTimerSound();
     }
     final bool? confirm = await showModalBottomSheet<bool>(
       context: context,
@@ -266,6 +289,9 @@ class _WorkoutExecutionPageState extends State<WorkoutExecutionPage> {
       }
     } else if (mounted) {
       setState(() => _phase = previousPhase);
+      if (!_isDynamic && previousPhase == WorkoutExecutionPhase.active) {
+        _startStaticTimer();
+      }
     }
   }
 
