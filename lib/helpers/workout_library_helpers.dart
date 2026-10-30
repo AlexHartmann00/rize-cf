@@ -234,7 +234,12 @@ List<Workout> selectDiverseWorkouts({
   return List<Workout>.unmodifiable(result);
 }
 
-/// Draws workouts randomly and without replacement from the eligible pool.
+/// Draws a random first exercise, then prefers the least repeated muscles.
+///
+/// Uncovered focus muscles take priority. Otherwise, minimize the highest
+/// muscle usage, then total overlap, with random tie-breaking. This continues
+/// balancing the plan even after every available muscle has been covered.
+/// Filters can still make repeated muscle groups unavoidable.
 List<Workout> selectWorkoutsForSpin({
   required Iterable<Workout> workouts,
   required int count,
@@ -256,10 +261,49 @@ List<Workout> selectWorkoutsForSpin({
   if (candidates.isEmpty) return const <Workout>[];
 
   final List<Workout> selected = <Workout>[];
+  final Map<String, int> muscleUsage = <String, int>{};
   final int selectionCount = count.clamp(0, candidates.length);
   while (selected.length < selectionCount) {
-    final int randomIndex = random.nextInt(candidates.length);
-    selected.add(candidates.removeAt(randomIndex));
+    final List<int> bestIndices = <int>[];
+    int bestFocusCoverage = -1;
+    int bestPeakUsage = 0;
+    int bestOverlap = 0;
+    for (int index = 0; index < candidates.length; index++) {
+      final Set<String> muscles = candidates[index].usedMuscleGroups.toSet();
+      final int focusCoverage = muscles.where((group) {
+        return muscleFilter.contains(group) && !muscleUsage.containsKey(group);
+      }).length;
+      int peakUsage = 0;
+      int overlap = 0;
+      for (final String group in muscles) {
+        final int usage = muscleUsage[group] ?? 0;
+        peakUsage = max(peakUsage, usage);
+        overlap += usage;
+      }
+      // Preserve a fully random first draw, including for a single exercise.
+      final int focusPriority = selected.isEmpty ? 0 : focusCoverage;
+      if (bestIndices.isEmpty ||
+          focusPriority > bestFocusCoverage ||
+          (focusPriority == bestFocusCoverage &&
+              (peakUsage < bestPeakUsage ||
+                  (peakUsage == bestPeakUsage && overlap < bestOverlap)))) {
+        bestIndices.clear();
+        bestFocusCoverage = focusPriority;
+        bestPeakUsage = peakUsage;
+        bestOverlap = overlap;
+      }
+      if (focusPriority == bestFocusCoverage &&
+          peakUsage == bestPeakUsage &&
+          overlap == bestOverlap) {
+        bestIndices.add(index);
+      }
+    }
+    final int selectedIndex = bestIndices[random.nextInt(bestIndices.length)];
+    final Workout next = candidates.removeAt(selectedIndex);
+    selected.add(next);
+    for (final String group in next.usedMuscleGroups.toSet()) {
+      muscleUsage.update(group, (usage) => usage + 1, ifAbsent: () => 1);
+    }
   }
   return List<Workout>.unmodifiable(selected);
 }

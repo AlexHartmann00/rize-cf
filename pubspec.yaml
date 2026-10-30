@@ -82,6 +82,7 @@ flutter:
   # the material Icons class.
   uses-material-design: true
   assets:
+    - assets/sounds/timer_done.wav
     - assets/data/workouts.json
     - assets/brand/Logo transparent.png
     - assets/brand/rize_logo_r.png

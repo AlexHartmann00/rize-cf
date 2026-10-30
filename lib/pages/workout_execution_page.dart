@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:rize/base_widgets.dart';
+import 'package:rize/audio_player.dart';
 import 'package:rize/firestore.dart';
 import 'package:rize/globals.dart' as globals;
 import 'package:rize/helpers/rize_style_helpers.dart';
@@ -120,7 +121,7 @@ class _WorkoutExecutionPageState extends State<WorkoutExecutionPage> {
       if (_remainingSeconds <= 1) {
         timer.cancel();
         setState(() => _remainingSeconds = 0);
-        await SystemSound.play(SystemSoundType.alert);
+        unawaited(playTimerSound());
         await _completeCurrentSubStep();
         return;
       }
