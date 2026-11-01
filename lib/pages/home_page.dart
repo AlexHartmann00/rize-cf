@@ -576,7 +576,7 @@ class _HomePageSlotMachineWidgetState extends State<HomePageSlotMachineWidget> {
     return _pageShell(
       streak: streak,
       message: plan.progress >= 1
-          ? 'Workout geschafft. Stark – jetzt darfst Du den Erfolg wirken lassen.'
+          ? 'Zeit, den Erfolg wirken zu lassen.'
           : 'Training beendet. Jede Wiederholung zählt.',
       children: <Widget>[
         CompletedWorkoutHero(

@@ -59,7 +59,11 @@ class CoachFloHomeHeader extends StatelessWidget {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: <Widget>[
-                const Text('🔥', style: TextStyle(fontSize: 15)),
+                const Icon(
+                  Icons.local_fire_department_rounded,
+                  color: Color(0xFFFF9857),
+                  size: 18,
+                ),
                 const SizedBox(width: 6),
                 Text(
                   '$streak',
@@ -491,95 +495,219 @@ class _CompletedWorkoutHeroState extends State<CompletedWorkoutHero> {
 
   @override
   Widget build(BuildContext context) {
-    return RizeCard(
-      accentColor: rizeGreen,
+    final complete = widget.progress >= 1;
+    final impact = widget.workouts.fold<double>(
+      0,
+      (sum, workout) => sum + workout.effectiveImpactScore,
+    );
+    final progress = widget.progress.clamp(0.0, 1.0);
+    return Container(
+      key: const ValueKey('completed-workout-card'),
+      padding: const EdgeInsets.all(22),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFF163E62), Color(0xFF0C2847)],
+        ),
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: Colors.white.withValues(alpha: .13)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: .12),
+            blurRadius: 28,
+            offset: const Offset(0, 12),
+          ),
+        ],
+      ),
       child: Column(
-        children: <Widget>[
-          Container(
-            width: 78,
-            height: 78,
-            decoration: BoxDecoration(
-              color: rizeGreen.withOpacity(0.14),
-              shape: BoxShape.circle,
-              border: Border.all(color: rizeGreen.withOpacity(0.34), width: 2),
-            ),
-            child: const Icon(Icons.check_rounded, color: rizeGreen, size: 42),
-          ),
-          const SizedBox(height: 18),
-          Text(
-            widget.progress >= 1 ? 'Für heute geschafft!' : 'Training beendet!',
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-              color: Colors.white,
-              fontWeight: FontWeight.w900,
-            ),
-          ),
-          const SizedBox(height: 10),
-          Text(
-            _motivation,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              color: Colors.white70,
-              fontSize: 16,
-              height: 1.4,
-            ),
-          ),
-          const SizedBox(height: 7),
-          Text(
-            widget.workouts.map((workout) => workout.name).join(' · '),
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: Colors.white.withOpacity(0.66),
-              fontWeight: FontWeight.w700,
-              fontSize: 15,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            '${widget.workouts.length} ${widget.workouts.length == 1 ? 'Übung' : 'Übungen'} abgeschlossen',
-            style: const TextStyle(color: Colors.white70),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            '${(widget.progress * 100).round()} % des Tagesziels geschafft',
-            style: const TextStyle(color: Colors.white70),
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: rizeGreen.withValues(alpha: .13),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.check_rounded,
+                  color: rizeGreen,
+                  size: 26,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'TAGESAUFGABE',
+                      style: TextStyle(
+                        color: Colors.white54,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 1.4,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      complete ? 'Abgeschlossen' : 'Training beendet',
+                      style: const TextStyle(
+                        color: rizeGreen,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 22),
+          Text(
+            complete ? 'Für heute geschafft!' : 'Training beendet!',
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 27,
+              height: 1.12,
+              letterSpacing: -.8,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            _motivation,
+            style: const TextStyle(
+              color: Color(0xFFBCD0E0),
+              fontSize: 15,
+              height: 1.5,
+            ),
+          ),
+          const SizedBox(height: 24),
           Row(
-            children: <Widget>[
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Padding(
+                padding: EdgeInsets.only(top: 1),
+                child: Icon(
+                  Icons.fitness_center_rounded,
+                  color: Colors.white54,
+                  size: 17,
+                ),
+              ),
+              const SizedBox(width: 9),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '${widget.workouts.length} ${widget.workouts.length == 1 ? 'Übung' : 'Übungen'} abgeschlossen',
+                      style: const TextStyle(
+                        color: Color(0xFFDFEAF2),
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 5),
+                    Text(
+                      widget.workouts
+                          .map((workout) => workout.name)
+                          .join(' · '),
+                      style: const TextStyle(
+                        color: Color(0xFF94AEC5),
+                        fontSize: 12,
+                        height: 1.5,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
               Expanded(
                 child: _CompletedMetric(
                   icon: Icons.local_fire_department_rounded,
-                  value: '$widget.streak Tage',
+                  value:
+                      '${widget.streak} ${widget.streak == 1 ? 'Tag' : 'Tage'}',
                   label: 'Aktuelle Serie',
-                  color: const Color(0xFFFF9857),
+                  color: const Color(0xFFFFAD77),
                 ),
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: 12),
               Expanded(
                 child: _CompletedMetric(
                   icon: Icons.bolt_rounded,
-                  value: widget.workouts
-                      .fold<double>(
-                        0,
-                        (sum, workout) => sum + workout.effectiveImpactScore,
-                      )
-                      .toStringAsFixed(2),
+                  value: impact.toStringAsFixed(2),
                   label: 'Impact',
                   color: rizeCyan,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 16),
-          Text(
-            'Deine nächste Tagesaufgabe ist in $widget.nextWorkoutIn bereit.',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: Colors.white.withOpacity(0.52),
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
+          const SizedBox(height: 22),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: LinearProgressIndicator(
+              value: progress,
+              minHeight: 4,
+              color: rizeGreen,
+              backgroundColor: Colors.white.withValues(alpha: .08),
             ),
+          ),
+          const SizedBox(height: 9),
+          Text(
+            '${(widget.progress * 100).round()} % des Tagesziels geschafft',
+            style: const TextStyle(
+              color: Color(0xFF94AEC5),
+              fontSize: 11,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 20),
+            child: Divider(height: 1, color: Color(0xFF294761)),
+          ),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Padding(
+                padding: EdgeInsets.only(top: 2),
+                child: Icon(
+                  Icons.schedule_rounded,
+                  color: Color(0xFF94AEC5),
+                  size: 18,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Nächste Tagesaufgabe',
+                      style: TextStyle(color: Color(0xFF94AEC5), fontSize: 11),
+                    ),
+                    const SizedBox(height: 5),
+                    Text(
+                      'In ${widget.nextWorkoutIn} bereit.',
+                      style: const TextStyle(
+                        color: Color(0xFFDFEAF2),
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        height: 1.3,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -594,46 +722,52 @@ class _CompletedMetric extends StatelessWidget {
     required this.label,
     required this.color,
   });
-
   final IconData icon;
   final String value;
   final String label;
   final Color color;
 
   @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.12),
-        borderRadius: BorderRadius.circular(17),
-      ),
-      child: Column(
-        children: <Widget>[
-          Icon(icon, color: color, size: 21),
-          const SizedBox(height: 7),
-          Text(
-            value,
-            style: const TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.w900,
-              fontSize: 16,
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.all(14),
+    decoration: BoxDecoration(
+      color: Colors.white.withValues(alpha: .045),
+      borderRadius: BorderRadius.circular(17),
+      border: Border.all(color: Colors.white.withValues(alpha: .045)),
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(icon, color: color, size: 16),
+            const SizedBox(width: 6),
+            Expanded(
+              child: Text(
+                label,
+                style: const TextStyle(
+                  color: Color(0xFF94AEC5),
+                  fontSize: 10,
+                  height: 1.3,
+                ),
+              ),
             ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        Text(
+          value,
+          style: TextStyle(
+            color: color,
+            fontSize: 23,
+            fontWeight: FontWeight.w800,
+            height: 1.1,
+            letterSpacing: -.5,
           ),
-          const SizedBox(height: 2),
-          Text(
-            label,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: Colors.white.withOpacity(0.47),
-              fontSize: 10,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+        ),
+      ],
+    ),
+  );
 }
 
 class HomeLoadingView extends StatelessWidget {
