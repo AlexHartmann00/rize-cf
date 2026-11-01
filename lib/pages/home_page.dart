@@ -1,3 +1,8 @@
+import 'dart:async';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:rize/types/user.dart';
+import 'package:rize/helpers/workout_celebrations.dart';
+import 'package:rize/widgets/progress_celebration.dart';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
@@ -36,6 +41,11 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
+  StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>?
+  _levelSubscription;
+  String? _levelUserId;
+  IntensityLevel? _observedLevel;
+  int _pendingLevelCelebrations = 0;
   bool _loadingUser = true;
   Object? _userLoadError;
   int _dataRevision = 0;
@@ -51,6 +61,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
 
   @override
   void dispose() {
+    _levelSubscription?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
@@ -113,15 +124,14 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
         globals.dailyWorkoutPlan = refreshed[1] as DailyWorkoutPlan?;
       }
 
-      userData.intensityLevel = levels.firstWhere(
-        (IntensityLevel level) =>
-            userData.intensityScore >= level.minScore &&
-            userData.intensityScore <= level.maxScore,
-        orElse: IntensityLevel.unknown,
+      userData.intensityLevel = intensityLevelForScore(
+        levels,
+        userData.intensityScore,
       );
 
       globals.userData = userData;
       globals.intensityLevels = levels;
+      await _watchLevelChanges(user.uid, userData.intensityLevel);
       if (reloadAppData) _dataRevision++;
     } catch (error) {
       _userLoadError = error;
@@ -135,6 +145,72 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
         }
       }
     }
+  }
+
+  Future<void> _watchLevelChanges(String userId, IntensityLevel initial) async {
+    if (_levelUserId == userId) return;
+    _levelSubscription?.cancel();
+    _levelUserId = userId;
+    final preferences = await SharedPreferences.getInstance();
+    if (!mounted || _levelUserId != userId) return;
+    final levelKey = 'last_observed_level_$userId';
+    final storedRank = preferences.getInt(levelKey);
+    _observedLevel =
+        globals.intensityLevels
+            .where((level) => level.level == storedRank)
+            .firstOrNull ??
+        initial;
+    _pendingLevelCelebrations = 0;
+    if (storedRank == null) await preferences.setInt(levelKey, initial.level);
+    _levelSubscription = FirebaseFirestore.instance
+        .collection('users')
+        .doc(userId)
+        .snapshots()
+        .listen(
+          (snapshot) {
+            if (!mounted || _levelUserId != userId || snapshot.data() == null)
+              return;
+            final userData = UserData.fromJson(snapshot.data()!);
+            final next = intensityLevelForScore(
+              globals.intensityLevels,
+              userData.intensityScore,
+            );
+            final previous = _observedLevel;
+            _observedLevel = next;
+            userData.intensityLevel = next;
+            setState(() => globals.userData = userData);
+            final sourceWorkoutId = snapshot
+                .data()!['intensityScoreSourceWorkoutId'];
+            if (isEarnedLevelUpgrade(
+              previous,
+              next,
+              sourceWorkoutId is String ? sourceWorkoutId : null,
+            )) {
+              _pendingLevelCelebrations++;
+              WidgetsBinding.instance.addPostFrameCallback((_) async {
+                try {
+                  if (mounted) {
+                    await showProgressCelebration(
+                      context,
+                      kind: ProgressCelebrationKind.levelUp,
+                      previousLevel: previous!.label,
+                      nextLevel: next.label,
+                      storageKey: 'level_${next.level}',
+                    );
+                    await preferences.setInt(levelKey, next.level);
+                  }
+                } finally {
+                  _pendingLevelCelebrations--;
+                }
+              });
+            } else if (_pendingLevelCelebrations == 0) {
+              unawaited(preferences.setInt(levelKey, next.level));
+            }
+          },
+          onError: (Object error) {
+            debugPrint('Level updates unavailable: $error');
+          },
+        );
   }
 
   Future<void> _openQuestionnaireWhenRequired() =>

@@ -3,6 +3,7 @@ import 'package:rize/globals.dart' as globals;
 import 'package:rize/helpers/milestone_service.dart';
 import 'package:rize/helpers/rize_style_helpers.dart';
 import 'package:rize/types/workout.dart';
+import 'package:rize/widgets/progress_celebration.dart';
 
 final _celebrations = MilestoneCelebrationCoordinator();
 
@@ -33,19 +34,22 @@ class MilestoneCelebrationCoordinator {
     required Future<List<MilestoneState>> Function() load,
     required Future<void> Function(Iterable<MilestoneState>) markShown,
   }) {
-    _pending = _pending.then((_) async {
-      if (!context.mounted || ModalRoute.of(context)?.isCurrent != true) return;
-      try {
-        final milestones = await load();
+    _pending = _pending.then(
+      (_) => queueWorkoutCelebration(context, () async {
         if (!context.mounted || ModalRoute.of(context)?.isCurrent != true)
           return;
-        final shown = await showMilestoneCelebration(context, milestones);
-        if (shown) await markShown(milestones);
-      } catch (error) {
-        // Keep unacknowledged celebrations available for the next check.
-        debugPrint('Milestone celebration failed: $error');
-      }
-    });
+        try {
+          final milestones = await load();
+          if (!context.mounted || ModalRoute.of(context)?.isCurrent != true)
+            return;
+          final shown = await showMilestoneCelebration(context, milestones);
+          if (shown) await markShown(milestones);
+        } catch (error) {
+          // Keep unacknowledged celebrations available for the next check.
+          debugPrint('Milestone celebration failed: $error');
+        }
+      }),
+    );
     return _pending;
   }
 }
@@ -60,7 +64,11 @@ Future<bool> showMilestoneCelebration(
     isScrollControlled: true,
     isDismissible: false,
     enableDrag: false,
-    backgroundColor: Colors.transparent,
+    backgroundColor: const Color(0xFF102F55),
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+    ),
+    clipBehavior: Clip.antiAlias,
     builder: (_) => _MilestoneCelebrationSheet(milestones: milestones),
   );
   return shown == true;

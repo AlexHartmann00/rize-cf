@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:rize/helpers/rize_style_helpers.dart';
 import 'package:rize/types/workout.dart';
 import 'package:rize/widgets/rize_card.dart';
+import 'package:rize/helpers/workout_celebrations.dart';
 
 class CoachFloHomeHeader extends StatelessWidget {
   const CoachFloHomeHeader({
@@ -441,7 +442,9 @@ class DailyWorkoutCard extends StatelessWidget {
   }
 }
 
-class CompletedWorkoutHero extends StatelessWidget {
+String? _lastCompletionMotivation;
+
+class CompletedWorkoutHero extends StatefulWidget {
   const CompletedWorkoutHero({
     super.key,
     required this.workouts,
@@ -454,6 +457,37 @@ class CompletedWorkoutHero extends StatelessWidget {
   final int streak;
   final double progress;
   final String nextWorkoutIn;
+
+  @override
+  State<CompletedWorkoutHero> createState() => _CompletedWorkoutHeroState();
+}
+
+class _CompletedWorkoutHeroState extends State<CompletedWorkoutHero> {
+  late String _motivation;
+
+  void _chooseMotivation() {
+    _motivation = completionMotivation(previous: _lastCompletionMotivation);
+    _lastCompletionMotivation = _motivation;
+  }
+
+  String _sessionKey(CompletedWorkoutHero value) => value.workouts
+      .map(
+        (workout) =>
+            '${workout.historyId ?? workout.id}:${workout.scheduledDay}',
+      )
+      .join('|');
+
+  @override
+  void initState() {
+    super.initState();
+    _chooseMotivation();
+  }
+
+  @override
+  void didUpdateWidget(covariant CompletedWorkoutHero oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (_sessionKey(oldWidget) != _sessionKey(widget)) _chooseMotivation();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -473,16 +507,26 @@ class CompletedWorkoutHero extends StatelessWidget {
           ),
           const SizedBox(height: 18),
           Text(
-            progress >= 1 ? 'Für heute geschafft!' : 'Training beendet!',
+            widget.progress >= 1 ? 'Für heute geschafft!' : 'Training beendet!',
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.headlineSmall?.copyWith(
               color: Colors.white,
               fontWeight: FontWeight.w900,
             ),
           ),
+          const SizedBox(height: 10),
+          Text(
+            _motivation,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              color: Colors.white70,
+              fontSize: 16,
+              height: 1.4,
+            ),
+          ),
           const SizedBox(height: 7),
           Text(
-            workouts.map((workout) => workout.name).join(' · '),
+            widget.workouts.map((workout) => workout.name).join(' · '),
             textAlign: TextAlign.center,
             style: TextStyle(
               color: Colors.white.withOpacity(0.66),
@@ -492,12 +536,12 @@ class CompletedWorkoutHero extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            '${workouts.length} ${workouts.length == 1 ? 'Übung' : 'Übungen'} abgeschlossen',
+            '${widget.workouts.length} ${widget.workouts.length == 1 ? 'Übung' : 'Übungen'} abgeschlossen',
             style: const TextStyle(color: Colors.white70),
           ),
           const SizedBox(height: 8),
           Text(
-            '${(progress * 100).round()} % des Tagesziels geschafft',
+            '${(widget.progress * 100).round()} % des Tagesziels geschafft',
             style: const TextStyle(color: Colors.white70),
           ),
           const SizedBox(height: 22),
@@ -506,7 +550,7 @@ class CompletedWorkoutHero extends StatelessWidget {
               Expanded(
                 child: _CompletedMetric(
                   icon: Icons.local_fire_department_rounded,
-                  value: '$streak Tage',
+                  value: '$widget.streak Tage',
                   label: 'Aktuelle Serie',
                   color: const Color(0xFFFF9857),
                 ),
@@ -515,12 +559,11 @@ class CompletedWorkoutHero extends StatelessWidget {
               Expanded(
                 child: _CompletedMetric(
                   icon: Icons.bolt_rounded,
-                  value: workouts
+                  value: widget.workouts
                       .fold<double>(
                         0,
                         (sum, workout) => sum + workout.effectiveImpactScore,
                       )
-                      .clamp(0, 1)
                       .toStringAsFixed(2),
                   label: 'Impact',
                   color: rizeCyan,
@@ -530,7 +573,7 @@ class CompletedWorkoutHero extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           Text(
-            'Deine nächste Tagesaufgabe ist in $nextWorkoutIn bereit.',
+            'Deine nächste Tagesaufgabe ist in $widget.nextWorkoutIn bereit.',
             textAlign: TextAlign.center,
             style: TextStyle(
               color: Colors.white.withOpacity(0.52),

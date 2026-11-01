@@ -6,7 +6,6 @@ import 'package:rize/base_widgets.dart';
 import 'package:rize/audio_player.dart';
 import 'package:rize/helpers/workout_countdown_sound.dart';
 import 'package:rize/firestore.dart';
-import 'package:rize/globals.dart' as globals;
 import 'package:rize/helpers/rize_style_helpers.dart';
 import 'package:rize/helpers/workout_execution_helpers.dart';
 import 'package:rize/helpers/screen_awake_service.dart';
@@ -14,6 +13,8 @@ import 'package:rize/types/workout.dart';
 import 'package:rize/widgets/rize_card.dart';
 import 'package:rize/widgets/workout_execution_widgets.dart';
 import 'package:rize/widgets/milestone_widgets.dart';
+import 'package:rize/widgets/progress_celebration.dart';
+import 'package:rize/helpers/workout_celebrations.dart';
 import 'package:rize/youtube.dart';
 
 class WorkoutExecutionPage extends StatefulWidget {
@@ -325,8 +326,30 @@ class _WorkoutExecutionPageState extends State<WorkoutExecutionPage> {
       await uploadWorkoutToServer(widget.workout);
       await _screenAwake.setActive(false);
       if (!mounted) return;
+      List<ScheduledWorkout>? history;
+      try {
+        history = await loadWorkoutHistoryFromServer();
+        final inactiveDays = comebackInactiveDays(
+          history,
+          _workoutBeforeCompletion,
+          widget.workout,
+        );
+        if (inactiveDays != null && mounted) {
+          await showProgressCelebration(
+            context,
+            kind: ProgressCelebrationKind.comeback,
+            inactiveDays: inactiveDays,
+            storageKey:
+                'comeback_${widget.workout.scheduledDay?.toIso8601String().substring(0, 10)}',
+          );
+        }
+      } catch (error) {
+        debugPrint('Comeback check failed: $error');
+      }
+      if (!mounted) return;
       await celebrateReachedMilestones(
         context,
+        history: history,
         completedWorkout: widget.workout,
         previousWorkout: _workoutBeforeCompletion,
       );
