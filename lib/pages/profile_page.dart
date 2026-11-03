@@ -21,7 +21,7 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Future<void> _openPrivacyPolicy() async {
-    await _openExternalUri(Uri.parse('https://www.coach-flo.de/datenschutz'));
+    await _openExternalUri(Uri.parse('https://coach-flo.de/datenschutz-rize'));
   }
 
   Future<void> _requestAccountDeletion() async {
