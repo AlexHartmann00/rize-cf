@@ -325,7 +325,7 @@ class WorkoutDetailsBottomAction extends StatelessWidget {
           canStart ? Icons.play_arrow_rounded : Icons.info_outline_rounded,
         ),
         label: Text(
-          canStart ? 'WORKOUT STARTEN' : 'AUS DER TAGESPLANUNG STARTEN',
+          canStart ? 'IMPULS STARTEN' : 'AUS DER TAGESPLANUNG STARTEN',
           style: const TextStyle(
             fontWeight: FontWeight.w900,
             letterSpacing: 0.25,

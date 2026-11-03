@@ -102,6 +102,56 @@ void main() {
     });
   }
 
+  testWidgets(
+    'greeting has no subtitle and a partial impulse has one completion headline',
+    (tester) async {
+      final workout = completed('V-Up');
+      workout.schedule.single.actualValue = 5;
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: SingleChildScrollView(
+              child: Column(
+                children: [
+                  const CoachFloHomeHeader(
+                    greeting: 'Guten Morgen, Flo',
+                    streak: 0,
+                  ),
+                  CompletedWorkoutHero(
+                    workouts: [workout],
+                    streak: 0,
+                    nextWorkoutIn: '13 Std. 12 Min.',
+                    progress: .5,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+      final header = find.byType(CoachFloHomeHeader);
+      final headerTexts = tester
+          .widgetList<Text>(
+            find.descendant(of: header, matching: find.byType(Text)),
+          )
+          .map((text) => text.data)
+          .toList();
+      expect(headerTexts, ['Guten Morgen, Flo', '0']);
+      expect(find.text('Impuls erledigt'), findsOneWidget);
+      expect(find.text('TAGESAUFGABE'), findsOneWidget);
+      expect(find.text('50 % des Tagesziels geschafft'), findsOneWidget);
+      for (final old in [
+        'Training beendet',
+        'Training beendet!',
+        'Workout geschafft',
+        'Abgeschlossen',
+      ]) {
+        expect(find.text(old), findsNothing);
+      }
+      expect(tester.takeException(), isNull);
+    },
+  );
+
   testWidgets('render completed home preview', (tester) async {
     final path = Platform.environment['RIZE_COMPLETED_PREVIEW'];
     if (path == null) return;
@@ -160,7 +210,6 @@ void main() {
                     children: [
                       const CoachFloHomeHeader(
                         greeting: 'Guten Morgen, Alex',
-                        message: 'Zeit, den Erfolg wirken zu lassen.',
                         streak: 1,
                       ),
                       const SizedBox(height: 22),

@@ -287,7 +287,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
 
     if (_userLoadError != null) {
       return HomeErrorView(
-        message: 'Deine Trainingsdaten konnten nicht geladen werden.',
+        message: 'Deine Tagesaufgaben konnten nicht geladen werden.',
         onRetry: _initializeUser,
       );
     }
@@ -390,11 +390,7 @@ class _HomePageSlotMachineWidgetState extends State<HomePageSlotMachineWidget> {
     );
   }
 
-  Widget _pageShell({
-    required List<Widget> children,
-    int? streak,
-    String? message,
-  }) {
+  Widget _pageShell({required List<Widget> children, int? streak}) {
     final DateTime now = DateTime.now();
 
     return SafeArea(
@@ -413,7 +409,6 @@ class _HomePageSlotMachineWidgetState extends State<HomePageSlotMachineWidget> {
                     authServiceNotifier.value.currentUser?.displayName,
                     now,
                   ),
-                  message: message ?? dailyMotivation(now),
                   streak: streak,
                 ),
                 const SizedBox(height: 18),
@@ -575,9 +570,6 @@ class _HomePageSlotMachineWidgetState extends State<HomePageSlotMachineWidget> {
 
     return _pageShell(
       streak: streak,
-      message: plan.progress >= 1
-          ? 'Zeit, den Erfolg wirken zu lassen.'
-          : 'Training beendet. Jede Wiederholung zählt.',
       children: <Widget>[
         CompletedWorkoutHero(
           workouts: plan.workouts,
@@ -995,7 +987,7 @@ class _DailySpinPanel extends StatelessWidget {
                   )
                 : const Icon(Icons.cyclone_rounded),
             label: Text(
-              isSpinning ? 'DEIN WORKOUT ENTSTEHT …' : 'JETZT DREHEN',
+              isSpinning ? 'DEINE TAGESAUFGABE ENTSTEHT …' : 'JETZT DREHEN',
               style: const TextStyle(
                 fontWeight: FontWeight.w900,
                 letterSpacing: 0.3,

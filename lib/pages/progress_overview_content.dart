@@ -162,7 +162,7 @@ class _ProgressDashboard extends StatelessWidget {
               ),
               const SizedBox(height: 6),
               Text(
-                'Deine Entwicklung, Aktivität und Trainingsleistung.',
+                'Deine Entwicklung, Aktivität und erledigten Impulse.',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   color: Colors.white.withOpacity(0.64),
                   height: 1.35,
@@ -346,10 +346,17 @@ class _WorkoutHistoryCalendarState extends State<WorkoutHistoryCalendar> {
 
   @override
   Widget build(BuildContext context) {
-    final DateTime currentMonth = DateTime(widget.today.year, widget.today.month);
+    final DateTime currentMonth = DateTime(
+      widget.today.year,
+      widget.today.month,
+    );
     return ActivityCalendarCard(
       month: _month,
-      daySummaries: _calendarSummaries(widget.history, _month, widget.scoreDeltas),
+      daySummaries: _calendarSummaries(
+        widget.history,
+        _month,
+        widget.scoreDeltas,
+      ),
       onPreviousMonth: () => _changeMonth(-1),
       onNextMonth: _month.isBefore(currentMonth) ? () => _changeMonth(1) : null,
     );

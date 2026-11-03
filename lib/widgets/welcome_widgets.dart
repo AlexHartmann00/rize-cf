@@ -84,7 +84,7 @@ class WelcomeIntroCard extends StatelessWidget {
           const WelcomeBenefit(
             icon: Icons.auto_awesome_rounded,
             title: 'Täglich neu',
-            text: 'Dein Workout wird passend zu Deinem Level ausgewählt.',
+            text: 'Deine Tagesaufgabe wird passend zu Deinem Level ausgewählt.',
           ),
           const SizedBox(height: 14),
           const WelcomeBenefit(

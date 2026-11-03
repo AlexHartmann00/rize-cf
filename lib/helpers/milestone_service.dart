@@ -96,7 +96,7 @@ class MilestoneState {
       case MilestoneMetric.activeDays:
         return 'Jeder aktive Tag ist ein sichtbares Kreuz im Kalender: Du warst da.';
       case MilestoneMetric.muscleGroups:
-        return 'Je mehr Gruppen Du erreichst, desto runder fühlt sich Dein Training im Alltag an.';
+        return 'Je mehr Muskelgruppen Du bewegst, desto vielseitiger werden Deine Impulse.';
       case MilestoneMetric.rounds:
         return 'Runden sind kleine abgeschlossene Siege – kurz, konkret und ehrlich.';
       case MilestoneMetric.workouts:
@@ -122,7 +122,7 @@ const List<MilestoneDefinition> milestoneDefinitions = <MilestoneDefinition>[
     target: 5,
     emoji: '⭐',
     title: 'Du bleibst dran',
-    message: 'Fünf Workouts – aus einem Start wird eine Gewohnheit.',
+    message: 'Fünf Impulse – aus einem Start wird eine Gewohnheit.',
   ),
   MilestoneDefinition(
     id: 'workouts_25',
@@ -140,7 +140,7 @@ const List<MilestoneDefinition> milestoneDefinitions = <MilestoneDefinition>[
     target: 75,
     emoji: '🏆',
     title: 'RIZE Veteran',
-    message: '75 Workouts. Das ist keine Phase mehr – das bist Du.',
+    message: '75 Impulse. Das ist keine Phase mehr – das bist Du.',
   ),
   MilestoneDefinition(
     id: 'streak_3',
@@ -320,7 +320,7 @@ const List<MilestoneDefinition> milestoneDefinitions = <MilestoneDefinition>[
     metric: MilestoneMetric.workouts,
     target: 20,
     emoji: '🏆',
-    title: '20 Workouts im Monat',
+    title: '20 Impulse im Monat',
     message: 'Du hast diesen Monat außergewöhnlich konsequent trainiert.',
   ),
   MilestoneDefinition(
@@ -522,7 +522,7 @@ const List<MilestoneDefinition> milestoneDefinitions = <MilestoneDefinition>[
     target: 10,
     emoji: '⭐',
     title: 'Zehnmal für Dich',
-    message: 'Zehn Workouts. Du bist drangeblieben.',
+    message: 'Zehn Impulse. Du bist drangeblieben.',
   ),
   MilestoneDefinition(
     id: 'workouts_50',
@@ -531,7 +531,7 @@ const List<MilestoneDefinition> milestoneDefinitions = <MilestoneDefinition>[
     target: 50,
     emoji: '🏅',
     title: '50 starke Momente',
-    message: '50 Workouts. Deine Routine trägt Dich.',
+    message: '50 Impulse. Deine Routine trägt Dich.',
   ),
 ];
 

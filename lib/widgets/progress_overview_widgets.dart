@@ -384,7 +384,7 @@ class ProgressChartCard extends StatelessWidget {
               children: <Widget>[
                 _LegendDot(label: 'RIZE-Score', color: rizeCyan),
                 const SizedBox(width: 14),
-                _LegendDot(label: 'Workout-Impact', color: impactColor),
+                _LegendDot(label: 'Impuls-Impact', color: impactColor),
                 const Spacer(),
                 Text(
                   'Letzter Impact ${formatScore(lastImpact!.score)}',

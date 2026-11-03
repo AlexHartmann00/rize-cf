@@ -5,15 +5,9 @@ import 'package:rize/widgets/rize_card.dart';
 import 'package:rize/helpers/workout_celebrations.dart';
 
 class CoachFloHomeHeader extends StatelessWidget {
-  const CoachFloHomeHeader({
-    super.key,
-    required this.greeting,
-    required this.message,
-    this.streak,
-  });
+  const CoachFloHomeHeader({super.key, required this.greeting, this.streak});
 
   final String greeting;
-  final String message;
   final int? streak;
 
   @override
@@ -31,15 +25,6 @@ class CoachFloHomeHeader extends StatelessWidget {
                   color: Colors.white,
                   fontWeight: FontWeight.w900,
                   letterSpacing: -0.6,
-                ),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                message,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Colors.white.withOpacity(0.64),
-                  height: 1.45,
-                  fontWeight: FontWeight.w500,
                 ),
               ),
             ],
@@ -120,7 +105,7 @@ class CoachFloManifestoCard extends StatelessWidget {
           ),
           const SizedBox(height: 10),
           Text(
-            'Dein Training passt sich Deinem Niveau und Deinem Alltag an. '
+            'Deine Tagesaufgabe passt sich Deinem Niveau und Deinem Alltag an. '
             'Heute zählt nicht perfekt – heute zählt gemacht.',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
               color: Colors.white.withOpacity(0.68),
@@ -324,7 +309,7 @@ class DailyWorkoutCard extends StatelessWidget {
     required this.onOpenTechnique,
     required this.schedule,
     required this.muscleVisualization,
-    this.eyebrow = 'DEIN WORKOUT HEUTE',
+    this.eyebrow = 'DEINE TAGESAUFGABE HEUTE',
     this.onReset,
   });
 
@@ -433,7 +418,7 @@ class DailyWorkoutCard extends StatelessWidget {
               if (onReset != null) ...<Widget>[
                 const SizedBox(width: 10),
                 IconButton.filledTonal(
-                  tooltip: 'Workout neu wählen',
+                  tooltip: 'Impuls neu wählen',
                   onPressed: onReset,
                   icon: const Icon(Icons.refresh_rounded),
                 ),
@@ -495,7 +480,6 @@ class _CompletedWorkoutHeroState extends State<CompletedWorkoutHero> {
 
   @override
   Widget build(BuildContext context) {
-    final complete = widget.progress >= 1;
     final impact = widget.workouts.fold<double>(
       0,
       (sum, workout) => sum + workout.effectiveImpactScore,
@@ -546,19 +530,10 @@ class _CompletedWorkoutHeroState extends State<CompletedWorkoutHero> {
                     const Text(
                       'TAGESAUFGABE',
                       style: TextStyle(
-                        color: Colors.white54,
+                        color: rizeGreen,
                         fontSize: 10,
                         fontWeight: FontWeight.w700,
                         letterSpacing: 1.4,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      complete ? 'Abgeschlossen' : 'Training beendet',
-                      style: const TextStyle(
-                        color: rizeGreen,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
                       ),
                     ),
                   ],
@@ -568,7 +543,7 @@ class _CompletedWorkoutHeroState extends State<CompletedWorkoutHero> {
           ),
           const SizedBox(height: 22),
           Text(
-            complete ? 'Für heute geschafft!' : 'Training beendet!',
+            'Impuls erledigt',
             style: const TextStyle(
               color: Colors.white,
               fontSize: 27,

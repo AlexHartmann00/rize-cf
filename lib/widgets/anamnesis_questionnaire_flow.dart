@@ -147,7 +147,7 @@ class _AnamnesisQuestionnaireFlowState
                             ),
                           ),
                           Text(
-                            'Vier kurze Fragen für dein Training.',
+                            'Vier kurze Fragen für deine Tagesaufgaben.',
                             style: TextStyle(
                               color: Colors.white54,
                               fontSize: 11,
@@ -348,7 +348,7 @@ class _AnamnesisQuestionnaireFlowState
                     _saving
                         ? 'WIRD GESPEICHERT …'
                         : _isLast
-                        ? 'MEIN TRAINING STARTEN'
+                        ? 'MEINE TAGESAUFGABE STARTEN'
                         : 'WEITER',
                     style: const TextStyle(
                       fontWeight: FontWeight.w900,
@@ -447,7 +447,7 @@ class _WelcomeIntro extends StatelessWidget {
                   ),
                   const SizedBox(height: 14),
                   const Text(
-                    'Schön, dass du da bist! Ich freue mich darauf, dich bei deinem Training zu begleiten.',
+                    'Schön, dass du da bist! Ich freue mich darauf, dich mit Deinen täglichen Impulsen zu begleiten.',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color: Colors.white70,

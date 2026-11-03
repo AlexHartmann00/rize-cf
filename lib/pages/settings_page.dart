@@ -263,7 +263,7 @@ class _SettingsPageState extends State<SettingsPage> {
                               ),
                               SizedBox(height: 4),
                               Text(
-                                'Wenn Deine Serie läuft und heute noch kein Workout erledigt ist, erinnern wir Dich automatisch.',
+                                'Wenn Deine Serie läuft und heute noch keine Tagesaufgabe erledigt ist, erinnern wir Dich automatisch.',
                                 style: TextStyle(
                                   color: Colors.white60,
                                   fontSize: 12,

@@ -30,7 +30,7 @@ class WorkoutLibrarySearchField extends StatelessWidget {
       style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
       cursorColor: colors.primary,
       decoration: InputDecoration(
-        hintText: 'Workouts oder Muskelgruppen suchen',
+        hintText: 'Impulse oder Muskelgruppen suchen',
         hintStyle: TextStyle(
           color: Colors.white.withOpacity(0.52),
           fontWeight: FontWeight.w600,
@@ -91,7 +91,7 @@ class WorkoutLibraryHeader extends StatelessWidget {
 
     final String countLabel = isSearching
         ? '$visibleWorkoutCount von $totalWorkoutCount gefunden'
-        : '$totalWorkoutCount Workouts';
+        : '$totalWorkoutCount Impulse';
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.end,
@@ -101,7 +101,7 @@ class WorkoutLibraryHeader extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
               Text(
-                'Workout-Bibliothek',
+                'Impulsbibliothek',
                 style: textTheme.headlineSmall?.copyWith(
                   color: Colors.white,
                   fontWeight: FontWeight.w900,
@@ -110,7 +110,7 @@ class WorkoutLibraryHeader extends StatelessWidget {
               ),
               const SizedBox(height: 4),
               Text(
-                'Finde die passende Übung für Dein Training.',
+                'Finde den passenden Impuls für Deine Tagesaufgabe.',
                 style: textTheme.bodyMedium?.copyWith(
                   color: Colors.white.withOpacity(0.62),
                   fontWeight: FontWeight.w500,
@@ -178,7 +178,7 @@ class WorkoutLibraryEmptyState extends StatelessWidget {
               ),
               const SizedBox(height: 20),
               Text(
-                'Keine Workouts gefunden',
+                'Keine Impulse gefunden',
                 textAlign: TextAlign.center,
                 style: textTheme.titleLarge?.copyWith(
                   color: Colors.white,
@@ -615,7 +615,7 @@ class _WorkoutImpactSection extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
                 Text(
-                  'Trainingsintensität',
+                  'Intensität',
                   style: TextStyle(
                     color: Colors.white.withOpacity(0.52),
                     fontSize: 12,

@@ -168,7 +168,7 @@ void main() {
       ),
     );
     expect(find.text('10 % des Tagesziels geschafft'), findsOneWidget);
-    expect(find.text('Training beendet!'), findsOneWidget);
+    expect(find.text('Impuls erledigt'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
   testWidgets('completed plan shows every exercise and combined impact', (

@@ -268,7 +268,7 @@ def build_spin_reminder_message(
         notification=messaging.Notification(
             title="Zeit für Deine Tagesaufgabe",
             body=(
-                "Dein heutiges Training wartet auf Dich. "
+                "Deine heutige Tagesaufgabe wartet auf Dich. "
                 "Ein kurzer Impuls reicht."
             ),
         ),

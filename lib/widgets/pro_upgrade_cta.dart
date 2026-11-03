@@ -272,7 +272,7 @@ class _ProUpgradeSheetState extends State<_ProUpgradeSheet> {
               ),
               const SizedBox(height: 18),
               const Text(
-                'Dein Training. Ohne Limits.',
+                'Deine Impulse. Ohne Limits.',
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 25,
@@ -332,7 +332,7 @@ class _ProUpgradeSheetState extends State<_ProUpgradeSheet> {
               ),
               const _Benefit(
                 icon: Icons.lock_open_rounded,
-                text: 'Vollständige Trainingsbibliothek',
+                text: 'Vollständige Impulsbibliothek',
               ),
               const _Benefit(
                 icon: Icons.auto_awesome_rounded,

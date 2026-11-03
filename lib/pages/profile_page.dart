@@ -32,7 +32,7 @@ class _ProfilePageState extends State<ProfilePage> {
         content: const Text(
           'Wir öffnen eine vorbereitete E-Mail an Coach Flo. Nach Deiner '
           'Bestätigung werden Dein RIZE-Konto und die zugehörigen '
-          'Trainingsdaten gelöscht. Ein aktives RIZE-Pro-Abo wird dabei '
+          'Daten zu Deinen Tagesaufgaben gelöscht. Ein aktives RIZE-Pro-Abo wird dabei '
           'ebenfalls beendet.',
         ),
         actions: <Widget>[

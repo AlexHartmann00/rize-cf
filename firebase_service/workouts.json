@@ -12,7 +12,7 @@
           "helpText": null
         }
       ],
-      "impactScore": 0.1,
+      "impactScore": 0.01,
       "muscleGroups": [
         "Chest",
         "Front Shoulders",
@@ -36,7 +36,7 @@
           "helpText": null
         }
       ],
-      "impactScore": 0.11,
+      "impactScore": 0.02,
       "muscleGroups": [
         "Calves"
       ],
@@ -57,7 +57,7 @@
           "helpText": null
         }
       ],
-      "impactScore": 0.12,
+      "impactScore": 0.03,
       "muscleGroups": [
         "Upper Back",
         "Rear Shoulders",
@@ -80,7 +80,7 @@
           "helpText": null
         }
       ],
-      "impactScore": 0.13,
+      "impactScore": 0.04,
       "muscleGroups": [
         "Quadriceps",
         "Glutes"
@@ -104,7 +104,7 @@
           "helpText": null
         }
       ],
-      "impactScore": 0.14,
+      "impactScore": 0.05,
       "muscleGroups": [
         "Upper Back",
         "Rear Shoulders"
@@ -126,7 +126,7 @@
           "helpText": null
         }
       ],
-      "impactScore": 0.15,
+      "impactScore": 0.06,
       "muscleGroups": [
         "Chest",
         "Front Shoulders",
@@ -154,7 +154,7 @@
           "helpText": "Ein kompletter Satz pro Seite"
         }
       ],
-      "impactScore": 0.15,
+      "impactScore": 0.07,
       "muscleGroups": [
         "Lower Back",
         "Abs",
@@ -180,7 +180,7 @@
           "helpText": null
         }
       ],
-      "impactScore": 0.16,
+      "impactScore": 0.08,
       "muscleGroups": [
         "Upper Back",
         "Rear Shoulders",
@@ -205,7 +205,7 @@
           "helpText": "Rechts und links zusammen ergeben eine Wiederholung"
         }
       ],
-      "impactScore": 0.17,
+      "impactScore": 0.09,
       "muscleGroups": [
         "Chest",
         "Front Shoulders",
@@ -233,7 +233,7 @@
           "helpText": null
         }
       ],
-      "impactScore": 0.18,
+      "impactScore": 0.1,
       "muscleGroups": [
         "Upper Back",
         "Rear Shoulders",
@@ -256,7 +256,7 @@
           "helpText": null
         }
       ],
-      "impactScore": 0.19,
+      "impactScore": 0.11,
       "muscleGroups": [
         "Hamstrings",
         "Glutes",
@@ -281,7 +281,7 @@
           "helpText": null
         }
       ],
-      "impactScore": 0.2,
+      "impactScore": 0.12,
       "muscleGroups": [
         "Quadriceps",
         "Glutes"
@@ -305,7 +305,7 @@
           "helpText": "Ein kompletter Satz pro Seite"
         }
       ],
-      "impactScore": 0.2,
+      "impactScore": 0.13,
       "muscleGroups": [
         "Lower Back",
         "Abs",
@@ -331,7 +331,7 @@
           "helpText": null
         }
       ],
-      "impactScore": 0.21,
+      "impactScore": 0.14,
       "muscleGroups": [
         "Glutes",
         "Hamstrings",
@@ -354,7 +354,7 @@
           "helpText": null
         }
       ],
-      "impactScore": 0.22,
+      "impactScore": 0.15,
       "muscleGroups": [
         "Quadriceps",
         "Glutes",
@@ -379,7 +379,7 @@
           "helpText": "Ein kompletter Satz pro Seite"
         }
       ],
-      "impactScore": 0.22,
+      "impactScore": 0.16,
       "muscleGroups": [
         "Abs"
       ],
@@ -400,7 +400,7 @@
           "helpText": null
         }
       ],
-      "impactScore": 0.23,
+      "impactScore": 0.17,
       "muscleGroups": [
         "Chest",
         "Front Shoulders",
@@ -428,7 +428,7 @@
           "helpText": null
         }
       ],
-      "impactScore": 0.24,
+      "impactScore": 0.18,
       "muscleGroups": [
         "Hamstrings",
         "Glutes",
@@ -453,7 +453,7 @@
           "helpText": "Ein kompletter Satz pro Seite"
         }
       ],
-      "impactScore": 0.24,
+      "impactScore": 0.19,
       "muscleGroups": [
         "Obliques",
         "Abs"
@@ -478,7 +478,7 @@
           "helpText": null
         }
       ],
-      "impactScore": 0.25,
+      "impactScore": 0.2,
       "muscleGroups": [
         "Quadriceps",
         "Calves",
@@ -493,7 +493,7 @@
       "videoExplanationUrl": "https://youtu.be/IG7WjzuPleM"
     },
     {
-      "id": "advanced_1",
+      "id": "beginner_21",
       "name": "Towel Pull Row",
       "type": "reps",
       "baseReps": 6,
@@ -504,7 +504,7 @@
           "helpText": null
         }
       ],
-      "impactScore": 0.26,
+      "impactScore": 0.21,
       "muscleGroups": [
         "Upper Back",
         "Rear Shoulders",
@@ -516,7 +516,7 @@
       "videoExplanationUrl": "https://youtu.be/RFhjA5JxvUA"
     },
     {
-      "id": "advanced_2",
+      "id": "beginner_22",
       "name": "Glute Bridge",
       "type": "reps",
       "baseReps": 6,
@@ -527,7 +527,7 @@
           "helpText": null
         }
       ],
-      "impactScore": 0.27,
+      "impactScore": 0.22,
       "muscleGroups": [
         "Glutes",
         "Hamstrings",
@@ -539,7 +539,7 @@
       "videoExplanationUrl": "https://youtu.be/W3gxzEGya4Q"
     },
     {
-      "id": "advanced_3",
+      "id": "beginner_23",
       "name": "Crab Dance",
       "type": "time",
       "baseReps": null,
@@ -550,7 +550,7 @@
           "helpText": null
         }
       ],
-      "impactScore": 0.28,
+      "impactScore": 0.23,
       "muscleGroups": [
         "Glutes",
         "Hamstrings",
@@ -567,7 +567,7 @@
       "videoExplanationUrl": "https://youtu.be/bGJ-FXH9MYc"
     },
     {
-      "id": "advanced_4",
+      "id": "beginner_24",
       "name": "Prone T Hold",
       "type": "time",
       "baseReps": null,
@@ -578,7 +578,7 @@
           "helpText": null
         }
       ],
-      "impactScore": 0.29,
+      "impactScore": 0.24,
       "muscleGroups": [
         "Rear Shoulders",
         "Upper Back",
@@ -592,7 +592,7 @@
       "videoExplanationUrl": "https://youtu.be/cvxM6L1GXXY"
     },
     {
-      "id": "advanced_5",
+      "id": "beginner_25",
       "name": "Hinge Overhead Reach",
       "type": "reps",
       "baseReps": 4,
@@ -603,7 +603,7 @@
           "helpText": null
         }
       ],
-      "impactScore": 0.3,
+      "impactScore": 0.25,
       "muscleGroups": [
         "Hamstrings",
         "Glutes",
@@ -618,7 +618,7 @@
       "videoExplanationUrl": "https://youtu.be/rabuBZtCMgg"
     },
     {
-      "id": "advanced_6",
+      "id": "advanced_1",
       "name": "Bear Crawl Hold",
       "type": "time",
       "baseReps": null,
@@ -629,7 +629,7 @@
           "helpText": null
         }
       ],
-      "impactScore": 0.31,
+      "impactScore": 0.26,
       "muscleGroups": [
         "Abs",
         "Front Shoulders",
@@ -644,7 +644,7 @@
       "videoExplanationUrl": "https://youtu.be/tD8VxHKuNq0"
     },
     {
-      "id": "advanced_7",
+      "id": "advanced_2",
       "name": "Towel Row Hold",
       "type": "time",
       "baseReps": null,
@@ -655,7 +655,7 @@
           "helpText": null
         }
       ],
-      "impactScore": 0.32,
+      "impactScore": 0.27,
       "muscleGroups": [
         "Upper Back",
         "Rear Shoulders",
@@ -667,7 +667,7 @@
       "videoExplanationUrl": "https://youtu.be/KfYnIW0NPA8"
     },
     {
-      "id": "advanced_8",
+      "id": "advanced_3",
       "name": "Split Squat Hold",
       "type": "time",
       "baseReps": null,
@@ -678,7 +678,7 @@
           "helpText": "Ein kompletter Satz pro Seite"
         }
       ],
-      "impactScore": 0.33,
+      "impactScore": 0.28,
       "muscleGroups": [
         "Quadriceps",
         "Glutes"
@@ -691,7 +691,7 @@
       "videoExplanationUrl": "https://youtu.be/qWSth6A_Y6U"
     },
     {
-      "id": "advanced_9",
+      "id": "advanced_4",
       "name": "Reach Up",
       "type": "reps",
       "baseReps": 6,
@@ -702,7 +702,7 @@
           "helpText": "Jede Seite zählt als eine Wiederholung"
         }
       ],
-      "impactScore": 0.34,
+      "impactScore": 0.29,
       "muscleGroups": [
         "Glutes",
         "Hamstrings",
@@ -718,7 +718,7 @@
       "videoExplanationUrl": "https://youtu.be/xdJfYzSyrKg"
     },
     {
-      "id": "advanced_10",
+      "id": "advanced_5",
       "name": "Marching Bridge",
       "type": "time",
       "baseReps": null,
@@ -729,7 +729,7 @@
           "helpText": null
         }
       ],
-      "impactScore": 0.35,
+      "impactScore": 0.3,
       "muscleGroups": [
         "Glutes",
         "Hamstrings",
@@ -742,7 +742,7 @@
       "videoExplanationUrl": "https://youtu.be/r11PB__OC6Y"
     },
     {
-      "id": "advanced_11",
+      "id": "advanced_6",
       "name": "Russian Twist Upper Body",
       "type": "reps",
       "baseReps": 8,
@@ -753,7 +753,7 @@
           "helpText": "Jede Seite zählt als eine Wiederholung"
         }
       ],
-      "impactScore": 0.36,
+      "impactScore": 0.31,
       "muscleGroups": [
         "Obliques",
         "Abs"
@@ -766,7 +766,7 @@
       "videoExplanationUrl": "https://youtu.be/K75hbXT43hQ"
     },
     {
-      "id": "advanced_12",
+      "id": "advanced_7",
       "name": "Prone W Pull",
       "type": "reps",
       "baseReps": 5,
@@ -777,7 +777,7 @@
           "helpText": null
         }
       ],
-      "impactScore": 0.37,
+      "impactScore": 0.32,
       "muscleGroups": [
         "Upper Back",
         "Rear Shoulders",
@@ -791,7 +791,7 @@
       "videoExplanationUrl": "https://youtu.be/dqg7SG7OnMo"
     },
     {
-      "id": "advanced_13",
+      "id": "advanced_8",
       "name": "Jumping Jacks",
       "type": "time",
       "baseReps": null,
@@ -802,7 +802,7 @@
           "helpText": null
         }
       ],
-      "impactScore": 0.38,
+      "impactScore": 0.33,
       "muscleGroups": [
         "Quadriceps",
         "Calves",
@@ -819,7 +819,7 @@
       "videoExplanationUrl": "https://youtu.be/vOQ2EtHd-wg"
     },
     {
-      "id": "advanced_14",
+      "id": "advanced_9",
       "name": "Prone T Raise",
       "type": "reps",
       "baseReps": 5,
@@ -830,7 +830,7 @@
           "helpText": null
         }
       ],
-      "impactScore": 0.38,
+      "impactScore": 0.34,
       "muscleGroups": [
         "Rear Shoulders",
         "Upper Back",
@@ -844,7 +844,7 @@
       "videoExplanationUrl": "https://youtu.be/5TPOQkro4Ps"
     },
     {
-      "id": "advanced_15",
+      "id": "advanced_10",
       "name": "Russian Twist Lower Body",
       "type": "reps",
       "baseReps": 8,
@@ -855,7 +855,7 @@
           "helpText": "Jede Seite zählt als eine Wiederholung"
         }
       ],
-      "impactScore": 0.39,
+      "impactScore": 0.35,
       "muscleGroups": [
         "Obliques",
         "Abs"
@@ -868,7 +868,7 @@
       "videoExplanationUrl": "https://youtu.be/3JRw4nqurSU"
     },
     {
-      "id": "advanced_16",
+      "id": "advanced_11",
       "name": "Towel Pulldown",
       "type": "reps",
       "baseReps": 4,
@@ -879,7 +879,7 @@
           "helpText": null
         }
       ],
-      "impactScore": 0.4,
+      "impactScore": 0.36,
       "muscleGroups": [
         "Upper Back",
         "Rear Shoulders",
@@ -893,7 +893,7 @@
       "videoExplanationUrl": "https://youtu.be/Ouoyt1r6XMM"
     },
     {
-      "id": "advanced_17",
+      "id": "advanced_12",
       "name": "Sumosquats",
       "type": "reps",
       "baseReps": 4,
@@ -904,7 +904,7 @@
           "helpText": null
         }
       ],
-      "impactScore": 0.41,
+      "impactScore": 0.37,
       "muscleGroups": [
         "Quadriceps",
         "Glutes"
@@ -917,7 +917,7 @@
       "videoExplanationUrl": "https://youtu.be/cQpHgdDgChg"
     },
     {
-      "id": "advanced_18",
+      "id": "advanced_13",
       "name": "Push-Up Shouldertap",
       "type": "reps",
       "baseReps": 4,
@@ -928,7 +928,7 @@
           "helpText": "Rechts und links zusammen ergeben eine Wiederholung"
         }
       ],
-      "impactScore": 0.42,
+      "impactScore": 0.38,
       "muscleGroups": [
         "Chest",
         "Front Shoulders",
@@ -944,7 +944,7 @@
       "videoExplanationUrl": "https://youtu.be/d2bAmmPLiYE"
     },
     {
-      "id": "advanced_19",
+      "id": "advanced_14",
       "name": "Single Leg Bridge",
       "type": "reps",
       "baseReps": 3,
@@ -955,7 +955,7 @@
           "helpText": "Ein kompletter Satz pro Seite"
         }
       ],
-      "impactScore": 0.43,
+      "impactScore": 0.39,
       "muscleGroups": [
         "Glutes",
         "Hamstrings",
@@ -968,7 +968,7 @@
       "videoExplanationUrl": "https://youtu.be/JL-KJbkOEdM"
     },
     {
-      "id": "advanced_20",
+      "id": "advanced_15",
       "name": "Squats",
       "type": "reps",
       "baseReps": 4,
@@ -979,7 +979,7 @@
           "helpText": null
         }
       ],
-      "impactScore": 0.44,
+      "impactScore": 0.4,
       "muscleGroups": [
         "Quadriceps",
         "Glutes"
@@ -992,7 +992,7 @@
       "videoExplanationUrl": "https://youtu.be/AswBmJwnyBs"
     },
     {
-      "id": "advanced_21",
+      "id": "advanced_16",
       "name": "Plank Hold",
       "type": "time",
       "baseReps": null,
@@ -1003,7 +1003,7 @@
           "helpText": null
         }
       ],
-      "impactScore": 0.45,
+      "impactScore": 0.41,
       "muscleGroups": [
         "Abs",
         "Front Shoulders",
@@ -1018,7 +1018,7 @@
       "videoExplanationUrl": "https://youtu.be/AQiBJRWUSIc"
     },
     {
-      "id": "advanced_22",
+      "id": "advanced_17",
       "name": "Prone Reverse Snow Angels",
       "type": "reps",
       "baseReps": 4,
@@ -1029,7 +1029,7 @@
           "helpText": null
         }
       ],
-      "impactScore": 0.46,
+      "impactScore": 0.42,
       "muscleGroups": [
         "Rear Shoulders",
         "Upper Back",
@@ -1044,7 +1044,7 @@
       "videoExplanationUrl": "https://youtu.be/vaxXju-WrsY"
     },
     {
-      "id": "advanced_23",
+      "id": "advanced_18",
       "name": "Lateral Lunge",
       "type": "reps",
       "baseReps": 3,
@@ -1055,7 +1055,7 @@
           "helpText": "Ein kompletter Satz pro Seite"
         }
       ],
-      "impactScore": 0.47,
+      "impactScore": 0.43,
       "muscleGroups": [
         "Quadriceps",
         "Glutes",
@@ -1069,7 +1069,7 @@
       "videoExplanationUrl": "https://youtu.be/HKkCT1aUp10"
     },
     {
-      "id": "advanced_24",
+      "id": "advanced_19",
       "name": "Walkout to Push-Up",
       "type": "reps",
       "baseReps": 3,
@@ -1080,7 +1080,7 @@
           "helpText": null
         }
       ],
-      "impactScore": 0.48,
+      "impactScore": 0.44,
       "muscleGroups": [
         "Chest",
         "Front Shoulders",
@@ -1096,7 +1096,7 @@
       "videoExplanationUrl": "https://youtu.be/z9aHMZK9J3w"
     },
     {
-      "id": "advanced_25",
+      "id": "advanced_20",
       "name": "Towel Row",
       "type": "reps",
       "baseReps": 4,
@@ -1107,7 +1107,7 @@
           "helpText": null
         }
       ],
-      "impactScore": 0.48,
+      "impactScore": 0.45,
       "muscleGroups": [
         "Upper Back",
         "Rear Shoulders",
@@ -1119,7 +1119,7 @@
       "videoExplanationUrl": "https://youtu.be/oCJdPkAZwPg"
     },
     {
-      "id": "advanced_26",
+      "id": "advanced_21",
       "name": "Elevated Bridge",
       "type": "reps",
       "baseReps": 4,
@@ -1130,7 +1130,7 @@
           "helpText": null
         }
       ],
-      "impactScore": 0.49,
+      "impactScore": 0.46,
       "muscleGroups": [
         "Hamstrings",
         "Glutes",
@@ -1142,7 +1142,7 @@
       "videoExplanationUrl": "https://youtu.be/aJtoFPFktLc"
     },
     {
-      "id": "advanced_27",
+      "id": "advanced_22",
       "name": "Diagonal Crunch",
       "type": "reps",
       "baseReps": 3,
@@ -1153,7 +1153,7 @@
           "helpText": "Ein kompletter Satz pro Seite"
         }
       ],
-      "impactScore": 0.5,
+      "impactScore": 0.47,
       "muscleGroups": [
         "Obliques",
         "Abs"
@@ -1164,7 +1164,7 @@
       "videoExplanationUrl": "https://youtu.be/eu0aD1RHODo"
     },
     {
-      "id": "athlete_1",
+      "id": "advanced_23",
       "name": "Dead Bug Hold + Move",
       "type": "reps",
       "baseReps": 3,
@@ -1175,7 +1175,7 @@
           "helpText": "Ein kompletter Satz pro Seite"
         }
       ],
-      "impactScore": 0.51,
+      "impactScore": 0.48,
       "muscleGroups": [
         "Abs"
       ],
@@ -1185,7 +1185,7 @@
       "videoExplanationUrl": "https://youtu.be/Xp7IGPJzCVY"
     },
     {
-      "id": "athlete_2",
+      "id": "advanced_24",
       "name": "Push-Up",
       "type": "reps",
       "baseReps": 4,
@@ -1196,7 +1196,7 @@
           "helpText": null
         }
       ],
-      "impactScore": 0.52,
+      "impactScore": 0.49,
       "muscleGroups": [
         "Chest",
         "Front Shoulders",
@@ -1212,7 +1212,7 @@
       "videoExplanationUrl": "https://youtu.be/4N9YT5IpN-U"
     },
     {
-      "id": "athlete_3",
+      "id": "advanced_25",
       "name": "Prone Y Hold",
       "type": "time",
       "baseReps": null,
@@ -1223,7 +1223,7 @@
           "helpText": null
         }
       ],
-      "impactScore": 0.53,
+      "impactScore": 0.5,
       "muscleGroups": [
         "Upper Back",
         "Rear Shoulders",
@@ -1238,7 +1238,7 @@
       "videoExplanationUrl": "https://youtu.be/ULIMJIHeKEU"
     },
     {
-      "id": "athlete_4",
+      "id": "athlete_1",
       "name": "Single Leg Heel Raise",
       "type": "reps",
       "baseReps": 4,
@@ -1249,7 +1249,7 @@
           "helpText": "Ein kompletter Satz pro Seite"
         }
       ],
-      "impactScore": 0.54,
+      "impactScore": 0.51,
       "muscleGroups": [
         "Calves"
       ],
@@ -1259,7 +1259,7 @@
       "videoExplanationUrl": "https://youtu.be/myAAOyzMVNU"
     },
     {
-      "id": "athlete_5",
+      "id": "athlete_2",
       "name": "Scissors Cross",
       "type": "time",
       "baseReps": null,
@@ -1270,7 +1270,7 @@
           "helpText": null
         }
       ],
-      "impactScore": 0.55,
+      "impactScore": 0.52,
       "muscleGroups": [
         "Abs",
         "Quadriceps"
@@ -1281,7 +1281,7 @@
       "videoExplanationUrl": "https://youtu.be/I9d4-0l4nDc"
     },
     {
-      "id": "athlete_6",
+      "id": "athlete_3",
       "name": "Reverse Lunge",
       "type": "reps",
       "baseReps": 4,
@@ -1292,7 +1292,7 @@
           "helpText": "Ein kompletter Satz pro Seite"
         }
       ],
-      "impactScore": 0.56,
+      "impactScore": 0.53,
       "muscleGroups": [
         "Quadriceps",
         "Glutes"
@@ -1305,7 +1305,7 @@
       "videoExplanationUrl": "https://youtu.be/2667HBFRK9k"
     },
     {
-      "id": "athlete_7",
+      "id": "athlete_4",
       "name": "Plank Jacks",
       "type": "time",
       "baseReps": null,
@@ -1316,7 +1316,7 @@
           "helpText": null
         }
       ],
-      "impactScore": 0.57,
+      "impactScore": 0.54,
       "muscleGroups": [
         "Abs",
         "Front Shoulders",
@@ -1331,7 +1331,7 @@
       "videoExplanationUrl": "https://youtu.be/49hTy1fs0l0"
     },
     {
-      "id": "athlete_8",
+      "id": "athlete_5",
       "name": "Single Leg Wall Sit",
       "type": "time",
       "baseReps": null,
@@ -1342,7 +1342,7 @@
           "helpText": "Ein kompletter Satz pro Seite"
         }
       ],
-      "impactScore": 0.58,
+      "impactScore": 0.55,
       "muscleGroups": [
         "Quadriceps",
         "Glutes"
@@ -1355,7 +1355,7 @@
       "videoExplanationUrl": "https://youtu.be/zDpFbUZk3sM"
     },
     {
-      "id": "athlete_9",
+      "id": "athlete_6",
       "name": "Push-Up to Ankle Tap",
       "type": "reps",
       "baseReps": 3,
@@ -1366,7 +1366,7 @@
           "helpText": "Rechts und links zusammen ergeben eine Wiederholung"
         }
       ],
-      "impactScore": 0.59,
+      "impactScore": 0.56,
       "muscleGroups": [
         "Chest",
         "Front Shoulders",
@@ -1382,7 +1382,7 @@
       "videoExplanationUrl": "https://youtu.be/1RGmz78uj_s"
     },
     {
-      "id": "athlete_10",
+      "id": "athlete_7",
       "name": "Prone Swimmer",
       "type": "time",
       "baseReps": null,
@@ -1393,7 +1393,7 @@
           "helpText": null
         }
       ],
-      "impactScore": 0.6,
+      "impactScore": 0.57,
       "muscleGroups": [
         "Upper Back",
         "Rear Shoulders",
@@ -1409,7 +1409,7 @@
       "videoExplanationUrl": "https://youtu.be/xvLfBI5dtaI"
     },
     {
-      "id": "athlete_11",
+      "id": "athlete_8",
       "name": "Long Lever Glute Bridge Hold",
       "type": "time",
       "baseReps": null,
@@ -1420,7 +1420,7 @@
           "helpText": null
         }
       ],
-      "impactScore": 0.61,
+      "impactScore": 0.58,
       "muscleGroups": [
         "Hamstrings",
         "Glutes",
@@ -1433,7 +1433,7 @@
       "videoExplanationUrl": "https://youtu.be/OPrXNdRR_0U"
     },
     {
-      "id": "athlete_12",
+      "id": "athlete_9",
       "name": "Lying Leg Raises",
       "type": "reps",
       "baseReps": 4,
@@ -1444,7 +1444,7 @@
           "helpText": null
         }
       ],
-      "impactScore": 0.62,
+      "impactScore": 0.59,
       "muscleGroups": [
         "Abs"
       ],
@@ -1456,7 +1456,7 @@
       "videoExplanationUrl": "https://youtu.be/sXK322egKhg"
     },
     {
-      "id": "athlete_13",
+      "id": "athlete_10",
       "name": "Push-Up with Rotation",
       "type": "reps",
       "baseReps": 3,
@@ -1467,7 +1467,7 @@
           "helpText": "Rechts und links zusammen ergeben eine Wiederholung"
         }
       ],
-      "impactScore": 0.63,
+      "impactScore": 0.6,
       "muscleGroups": [
         "Chest",
         "Front Shoulders",
@@ -1485,7 +1485,7 @@
       "videoExplanationUrl": "https://youtu.be/06FvJ7nIDDE"
     },
     {
-      "id": "athlete_14",
+      "id": "athlete_11",
       "name": "Reverse Plank Hold",
       "type": "time",
       "baseReps": null,
@@ -1496,7 +1496,7 @@
           "helpText": null
         }
       ],
-      "impactScore": 0.64,
+      "impactScore": 0.61,
       "muscleGroups": [
         "Glutes",
         "Hamstrings",
@@ -1511,7 +1511,7 @@
       "videoExplanationUrl": "https://youtu.be/aPjuzB5TFsM"
     },
     {
-      "id": "athlete_15",
+      "id": "athlete_12",
       "name": "Slow Mountain Climbers",
       "type": "time",
       "baseReps": null,
@@ -1522,7 +1522,7 @@
           "helpText": null
         }
       ],
-      "impactScore": 0.65,
+      "impactScore": 0.62,
       "muscleGroups": [
         "Abs",
         "Front Shoulders",
@@ -1537,7 +1537,7 @@
       "videoExplanationUrl": "https://youtu.be/E2a4OA_TWLU"
     },
     {
-      "id": "athlete_16",
+      "id": "athlete_13",
       "name": "Kneeling Lean Back",
       "type": "reps",
       "baseReps": 3,
@@ -1548,7 +1548,7 @@
           "helpText": null
         }
       ],
-      "impactScore": 0.66,
+      "impactScore": 0.63,
       "muscleGroups": [
         "Quadriceps"
       ],
@@ -1560,7 +1560,7 @@
       "videoExplanationUrl": "https://youtu.be/itqZDFLj5HA"
     },
     {
-      "id": "athlete_17",
+      "id": "athlete_14",
       "name": "Push-Up Iso Hold Bottom",
       "type": "time",
       "baseReps": null,
@@ -1571,7 +1571,7 @@
           "helpText": null
         }
       ],
-      "impactScore": 0.67,
+      "impactScore": 0.64,
       "muscleGroups": [
         "Chest",
         "Front Shoulders",
@@ -1587,7 +1587,7 @@
       "videoExplanationUrl": "https://youtu.be/D_r4MskaPjY"
     },
     {
-      "id": "athlete_18",
+      "id": "athlete_15",
       "name": "Prone Superman Hold",
       "type": "time",
       "baseReps": null,
@@ -1598,7 +1598,7 @@
           "helpText": "Ein kompletter Satz pro Seite"
         }
       ],
-      "impactScore": 0.68,
+      "impactScore": 0.65,
       "muscleGroups": [
         "Lower Back",
         "Glutes",
@@ -1613,7 +1613,7 @@
       "videoExplanationUrl": "https://youtu.be/8nTDEkBVRZ4"
     },
     {
-      "id": "athlete_19",
+      "id": "athlete_16",
       "name": "Prone Y-T-W Combo",
       "type": "reps",
       "baseReps": 3,
@@ -1624,7 +1624,7 @@
           "helpText": null
         }
       ],
-      "impactScore": 0.69,
+      "impactScore": 0.66,
       "muscleGroups": [
         "Upper Back",
         "Rear Shoulders",
@@ -1639,7 +1639,7 @@
       "videoExplanationUrl": "https://youtu.be/aw9IkNDqGCg"
     },
     {
-      "id": "athlete_20",
+      "id": "athlete_17",
       "name": "High Reverse Plank Hold",
       "type": "time",
       "baseReps": null,
@@ -1650,7 +1650,7 @@
           "helpText": null
         }
       ],
-      "impactScore": 0.7,
+      "impactScore": 0.67,
       "muscleGroups": [
         "Glutes",
         "Hamstrings",
@@ -1666,7 +1666,7 @@
       "videoExplanationUrl": "https://youtu.be/f7wKqKst83A"
     },
     {
-      "id": "athlete_21",
+      "id": "athlete_18",
       "name": "Lunge with Overhead Reach",
       "type": "reps",
       "baseReps": 3,
@@ -1677,7 +1677,7 @@
           "helpText": "Ein kompletter Satz pro Seite"
         }
       ],
-      "impactScore": 0.71,
+      "impactScore": 0.68,
       "muscleGroups": [
         "Quadriceps",
         "Glutes",
@@ -1692,7 +1692,7 @@
       "videoExplanationUrl": "https://youtu.be/QV-wUMlJ5vA"
     },
     {
-      "id": "athlete_22",
+      "id": "athlete_19",
       "name": "Speed Skater",
       "type": "time",
       "baseReps": null,
@@ -1703,7 +1703,7 @@
           "helpText": null
         }
       ],
-      "impactScore": 0.72,
+      "impactScore": 0.69,
       "muscleGroups": [
         "Quadriceps",
         "Glutes",
@@ -1719,7 +1719,7 @@
       "videoExplanationUrl": "https://youtu.be/8naxvJzUkLY"
     },
     {
-      "id": "athlete_23",
+      "id": "athlete_20",
       "name": "Dips",
       "type": "reps",
       "baseReps": 3,
@@ -1730,7 +1730,7 @@
           "helpText": null
         }
       ],
-      "impactScore": 0.73,
+      "impactScore": 0.7,
       "muscleGroups": [
         "Triceps",
         "Chest",
@@ -1745,7 +1745,7 @@
       "videoExplanationUrl": "https://youtu.be/eYGuEsJAKEg"
     },
     {
-      "id": "athlete_24",
+      "id": "athlete_21",
       "name": "Side Plank Extended",
       "type": "time",
       "baseReps": null,
@@ -1756,7 +1756,7 @@
           "helpText": "Ein kompletter Satz pro Seite"
         }
       ],
-      "impactScore": 0.74,
+      "impactScore": 0.71,
       "muscleGroups": [
         "Obliques",
         "Abs"
@@ -1769,7 +1769,7 @@
       "videoExplanationUrl": "https://youtu.be/KMxRLChiedM"
     },
     {
-      "id": "athlete_25",
+      "id": "athlete_22",
       "name": "Bentover Towel Row",
       "type": "reps",
       "baseReps": 3,
@@ -1780,7 +1780,7 @@
           "helpText": null
         }
       ],
-      "impactScore": 0.75,
+      "impactScore": 0.72,
       "muscleGroups": [
         "Upper Back",
         "Rear Shoulders",
@@ -1795,7 +1795,7 @@
       "videoExplanationUrl": "https://youtu.be/LdQWYU10Mas"
     },
     {
-      "id": "athlete_26",
+      "id": "athlete_23",
       "name": "Lunge with Rotation",
       "type": "reps",
       "baseReps": 3,
@@ -1806,7 +1806,7 @@
           "helpText": "Ein kompletter Satz pro Seite"
         }
       ],
-      "impactScore": 0.75,
+      "impactScore": 0.73,
       "muscleGroups": [
         "Quadriceps",
         "Glutes",
@@ -1821,7 +1821,7 @@
       "videoExplanationUrl": "https://youtu.be/yaXpHg73f8Y"
     },
     {
-      "id": "elite_1",
+      "id": "athlete_24",
       "name": "Pike Push-Up",
       "type": "reps",
       "baseReps": 2,
@@ -1832,7 +1832,7 @@
           "helpText": null
         }
       ],
-      "impactScore": 0.76,
+      "impactScore": 0.74,
       "muscleGroups": [
         "Front Shoulders",
         "Triceps",
@@ -1847,7 +1847,7 @@
       "videoExplanationUrl": "https://youtu.be/8dG218xg8xA"
     },
     {
-      "id": "elite_2",
+      "id": "athlete_25",
       "name": "Single Leg Deadlift",
       "type": "reps",
       "baseReps": 3,
@@ -1858,7 +1858,7 @@
           "helpText": "Ein kompletter Satz pro Seite"
         }
       ],
-      "impactScore": 0.77,
+      "impactScore": 0.75,
       "muscleGroups": [
         "Glutes",
         "Hamstrings",
@@ -1872,7 +1872,7 @@
       "videoExplanationUrl": "https://youtu.be/uc1W8fMfuPs"
     },
     {
-      "id": "elite_3",
+      "id": "elite_1",
       "name": "Plank + Rotation",
       "type": "reps",
       "baseReps": 4,
@@ -1883,7 +1883,7 @@
           "helpText": "Jede Seite zählt als eine Wiederholung"
         }
       ],
-      "impactScore": 0.78,
+      "impactScore": 0.76,
       "muscleGroups": [
         "Obliques",
         "Abs",
@@ -1898,7 +1898,7 @@
       "videoExplanationUrl": "https://youtu.be/wsOzHC5dbIU"
     },
     {
-      "id": "elite_4",
+      "id": "elite_2",
       "name": "Pop Squats",
       "type": "time",
       "baseReps": null,
@@ -1909,7 +1909,7 @@
           "helpText": null
         }
       ],
-      "impactScore": 0.79,
+      "impactScore": 0.77,
       "muscleGroups": [
         "Quadriceps",
         "Glutes",
@@ -1924,7 +1924,7 @@
       "videoExplanationUrl": "https://youtu.be/jlqQCc0Arq8"
     },
     {
-      "id": "elite_5",
+      "id": "elite_3",
       "name": "Push-Up to Plank Reach",
       "type": "reps",
       "baseReps": 3,
@@ -1935,7 +1935,7 @@
           "helpText": "Rechts und links zusammen ergeben eine Wiederholung"
         }
       ],
-      "impactScore": 0.8,
+      "impactScore": 0.78,
       "muscleGroups": [
         "Chest",
         "Front Shoulders",
@@ -1951,7 +1951,7 @@
       "videoExplanationUrl": "https://youtu.be/7h9UgWSq-6s"
     },
     {
-      "id": "elite_6",
+      "id": "elite_4",
       "name": "V-Hold",
       "type": "time",
       "baseReps": null,
@@ -1962,7 +1962,7 @@
           "helpText": null
         }
       ],
-      "impactScore": 0.81,
+      "impactScore": 0.79,
       "muscleGroups": [
         "Abs"
       ],
@@ -1974,7 +1974,7 @@
       "videoExplanationUrl": "https://youtu.be/tGeAxcdhrPo"
     },
     {
-      "id": "elite_7",
+      "id": "elite_5",
       "name": "Diagonal Lunge",
       "type": "reps",
       "baseReps": 4,
@@ -1985,7 +1985,7 @@
           "helpText": "Jede Seite zählt als eine Wiederholung"
         }
       ],
-      "impactScore": 0.82,
+      "impactScore": 0.8,
       "muscleGroups": [
         "Quadriceps",
         "Glutes",
@@ -1999,7 +1999,7 @@
       "videoExplanationUrl": "https://youtu.be/wb8RENlekX8"
     },
     {
-      "id": "elite_8",
+      "id": "elite_6",
       "name": "One Arm Towel Row Hold",
       "type": "time",
       "baseReps": null,
@@ -2010,7 +2010,7 @@
           "helpText": "Ein kompletter Satz pro Seite"
         }
       ],
-      "impactScore": 0.83,
+      "impactScore": 0.81,
       "muscleGroups": [
         "Upper Back",
         "Rear Shoulders",
@@ -2022,7 +2022,7 @@
       "videoExplanationUrl": "https://youtu.be/hi-8zT1latc"
     },
     {
-      "id": "elite_9",
+      "id": "elite_7",
       "name": "Single Leg Deadlift Hold",
       "type": "time",
       "baseReps": null,
@@ -2033,7 +2033,7 @@
           "helpText": "Ein kompletter Satz pro Seite"
         }
       ],
-      "impactScore": 0.84,
+      "impactScore": 0.82,
       "muscleGroups": [
         "Glutes",
         "Hamstrings",
@@ -2048,7 +2048,7 @@
       "videoExplanationUrl": "https://youtu.be/O5XRDw516Sg"
     },
     {
-      "id": "elite_10",
+      "id": "elite_8",
       "name": "Diamond Push-Up",
       "type": "reps",
       "baseReps": 3,
@@ -2059,7 +2059,7 @@
           "helpText": null
         }
       ],
-      "impactScore": 0.85,
+      "impactScore": 0.83,
       "muscleGroups": [
         "Triceps",
         "Chest",
@@ -2074,7 +2074,7 @@
       "videoExplanationUrl": "https://youtu.be/4C-vaSmjAas"
     },
     {
-      "id": "elite_11",
+      "id": "elite_9",
       "name": "Bridge Walkout",
       "type": "reps",
       "baseReps": 2,
@@ -2085,7 +2085,7 @@
           "helpText": null
         }
       ],
-      "impactScore": 0.85,
+      "impactScore": 0.84,
       "muscleGroups": [
         "Hamstrings",
         "Glutes",
@@ -2097,7 +2097,7 @@
       "videoExplanationUrl": "https://youtu.be/6UMSkPepDkM"
     },
     {
-      "id": "elite_12",
+      "id": "elite_10",
       "name": "Hollow Hold",
       "type": "time",
       "baseReps": null,
@@ -2108,7 +2108,7 @@
           "helpText": null
         }
       ],
-      "impactScore": 0.86,
+      "impactScore": 0.85,
       "muscleGroups": [
         "Abs"
       ],
@@ -2120,7 +2120,7 @@
       "videoExplanationUrl": "https://youtu.be/zyarVPO1Zfo"
     },
     {
-      "id": "elite_13",
+      "id": "elite_11",
       "name": "Lunge to Knee Drive",
       "type": "reps",
       "baseReps": 3,
@@ -2131,7 +2131,7 @@
           "helpText": "Ein kompletter Satz pro Seite"
         }
       ],
-      "impactScore": 0.87,
+      "impactScore": 0.86,
       "muscleGroups": [
         "Quadriceps",
         "Glutes",
@@ -2146,7 +2146,7 @@
       "videoExplanationUrl": "https://youtu.be/x_5xIXBoozc"
     },
     {
-      "id": "elite_14",
+      "id": "elite_12",
       "name": "Jump Squat",
       "type": "time",
       "baseReps": null,
@@ -2157,7 +2157,7 @@
           "helpText": null
         }
       ],
-      "impactScore": 0.88,
+      "impactScore": 0.87,
       "muscleGroups": [
         "Quadriceps",
         "Glutes",
@@ -2173,7 +2173,7 @@
       "videoExplanationUrl": "https://youtu.be/AoYBCb3pIxo"
     },
     {
-      "id": "elite_15",
+      "id": "elite_13",
       "name": "Wall Walk",
       "type": "reps",
       "baseReps": 1,
@@ -2184,7 +2184,7 @@
           "helpText": null
         }
       ],
-      "impactScore": 0.89,
+      "impactScore": 0.88,
       "muscleGroups": [
         "Front Shoulders",
         "Upper Back",
@@ -2200,7 +2200,7 @@
       "videoExplanationUrl": "https://youtu.be/XvI-CV0A-ZM"
     },
     {
-      "id": "elite_16",
+      "id": "elite_14",
       "name": "One Arm Towel Row",
       "type": "reps",
       "baseReps": 2,
@@ -2211,7 +2211,7 @@
           "helpText": "Ein kompletter Satz pro Seite"
         }
       ],
-      "impactScore": 0.9,
+      "impactScore": 0.89,
       "muscleGroups": [
         "Upper Back",
         "Rear Shoulders",
@@ -2223,7 +2223,7 @@
       "videoExplanationUrl": "https://youtu.be/g3ooT_zk-to"
     },
     {
-      "id": "elite_17",
+      "id": "elite_15",
       "name": "Reverse Plank High Knees",
       "type": "time",
       "baseReps": null,
@@ -2234,7 +2234,7 @@
           "helpText": null
         }
       ],
-      "impactScore": 0.91,
+      "impactScore": 0.9,
       "muscleGroups": [
         "Glutes",
         "Hamstrings",
@@ -2250,7 +2250,7 @@
       "videoExplanationUrl": "https://youtu.be/miYO1gX_V64"
     },
     {
-      "id": "elite_18",
+      "id": "elite_16",
       "name": "Side Plank Elbow to Knee",
       "type": "reps",
       "baseReps": 3,
@@ -2261,7 +2261,7 @@
           "helpText": "Ein kompletter Satz pro Seite"
         }
       ],
-      "impactScore": 0.92,
+      "impactScore": 0.91,
       "muscleGroups": [
         "Obliques",
         "Abs"
@@ -2274,7 +2274,7 @@
       "videoExplanationUrl": "https://youtu.be/Ve7QHG5SaKQ"
     },
     {
-      "id": "elite_19",
+      "id": "elite_17",
       "name": "Split Lunge Jumps",
       "type": "time",
       "baseReps": null,
@@ -2285,7 +2285,7 @@
           "helpText": null
         }
       ],
-      "impactScore": 0.93,
+      "impactScore": 0.92,
       "muscleGroups": [
         "Quadriceps",
         "Glutes",
@@ -2301,7 +2301,7 @@
       "videoExplanationUrl": "https://youtu.be/DWzf1diUi3w"
     },
     {
-      "id": "elite_20",
+      "id": "elite_18",
       "name": "One Arm Push-Up Iso Hold",
       "type": "time",
       "baseReps": null,
@@ -2312,7 +2312,7 @@
           "helpText": "Ein kompletter Satz pro Seite"
         }
       ],
-      "impactScore": 0.94,
+      "impactScore": 0.93,
       "muscleGroups": [
         "Chest",
         "Front Shoulders",
@@ -2328,7 +2328,7 @@
       "videoExplanationUrl": "https://youtu.be/KFRoYyBQ5XE"
     },
     {
-      "id": "elite_21",
+      "id": "elite_19",
       "name": "High Reverse Plank High Knees",
       "type": "time",
       "baseReps": null,
@@ -2339,7 +2339,7 @@
           "helpText": null
         }
       ],
-      "impactScore": 0.95,
+      "impactScore": 0.94,
       "muscleGroups": [
         "Glutes",
         "Hamstrings",
@@ -2356,7 +2356,7 @@
       "videoExplanationUrl": "https://youtu.be/0j2BQyOztlA"
     },
     {
-      "id": "elite_22",
+      "id": "elite_20",
       "name": "Prone Towel Hold",
       "type": "time",
       "baseReps": null,
@@ -2383,7 +2383,7 @@
       "videoExplanationUrl": "https://youtu.be/NpYN2PY5w6I"
     },
     {
-      "id": "elite_23",
+      "id": "elite_21",
       "name": "V-Up",
       "type": "reps",
       "baseReps": 3,
@@ -2406,7 +2406,7 @@
       "videoExplanationUrl": "https://youtu.be/W0EJ1IzAuqo"
     },
     {
-      "id": "elite_24",
+      "id": "elite_22",
       "name": "Mountain Climber",
       "type": "time",
       "baseReps": null,
@@ -2433,7 +2433,7 @@
       "videoExplanationUrl": "https://youtu.be/NUxX2jE2Mc0"
     },
     {
-      "id": "elite_25",
+      "id": "elite_23",
       "name": "Archer Push-Up",
       "type": "reps",
       "baseReps": 2,
@@ -2460,7 +2460,7 @@
       "videoExplanationUrl": "https://youtu.be/QYMGRqHUzGg"
     },
     {
-      "id": "elite_26",
+      "id": "elite_24",
       "name": "Single Leg Long Lever Hold",
       "type": "time",
       "baseReps": null,
@@ -2484,7 +2484,7 @@
       "videoExplanationUrl": "https://youtu.be/HCzO7p_lmgY"
     },
     {
-      "id": "elite_27",
+      "id": "elite_25",
       "name": "Burpee",
       "type": "time",
       "baseReps": null,

@@ -293,7 +293,7 @@ class _WorkoutScheduleWidgetState extends State<WorkoutScheduleWidget> {
                           return AlertDialog(
                             title: Text('Nicht im richtigen Zeitraum'),
                             content: Text(
-                              'Dieses Training kann nur im angegebenen Zeitraum abgeschlossen werden.',
+                              'Diese Tagesaufgabe kann nur im angegebenen Zeitraum abgeschlossen werden.',
                             ),
                             actions: [
                               TextButton(
