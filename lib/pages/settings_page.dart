@@ -4,6 +4,8 @@ import 'package:rize/firestore.dart';
 import 'package:rize/globals.dart' as globals;
 import 'package:rize/utils.dart' show Time;
 
+import 'package:rize/widgets/youtube_consent.dart';
+
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
 
@@ -284,6 +286,34 @@ class _SettingsPageState extends State<SettingsPage> {
                       color: Colors.white.withOpacity(0.42),
                       fontSize: 11,
                       height: 1.4,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  _SettingsCard(
+                    child: ValueListenableBuilder<bool?>(
+                      valueListenable: youtubeConsent,
+                      builder: (context, allowed, _) => ListTile(
+                        title: const Text(
+                          'YouTube-Videos',
+                          style: TextStyle(color: Colors.white),
+                        ),
+                        subtitle: Text(
+                          allowed == true
+                              ? 'Immer erlaubt · Autoplay aktiv'
+                              : 'Nur einzeln freigeben',
+                          style: const TextStyle(color: Colors.white70),
+                        ),
+                        trailing: const Icon(
+                          Icons.edit_outlined,
+                          color: Colors.white70,
+                        ),
+                        onTap: () => showDialog<void>(
+                          context: context,
+                          builder: (dialogContext) => YoutubeConsentDialog(
+                            onSaved: () => Navigator.pop(dialogContext),
+                          ),
+                        ),
+                      ),
                     ),
                   ),
                 ],

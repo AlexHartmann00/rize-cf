@@ -103,7 +103,7 @@ void main() {
   }
 
   testWidgets(
-    'greeting has no subtitle and a partial impulse has one completion headline',
+    'greeting has a subtitle and a partial impulse has one completion headline',
     (tester) async {
       final workout = completed('V-Up');
       workout.schedule.single.actualValue = 5;
@@ -115,6 +115,7 @@ void main() {
                 children: [
                   const CoachFloHomeHeader(
                     greeting: 'Guten Morgen, Flo',
+                    subtitle: 'Starte bewegt in den Tag.',
                     streak: 0,
                   ),
                   CompletedWorkoutHero(
@@ -136,7 +137,11 @@ void main() {
           )
           .map((text) => text.data)
           .toList();
-      expect(headerTexts, ['Guten Morgen, Flo', '0']);
+      expect(headerTexts, [
+        'Guten Morgen, Flo',
+        'Starte bewegt in den Tag.',
+        '0',
+      ]);
       expect(find.text('Impuls erledigt'), findsOneWidget);
       expect(find.text('TAGESAUFGABE'), findsOneWidget);
       expect(find.text('50 % des Tagesziels geschafft'), findsOneWidget);
@@ -210,6 +215,7 @@ void main() {
                     children: [
                       const CoachFloHomeHeader(
                         greeting: 'Guten Morgen, Alex',
+                        subtitle: 'Starte bewegt in den Tag.',
                         streak: 1,
                       ),
                       const SizedBox(height: 22),

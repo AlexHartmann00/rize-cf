@@ -96,7 +96,7 @@ String dailyMotivation(DateTime now) {
   if (now.hour < 17) {
     return 'Ein kurzer Impuls reicht, um heute etwas für Dich zu tun.';
   }
-  return 'Der Tag ist noch nicht vorbei. Zeit für Deinen starken Abschluss.';
+  return 'Zeit, Deinen Erfolg wirken zu lassen.';
 }
 
 String completedMessage(int streak) {

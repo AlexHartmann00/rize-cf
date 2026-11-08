@@ -5,9 +5,15 @@ import 'package:rize/widgets/rize_card.dart';
 import 'package:rize/helpers/workout_celebrations.dart';
 
 class CoachFloHomeHeader extends StatelessWidget {
-  const CoachFloHomeHeader({super.key, required this.greeting, this.streak});
+  const CoachFloHomeHeader({
+    super.key,
+    required this.greeting,
+    required this.subtitle,
+    this.streak,
+  });
 
   final String greeting;
+  final String subtitle;
   final int? streak;
 
   @override
@@ -27,6 +33,8 @@ class CoachFloHomeHeader extends StatelessWidget {
                   letterSpacing: -0.6,
                 ),
               ),
+              const SizedBox(height: 4),
+              Text(subtitle, style: const TextStyle(color: Colors.white70)),
             ],
           ),
         ),

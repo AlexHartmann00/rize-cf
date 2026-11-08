@@ -310,6 +310,33 @@ class _WorkoutExecutionPageState extends State<WorkoutExecutionPage> {
 
   Future<void> _saveCompletedRound() async {
     if (_saving) return;
+    if (_isDynamic && _actualValue == 0) {
+      final confirm = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('0 Wiederholungen speichern?'),
+          content: const Text(
+            'Du hast keine Wiederholung eingetragen. Möchtest Du die Anzahl korrigieren oder die Runde mit 0 speichern?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Anzahl korrigieren'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Mit 0 speichern'),
+            ),
+          ],
+        ),
+      );
+      if (!mounted || confirm == null) return;
+      if (!confirm) {
+        await _screenAwake.setActive(true);
+        if (mounted) setState(() => _phase = WorkoutExecutionPhase.active);
+        return;
+      }
+    }
 
     setState(() {
       _saving = true;

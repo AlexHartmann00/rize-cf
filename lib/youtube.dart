@@ -4,15 +4,56 @@ import 'package:flutter/material.dart';
 import 'package:rize/helpers/screen_awake_service.dart';
 import 'package:youtube_player_iframe/youtube_player_iframe.dart';
 
-class YoutubeVideo extends StatefulWidget {
-  final String videoId; // e.g. "dQw4w9WgXcQ"
+import 'package:rize/widgets/youtube_consent.dart';
+
+class YoutubeVideo extends StatelessWidget {
   const YoutubeVideo({super.key, required this.videoId});
+  final String videoId;
 
   @override
-  State<YoutubeVideo> createState() => _YoutubeVideoState();
+  Widget build(BuildContext context) => ValueListenableBuilder<bool?>(
+    valueListenable: youtubeConsent,
+    builder: (context, allowed, _) => allowed == true
+        ? _YoutubePlayer(key: ValueKey(videoId), videoId: videoId)
+        : _SingleVideoConsent(key: ValueKey(videoId), videoId: videoId),
+  );
 }
 
-class _YoutubeVideoState extends State<YoutubeVideo>
+class _SingleVideoConsent extends StatefulWidget {
+  const _SingleVideoConsent({super.key, required this.videoId});
+  final String videoId;
+  @override
+  State<_SingleVideoConsent> createState() => _SingleVideoConsentState();
+}
+
+class _SingleVideoConsentState extends State<_SingleVideoConsent> {
+  bool _allowed = false;
+  @override
+  Widget build(BuildContext context) => _allowed
+      ? _YoutubePlayer(videoId: widget.videoId)
+      : Padding(
+          padding: const EdgeInsets.all(12),
+          child: Center(
+            child: FilledButton(
+              onPressed: () => setState(() => _allowed = true),
+              child: const Text(
+                'Video einmal anzeigen und YouTube-Cookies akzeptieren',
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ),
+        );
+}
+
+class _YoutubePlayer extends StatefulWidget {
+  final String videoId; // e.g. "dQw4w9WgXcQ"
+  const _YoutubePlayer({super.key, required this.videoId});
+
+  @override
+  State<_YoutubePlayer> createState() => _YoutubeVideoState();
+}
+
+class _YoutubeVideoState extends State<_YoutubePlayer>
     with WidgetsBindingObserver {
   late final YoutubePlayerController _controller;
   late final StreamSubscription<YoutubePlayerValue> _playerSubscription;

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:rize/helpers/rize_style_helpers.dart';
+import 'package:rize/helpers/external_link.dart';
 
 class WelcomeBrandHero extends StatelessWidget {
   const WelcomeBrandHero({super.key});
@@ -13,11 +14,7 @@ class WelcomeBrandHero extends StatelessWidget {
           height: 92,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(29),
-            gradient: const LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: <Color>[Color(0xFF79D5FF), Color(0xFF176BC7)],
-            ),
+            color: Colors.black,
             boxShadow: <BoxShadow>[
               BoxShadow(
                 color: const Color(0xFF176BC7).withOpacity(0.42),
@@ -332,6 +329,19 @@ class WelcomeAuthForm extends StatelessWidget {
                   : Icons.person_add_alt_1_rounded,
               loading: isLoading,
               onPressed: isLoading ? null : onSubmit,
+            ),
+            TextButton(
+              onPressed: () =>
+                  openExternalLink(context, 'https://coach-flo.de'),
+              child: const Text(
+                'RIZE-AGB',
+                style: TextStyle(
+                  color: Colors.white70,
+                  fontSize: 12,
+                  decoration: TextDecoration.underline,
+                  decorationColor: Colors.white70,
+                ),
+              ),
             ),
           ],
         ),

@@ -409,6 +409,7 @@ class _HomePageSlotMachineWidgetState extends State<HomePageSlotMachineWidget> {
                     authServiceNotifier.value.currentUser?.displayName,
                     now,
                   ),
+                  subtitle: dailyMotivation(now),
                   streak: streak,
                 ),
                 const SizedBox(height: 18),

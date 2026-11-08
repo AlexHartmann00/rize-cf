@@ -38,6 +38,8 @@ import 'package:flutter/services.dart'
     show DeviceOrientation, SystemChrome, rootBundle;
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:rize/widgets/youtube_consent.dart';
+
 //TODO: Daily workout in shared preferences
 // Creation day; workout id; schedule & schedule progress; intensity
 // On app start, if saved workout day was before today, clear saved workout
@@ -47,6 +49,7 @@ void main() async {
   await SystemChrome.setPreferredOrientations(const <DeviceOrientation>[
     DeviceOrientation.portraitUp,
   ]);
+  await loadYoutubeConsent();
   await Firebase.initializeApp();
   authServiceNotifier.value.authStateChanges.listen((user) {
     if (user != null) {
@@ -117,9 +120,17 @@ class MyApp extends StatelessWidget {
           seedColor: const Color.fromARGB(255, 6, 98, 172),
         ),
       ),
-      home: authServiceNotifier.value.currentUser == null
-          ? const WelcomePage()
-          : const MyHomePage(title: 'RIZE'),
+      home: ValueListenableBuilder<bool?>(
+        valueListenable: youtubeConsent,
+        builder: (context, choice, _) => choice == null
+            ? const Scaffold(
+                backgroundColor: Color(0xFF102F55),
+                body: YoutubeConsentDialog(),
+              )
+            : authServiceNotifier.value.currentUser == null
+            ? const WelcomePage()
+            : const MyHomePage(title: 'RIZE'),
+      ),
     );
   }
 }

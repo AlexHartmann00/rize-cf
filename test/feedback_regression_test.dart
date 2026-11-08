@@ -53,7 +53,7 @@ void main() {
     ));
     expect(tester.widget<ActivityCalendarCard>(find.byType(ActivityCalendarCard)).month,
         DateTime(2026, 1));
-    expect(tester.widget<IconButton>(find.byTooltip('Nächster Monat')).onPressed, isNull);
+    expect(tester.widget<IconButton>(find.widgetWithIcon(IconButton, Icons.chevron_right_rounded)).onPressed, isNull);
     await tester.tap(find.byTooltip('Vorheriger Monat'));
     await tester.pump();
     expect(tester.widget<ActivityCalendarCard>(find.byType(ActivityCalendarCard)).month,
