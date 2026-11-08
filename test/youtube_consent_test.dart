@@ -26,6 +26,7 @@ void main() {
     await tester.ensureVisible(find.text('YouTube-Videos'));
     await tester.tap(find.text('YouTube-Videos'));
     await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Nur einzeln freigeben'));
     await tester.tap(find.text('Nur einzeln freigeben'));
     await tester.pumpAndSettle();
     youtubeConsent.value = null;

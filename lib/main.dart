@@ -123,10 +123,7 @@ class MyApp extends StatelessWidget {
       home: ValueListenableBuilder<bool?>(
         valueListenable: youtubeConsent,
         builder: (context, choice, _) => choice == null
-            ? const Scaffold(
-                backgroundColor: Color(0xFF102F55),
-                body: YoutubeConsentDialog(),
-              )
+            ? const RizeScaffold(body: SafeArea(child: YoutubeConsentDialog()))
             : authServiceNotifier.value.currentUser == null
             ? const WelcomePage()
             : const MyHomePage(title: 'RIZE'),
