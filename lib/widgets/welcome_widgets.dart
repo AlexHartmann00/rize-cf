@@ -332,7 +332,7 @@ class WelcomeAuthForm extends StatelessWidget {
             ),
             TextButton(
               onPressed: () =>
-                  openExternalLink(context, 'https://coach-flo.de'),
+                  openExternalLink(context, 'https://coach-flo.de/agb-rize'),
               child: const Text(
                 'RIZE-AGB',
                 style: TextStyle(
