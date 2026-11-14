@@ -32,6 +32,31 @@ ScheduledWorkout session({int? actual, int completed = 1, int intensity = 1}) =>
     );
 
 void main() {
+  test('technique start advances through rounds without overwriting completions', () {
+    final workout = session(completed: 0);
+    workout.schedule.add(WorkoutStep(
+      timeOfDay: TimeOfDay.any,
+      plannedUnits: 2,
+      completedUnits: 0,
+    ));
+    for (final expectedIndex in [0, 1, 1]) {
+      final index = workout.nextIncompleteScheduleEntryIndex;
+      expect(index, expectedIndex);
+      workout.schedule[index!] = completedWorkoutStep(
+        workout.schedule[index],
+        actualValue: 10,
+        targetValue: 10,
+      );
+    }
+    final restored = ScheduledWorkout.fromJson(workout.toJson());
+    expect(restored.schedule[0].completedUnits, 1);
+    expect(restored.schedule[0].actualValue, 10);
+    expect(restored.schedule[1].completedUnits, 2);
+    expect(restored.schedule[1].actualValue, 20);
+    expect(restored.nextIncompleteScheduleEntryIndex, isNull);
+    expect(restored.isCompleted, isTrue);
+  });
+
   test('three planned rounds require three separate submissions', () {
     final workout = session(completed: 0);
     workout.schedule.single.plannedUnits = 3;

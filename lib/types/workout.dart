@@ -287,6 +287,14 @@ class ScheduledWorkout extends Workout {
       ? ImpactLevel.medium
       : ImpactLevel.high;
 
+  /// First round that can still accept a completion, including multi-unit steps.
+  int? get nextIncompleteScheduleEntryIndex {
+    for (final entry in schedule.indexed) {
+      if (entry.$2.completedUnits < entry.$2.plannedUnits) return entry.$1;
+    }
+    return null;
+  }
+
   bool get isCompleted {
     for (var entry in schedule) {
       if (entry.completedUnits < entry.plannedUnits) {

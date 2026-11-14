@@ -293,7 +293,9 @@ class WorkoutDetailsBottomAction extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bool canStart = workout is ScheduledWorkout;
+    final bool isCompleted =
+        workout is ScheduledWorkout && (workout as ScheduledWorkout).isCompleted;
+    final bool canStart = workout is ScheduledWorkout && !isCompleted;
 
     return Container(
       padding: const EdgeInsets.all(8),
@@ -325,7 +327,11 @@ class WorkoutDetailsBottomAction extends StatelessWidget {
           canStart ? Icons.play_arrow_rounded : Icons.info_outline_rounded,
         ),
         label: Text(
-          canStart ? 'IMPULS STARTEN' : 'AUS DER TAGESPLANUNG STARTEN',
+          isCompleted
+              ? 'IMPULS ERLEDIGT'
+              : canStart
+              ? 'IMPULS STARTEN'
+              : 'AUS DER TAGESPLANUNG STARTEN',
           style: const TextStyle(
             fontWeight: FontWeight.w900,
             letterSpacing: 0.25,

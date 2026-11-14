@@ -4,7 +4,6 @@ import 'package:rize/base_widgets.dart';
 import 'package:rize/firestore.dart';
 import 'package:rize/helpers/rize_style_helpers.dart';
 import 'package:rize/types/anamnesis.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class AnamnesisQuestionnaireFlow extends StatefulWidget {
   const AnamnesisQuestionnaireFlow({super.key, required this.questionnaire});
@@ -56,9 +55,6 @@ class _AnamnesisQuestionnaireFlowState
     setState(() => _saving = true);
     try {
       await saveAnamnesisResponse(widget.questionnaire);
-      final SharedPreferences preferences =
-          await SharedPreferences.getInstance();
-      await preferences.setBool('anamnesisDone', true);
       if (mounted) Navigator.pop(context, true);
     } catch (_) {
       if (!mounted) return;

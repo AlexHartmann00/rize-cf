@@ -121,11 +121,15 @@ class WorkoutDetailsPage extends StatelessWidget {
       return;
     }
 
+    final scheduledWorkout = workout as ScheduledWorkout;
+    final int? index = scheduledWorkout.nextIncompleteScheduleEntryIndex;
+    if (index == null) return;
+
     final bool? completed = await Navigator.of(context).push<bool>(
       MaterialPageRoute<bool>(
         builder: (_) => WorkoutExecutionPage(
-          workout: workout as ScheduledWorkout,
-          scheduleEntryIndex: 0,
+          workout: scheduledWorkout,
+          scheduleEntryIndex: index,
         ),
       ),
     );

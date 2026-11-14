@@ -216,11 +216,8 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   Future<void> _openQuestionnaireWhenRequired() =>
       _questionnaireLaunchGuard.run(() async {
         if (!mounted) return;
-        final SharedPreferences preferences =
-            await SharedPreferences.getInstance();
         final bool questionnaireSubmitted =
-            (preferences.getBool('anamnesisDone') ?? false) ||
-            (globals.userData?.intensityScore ?? 0) != 0;
+            globals.userData?.anamnesisCompleted ?? false;
         if (questionnaireSubmitted || !mounted) return;
 
         final questionnaire = await loadAnamnesisQuestionnaire();

@@ -4,6 +4,7 @@ import 'package:rize/utils.dart';
 
 class UserData {
   double intensityScore;
+  final bool anamnesisCompleted;
   IntensityLevel intensityLevel = IntensityLevel.unknown();
   Time? spinReminderTime;
   bool isPro;
@@ -13,6 +14,7 @@ class UserData {
   UserData({
     required this.intensityScore,
     required this.spinReminderTime,
+    this.anamnesisCompleted = false,
     this.isPro = false,
     this.subscriptionStatus,
     this.proAccessUntil,
@@ -34,6 +36,10 @@ class UserData {
     }.contains(subscriptionStatus);
     return UserData(
       intensityScore: json['intensityScore']?.toDouble() ?? 0.0,
+      // Older accounts predate the explicit completion flag.
+      anamnesisCompleted:
+          (json['anamnesisCompleted'] as bool?) ??
+          ((json['intensityScore']?.toDouble() ?? 0.0) != 0),
       spinReminderTime: Time.parse(json['spinReminderTime'] ?? ''),
       isPro:
           subscriptionStatus == 'active' ||

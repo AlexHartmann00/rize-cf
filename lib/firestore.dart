@@ -54,11 +54,12 @@ Future<AnamnesisQuestionnaire> loadAnamnesisQuestionnaire() async {
 
 Future<void> saveAnamnesisResponse(AnamnesisQuestionnaire questionnaire) async {
   print('FB usage: Saving anamnesis response to Firestore');
-  CollectionReference<Map<String, dynamic>> collection = FirebaseFirestore
-      .instance
-      .collection('userAnamnesis');
+  final String userId = authServiceNotifier.value.currentUser!.uid;
+  final database = FirebaseFirestore.instance;
+  final batch = database.batch();
+  final response = database.collection('userAnamnesis').doc();
 
-  await collection.add({
+  batch.set(response, {
     'completionTime': FieldValue.serverTimestamp(),
     'responses': questionnaire.entries.map((entry) {
       final QuestionnaireResponseOption? selected = entry.selectedOption;
@@ -74,17 +75,14 @@ Future<void> saveAnamnesisResponse(AnamnesisQuestionnaire questionnaire) async {
       };
     }).toList(),
     'totalScore': questionnaire.totalScore,
-    'userId': authServiceNotifier.value.currentUser!.uid,
+    'userId': userId,
   });
 
-  //update the user's document to set intensityScore to total score. The user id is the document name
-  CollectionReference<Map<String, dynamic>> usersCollection = FirebaseFirestore
-      .instance
-      .collection('users');
-
-  await usersCollection.doc(authServiceNotifier.value.currentUser!.uid).update({
+  batch.update(database.collection('users').doc(userId), {
     'intensityScore': questionnaire.totalScore,
+    'anamnesisCompleted': true,
   });
+  await batch.commit();
 }
 
 // Future<void> updateUserIntensityScore(double intensityScore) async {
@@ -104,7 +102,10 @@ Future<void> createUserDocument(String userId) {
       .instance
       .collection('users');
 
-  return usersCollection.doc(userId).set({'intensityScore': 0.0});
+  return usersCollection.doc(userId).set({
+    'intensityScore': 0.0,
+    'anamnesisCompleted': false,
+  });
 }
 
 Future<UserData> loadUserData(String userId) async {
