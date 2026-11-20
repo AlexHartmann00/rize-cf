@@ -18,6 +18,8 @@ import 'package:rize/utils.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:rize/globals.dart' as globals;
 import 'package:rize/helpers/home_page_helpers.dart';
+import 'package:rize/helpers/calendar_clock.dart';
+import 'package:rize/helpers/date_helpers.dart';
 import 'package:rize/helpers/workout_library_helpers.dart';
 import 'package:rize/helpers/muscle_group_labels.dart';
 import 'package:rize/helpers/pro_checkout_service.dart';
@@ -49,6 +51,9 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   bool _loadingUser = true;
   Object? _userLoadError;
   int _dataRevision = 0;
+  DateTime? _loadedPlanDay;
+  late final CalendarClock _calendarClock;
+  bool _initializingUser = false;
   final QuestionnaireLaunchGuard _questionnaireLaunchGuard =
       QuestionnaireLaunchGuard();
 
@@ -56,12 +61,14 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _calendarClock = CalendarClock()..addListener(_onClockChanged);
     _initializeUser();
   }
 
   @override
   void dispose() {
     _levelSubscription?.cancel();
+    _calendarClock.dispose();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
@@ -73,6 +80,15 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
       _refreshAfterCheckout();
     } else {
       _initializeUser();
+    }
+  }
+
+  void _onClockChanged() {
+    if (!mounted || _initializingUser) return;
+    if (_loadedPlanDay != normalizeDate(_calendarClock.value)) {
+      unawaited(_initializeUser());
+    } else {
+      setState(() {});
     }
   }
 
@@ -100,9 +116,14 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   }
 
   Future<void> _initializeUser({bool reloadAppData = false}) async {
+    if (_initializingUser) return;
+    _initializingUser = true;
+    final DateTime planDay = normalizeDate(DateTime.now());
     if (mounted) {
       setState(() {
-        _loadingUser = true;
+        // Keep the home state mounted while a workout/technique route is open.
+        // Its navigation callback must survive app resumes (e.g. the video player).
+        _loadingUser = _loadedPlanDay == null || _loadedPlanDay != planDay;
         _userLoadError = null;
       });
     }
@@ -116,12 +137,10 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
       final userData = await loadUserData(user.uid);
       final List<IntensityLevel> levels = await loadIntensityLevels();
 
+      final DailyWorkoutPlan? previousPlan = globals.dailyWorkoutPlan;
+      final DailyWorkoutPlan? dailyPlan = await loadDailyWorkoutPlan();
       if (reloadAppData) {
-        final List<Object?> refreshed = await Future.wait<Object?>(
-          <Future<Object?>>[loadWorkoutCollection(), loadDailyWorkoutPlan()],
-        );
-        globals.workoutLibrary = refreshed[0]! as List<Workout>;
-        globals.dailyWorkoutPlan = refreshed[1] as DailyWorkoutPlan?;
+        globals.workoutLibrary = await loadWorkoutCollection();
       }
 
       userData.intensityLevel = intensityLevelForScore(
@@ -129,6 +148,12 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
         userData.intensityScore,
       );
 
+      // A round may have finished while the resume refresh was in flight.
+      // Do not replace its newer refresh with an older query result.
+      if (identical(globals.dailyWorkoutPlan, previousPlan)) {
+        globals.dailyWorkoutPlan = dailyPlan;
+      }
+      _loadedPlanDay = planDay;
       globals.userData = userData;
       globals.intensityLevels = levels;
       await _watchLevelChanges(user.uid, userData.intensityLevel);
@@ -136,6 +161,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
     } catch (error) {
       _userLoadError = error;
     } finally {
+      _initializingUser = false;
       if (mounted) {
         setState(() => _loadingUser = false);
         if (_userLoadError == null) {
@@ -699,12 +725,12 @@ class _HomePageSlotMachineWidgetState extends State<HomePageSlotMachineWidget> {
       ),
     );
 
-    if (completed == true && mounted) {
-      _refreshWorkoutProgress();
+    if (mounted) {
+      await _refreshWorkoutProgress(showNudge: completed == true);
     }
   }
 
-  Future<void> _refreshWorkoutProgress() async {
+  Future<void> _refreshWorkoutProgress({bool showNudge = true}) async {
     if (!mounted) return;
     final Future<List<ScheduledWorkout>> historyFuture =
         loadWorkoutHistoryFromServer();
@@ -712,8 +738,11 @@ class _HomePageSlotMachineWidgetState extends State<HomePageSlotMachineWidget> {
       _historyFuture = historyFuture;
     });
 
-    final List<ScheduledWorkout> history = await historyFuture;
+    final DailyWorkoutPlan? plan = await loadDailyWorkoutPlan();
     if (!mounted) return;
+    setState(() => globals.dailyWorkoutPlan = plan);
+    final List<ScheduledWorkout> history = await historyFuture;
+    if (!mounted || !showNudge) return;
     await _showProNudgeWhenEligible(history);
   }
 

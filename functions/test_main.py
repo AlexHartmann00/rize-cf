@@ -27,6 +27,61 @@ class HttpFunctionStartupTest(unittest.TestCase):
         except ValueError:
             pass
 
+    def _workout(self, id, completed, **fields):
+        snap = Mock(id=id)
+        snap.to_dict.return_value = {
+            "schedule": [{"plannedUnits": 1, "completedUnits": int(completed)}],
+            **fields,
+        }
+        return snap
+
+    def test_completed_plan_suppresses_reminders_despite_another_unfinished_plan(self):
+        completed = self._workout("morning", True, planId="morning")
+        unfinished = self._workout("later", False, planId="later")
+        self.assertTrue(self.main.has_completed_daily_plan([completed, unfinished]))
+        self.assertFalse(self.main.has_completed_daily_plan([unfinished]))
+        self.assertFalse(self.main.has_completed_daily_plan([]))
+
+    def test_multi_exercise_task_requires_all_its_exercises(self):
+        first = self._workout("one", True, planId="multi", planExerciseCount=2)
+        second = self._workout("two", False, planId="multi", planExerciseCount=2)
+        self.assertFalse(self.main.has_completed_daily_plan([first]))
+        self.assertFalse(self.main.has_completed_daily_plan([first, second]))
+        second.to_dict.return_value["schedule"][0]["completedUnits"] = 1
+        self.assertTrue(self.main.has_completed_daily_plan([first, second]))
+
+    def test_day_lookup_includes_legacy_completion_alongside_new_sessions(self):
+        ref = Mock()
+        history = ref.collection.return_value
+        modern = self._workout("new", False)
+        legacy = self._workout("2026-11-20", True)
+        legacy.exists = True
+        history.where.return_value.stream.return_value = [modern]
+        history.document.return_value.get.return_value = legacy
+        workouts = self.main.workouts_for_day(ref, "2026-11-20")
+        self.assertEqual(workouts, [modern, legacy])
+        self.assertTrue(self.main.has_completed_daily_plan(workouts))
+        history.where.return_value.stream.return_value = [legacy]
+        self.assertEqual(self.main.workouts_for_day(ref, "2026-11-20"), [legacy])
+
+    def test_both_reminder_jobs_skip_a_task_completed_at_five(self):
+        from datetime import datetime
+        completed = self._workout("morning", True, planId="morning")
+        later = self._workout("later", False, planId="later")
+        db = Mock()
+        user = Mock(id="user")
+        user.to_dict.return_value = {"spinReminderTime": "16:30", "fcmToken": "token"}
+        db.collection.return_value.stream.return_value = [user]
+        with patch.object(self.main, "get_db", return_value=db), patch.object(
+            self.main, "datetime"
+        ) as clock, patch.object(
+            self.main, "workouts_for_day", return_value=[completed, later]
+        ), patch.object(self.main.messaging, "send") as send:
+            clock.now.return_value = datetime(2026, 11, 20, 16, 30, tzinfo=self.main.TZ)
+            self.main.send_spin_reminders.__wrapped__(Mock())
+            self.main.send_streak_reminders.__wrapped__(Mock())
+        send.assert_not_called()
+
     def test_http_wrappers_start_and_validate_requests(self):
         checkout_response = self.app.test_client().get("/")
 

@@ -176,16 +176,39 @@ def schedule_sums(schedule: Any) -> Tuple[int, int, bool]:
 
 
 def workouts_for_day(user_ref, day_id: str):
-    """Returns v2 session docs and falls back to the legacy date-keyed doc."""
+    """Returns modern and legacy sessions, including mixed migration data."""
     docs = list(
         user_ref.collection("workoutHistory")
         .where("dayKey", "==", day_id)
         .stream()
     )
-    if docs:
-        return docs
     legacy = user_ref.collection("workoutHistory").document(day_id).get()
-    return [legacy] if legacy.exists else []
+    if legacy.exists and all(doc.id != legacy.id for doc in docs):
+        docs.append(legacy)
+    return docs
+
+
+def has_completed_daily_plan(workouts) -> bool:
+    """A completed plan suppresses reminders even if another plan is unfinished.
+
+    Keep exercises in multi-exercise plans together; one finished exercise does
+    not complete the whole task. Legacy sessions each represent a single plan.
+    """
+    plans = {}
+    for snap in workouts:
+        data = snap.to_dict() or {}
+        key = ("plan", data["planId"]) if data.get("planId") else ("session", snap.id)
+        plans.setdefault(key, []).append(data)
+    for exercises in plans.values():
+        expected_count = max(
+            (int(data.get("planExerciseCount") or 1) for data in exercises),
+            default=1,
+        )
+        if len(exercises) >= expected_count and all(
+            is_schedule_completed(data.get("schedule")) for data in exercises
+        ):
+            return True
+    return False
 
 
 def compute_completion_delta(
@@ -590,14 +613,11 @@ def send_spin_reminders(
 
       - Read each user's spinReminderTime.
       - Send only at or shortly after that time.
-      - Skip the user when today's workoutHistory document already exists.
+      - Skip the user when a daily plan was already completed today.
       - Skip when a reminder was already sent today.
       - Send an Android/iOS notification with explicit delivery options.
       - Remove stale registration tokens.
       - Write detailed summary logs for diagnosis.
-
-    The existing workout-document check is intentionally preserved:
-    any users/{userId}/workoutHistory/{today} document suppresses the reminder.
     """
     now = datetime.now(TZ)
     today_id = now.strftime("%Y-%m-%d")
@@ -658,10 +678,7 @@ def send_spin_reminders(
 
             # Suppress the reminder only when today's task is fully done.
             today_workouts = workouts_for_day(user_ref, today_id)
-            if today_workouts and all(
-                is_schedule_completed((snap.to_dict() or {}).get("schedule"))
-                for snap in today_workouts
-            ):
+            if has_completed_daily_plan(today_workouts):
                 skipped_existing_workout += 1
                 continue
 
@@ -783,13 +800,10 @@ def send_streak_reminders(event: scheduler_fn.ScheduledEvent) -> None:
         if data.get("lastStreakReminderDate") == today_id:
             continue
         today_workouts = workouts_for_day(user_ref, today_id)
-        if today_workouts and all(
-            is_schedule_completed((snap.to_dict() or {}).get("schedule"))
-            for snap in today_workouts
-        ):
+        if has_completed_daily_plan(today_workouts):
             continue
         yesterday = workouts_for_day(user_ref, yesterday_id)
-        if not any(is_schedule_completed((snap.to_dict() or {}).get("schedule")) for snap in yesterday):
+        if not has_completed_daily_plan(yesterday):
             continue
         message = messaging.Message(
             token=token.strip(),
